@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-traincoach}
+      POSTGRES_USER: ${POSTGRES_USER:-traincoach}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set, see .env.example}
+    ports:
+      - "5432:5432"
+    volumes:
+      - traincoach_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-traincoach} -d ${POSTGRES_DB:-traincoach}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-traincoach};Username=${POSTGRES_USER:-traincoach};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?JWT_SIGNING_KEY must be set, see .env.example}
+      Jwt__Issuer: ${JWT_ISSUER:-TrainCoach}
+      Jwt__Audience: ${JWT_AUDIENCE:-TrainCoach.Clients}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      Integrations__Strava__ClientId: ${STRAVA_CLIENT_ID:-}
+      Integrations__Strava__ClientSecret: ${STRAVA_CLIENT_SECRET:-}
+      Integrations__Strava__RedirectUri: ${STRAVA_REDIRECT_URI:-http://localhost:5173/integrations/strava/callback}
+    ports:
+      - "5158:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:5158}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  traincoach_postgres_data:

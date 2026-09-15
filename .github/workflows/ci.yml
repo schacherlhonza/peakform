@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: traincoach_ci
+          POSTGRES_USER: traincoach
+          POSTGRES_PASSWORD: traincoach_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U traincoach -d traincoach_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore TrainCoach.slnx
+
+      - name: Build
+        run: dotnet build TrainCoach.slnx --no-restore -c Release
+
+      - name: Apply migrations against CI Postgres
+        env:
+          ConnectionStrings__Default: "Host=localhost;Port=5432;Database=traincoach_ci;Username=traincoach;Password=traincoach_ci_password"
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          dotnet ef database update --project src/TrainCoach.Infrastructure --startup-project src/TrainCoach.Api
+
+      - name: Test
+        run: dotnet test TrainCoach.slnx --no-build -c Release --logger "console;verbosity=normal"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build

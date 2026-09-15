@@ -1,0 +1,6812 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "TrainCoach API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/athletes/{athleteUserId}/activities": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompletedActivityDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompletedActivityDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CompletedActivityDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activities": {
+      "post": {
+        "tags": [
+          "Activities"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualActivityRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualActivityRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualActivityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/feedback": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingFeedbackDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingFeedbackDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingFeedbackDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "put": {
+        "tags": [
+          "Activities"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTrainingFeedbackRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTrainingFeedbackRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTrainingFeedbackRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingFeedbackDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingFeedbackDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingFeedbackDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/logout-all": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/workouts/{workoutId}/comments": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "parameters": [
+          {
+            "name": "workoutId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments": {
+      "post": {
+        "tags": [
+          "Comments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comments/{id}": {
+      "delete": {
+        "tags": [
+          "Comments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/abbreviations": {
+      "get": {
+        "tags": [
+          "CustomAbbreviations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomAbbreviationDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomAbbreviationDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomAbbreviationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomAbbreviations"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomAbbreviationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomAbbreviationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomAbbreviationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomAbbreviationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomAbbreviationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomAbbreviationDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/abbreviations/{id}": {
+      "put": {
+        "tags": [
+          "CustomAbbreviations"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomAbbreviationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomAbbreviationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomAbbreviationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomAbbreviationDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomAbbreviationDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomAbbreviationDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CustomAbbreviations"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/food": {
+      "get": {
+        "tags": [
+          "FoodEntries"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FoodEntryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FoodEntryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FoodEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FoodEntries"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFoodEntryRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFoodEntryRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFoodEntryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodEntryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodEntryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodEntryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/food/{entryId}": {
+      "delete": {
+        "tags": [
+          "FoodEntries"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/goals": {
+      "get": {
+        "tags": [
+          "Goals"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GoalDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GoalDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GoalDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/goals": {
+      "post": {
+        "tags": [
+          "Goals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/goals/{id}": {
+      "put": {
+        "tags": [
+          "Goals"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Goals"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/heart-rate-zones": {
+      "get": {
+        "tags": [
+          "HeartRateZones"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeartRateZoneDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeartRateZoneDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeartRateZoneDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "HeartRateZones"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetHeartRateZonesRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetHeartRateZonesRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetHeartRateZonesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeartRateZoneDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeartRateZoneDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeartRateZoneDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/hrv": {
+      "get": {
+        "tags": [
+          "HrvMeasurements"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HrvMeasurementDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HrvMeasurementDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HrvMeasurementDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "HrvMeasurements"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertHrvMeasurementRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertHrvMeasurementRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertHrvMeasurementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/HrvMeasurementDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HrvMeasurementDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HrvMeasurementDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/hydration": {
+      "get": {
+        "tags": [
+          "HydrationEntries"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HydrationEntryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HydrationEntryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HydrationEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "HydrationEntries"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHydrationEntryRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHydrationEntryRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHydrationEntryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/HydrationEntryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HydrationEntryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HydrationEntryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/hydration/{entryId}": {
+      "delete": {
+        "tags": [
+          "HydrationEntries"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/checkins": {
+      "put": {
+        "tags": [
+          "CheckIns"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCheckInRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCheckInRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCheckInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCheckInDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCheckInDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCheckInDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/checkins/{date}/{type}": {
+      "get": {
+        "tags": [
+          "CheckIns"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CheckInType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCheckInDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCheckInDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyCheckInDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/checkins": {
+      "get": {
+        "tags": [
+          "CheckIns"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyCheckInDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyCheckInDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DailyCheckInDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/preview": {
+      "post": {
+        "tags": [
+          "Import"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "fileType": {
+                    "$ref": "#/components/schemas/ImportFileType"
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                },
+                "fileType": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import/{importedFileId}/confirm": {
+      "post": {
+        "tags": [
+          "Import"
+        ],
+        "parameters": [
+          {
+            "name": "importedFileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportConfirmResultDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportConfirmResultDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportConfirmResultDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations": {
+      "get": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationConnectionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationConnectionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IntegrationConnectionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}/authorize-url": {
+      "get": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationUrlDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationUrlDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationUrlDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}/callback": {
+      "post": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthCallbackRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthCallbackRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthCallbackRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}/connect-demo": {
+      "post": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}": {
+      "delete": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}/sync": {
+      "post": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}/sync-history": {
+      "get": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SynchronizationRunDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SynchronizationRunDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SynchronizationRunDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/health-flags": {
+      "get": {
+        "tags": [
+          "PainOrHealthFlags"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PainOrHealthFlags"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePainOrHealthFlagRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePainOrHealthFlagRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePainOrHealthFlagRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/health-flags/{flagId}/status": {
+      "put": {
+        "tags": [
+          "PainOrHealthFlags"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "flagId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHealthFlagStatusRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHealthFlagStatusRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHealthFlagStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PainOrHealthFlagDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/personal-records": {
+      "get": {
+        "tags": [
+          "PersonalRecords"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalRecordDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalRecordDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalRecordDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PersonalRecords"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalRecordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalRecordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalRecordDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalRecordDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalRecordDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/personal-records/{recordId}": {
+      "put": {
+        "tags": [
+          "PersonalRecords"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonalRecordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonalRecordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonalRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalRecordDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalRecordDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalRecordDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PersonalRecords"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/races": {
+      "get": {
+        "tags": [
+          "Races"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RaceDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RaceDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RaceDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/races": {
+      "post": {
+        "tags": [
+          "Races"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRaceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRaceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/races/{id}": {
+      "put": {
+        "tags": [
+          "Races"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRaceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRaceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Races"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/recovery": {
+      "get": {
+        "tags": [
+          "RecoveryMetrics"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecoveryMetricDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecoveryMetricDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecoveryMetricDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RecoveryMetrics"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRecoveryMetricRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRecoveryMetricRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRecoveryMetricRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryMetricDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryMetricDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryMetricDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships": {
+      "get": {
+        "tags": [
+          "Relationships"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships/invite": {
+      "post": {
+        "tags": [
+          "Relationships"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAthleteRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAthleteRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAthleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships/{id}/respond": {
+      "post": {
+        "tags": [
+          "Relationships"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondToInviteRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondToInviteRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RespondToInviteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships/{id}/revoke": {
+      "post": {
+        "tags": [
+          "Relationships"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeAccessRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeAccessRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/relationships/{id}/permissions": {
+      "put": {
+        "tags": [
+          "Relationships"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPermissionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPermissionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPermissionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachAthleteRelationshipDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/reports/{date}/{type}": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ReportType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/reports/{date}/{type}/regenerate": {
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ReportType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedReportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/seasons": {
+      "get": {
+        "tags": [
+          "Seasons"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeasonDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeasonDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeasonDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seasons": {
+      "post": {
+        "tags": [
+          "Seasons"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSeasonRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSeasonRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSeasonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/seasons/{id}": {
+      "put": {
+        "tags": [
+          "Seasons"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeasonRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeasonRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeasonRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeasonDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Seasons"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/sleep": {
+      "get": {
+        "tags": [
+          "SleepRecords"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SleepRecordDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SleepRecordDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SleepRecordDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SleepRecords"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSleepRecordRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSleepRecordRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSleepRecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SleepRecordDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SleepRecordDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SleepRecordDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/plans": {
+      "get": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingPlanDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingPlanDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingPlanDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plans/{id}": {
+      "get": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanDetailDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plans": {
+      "post": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingPlanRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingPlanRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingPlanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPlanDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plans/{planId}/weeks": {
+      "post": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingWeekRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingWeekRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingWeekRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWeekDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWeekDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWeekDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/weeks/{weekId}": {
+      "put": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "weekId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingWeekRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingWeekRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingWeekRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWeekDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWeekDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingWeekDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workouts/{id}": {
+      "get": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlannedWorkoutRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlannedWorkoutRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlannedWorkoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/workouts": {
+      "post": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlannedWorkoutRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlannedWorkoutRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlannedWorkoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workouts/{id}/copy": {
+      "post": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyWorkoutRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyWorkoutRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyWorkoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlannedWorkoutDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workout-templates": {
+      "get": {
+        "tags": [
+          "WorkoutTemplates"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutTemplateDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutTemplateDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutTemplateDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WorkoutTemplates"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkoutTemplateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkoutTemplateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkoutTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTemplateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTemplateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTemplateDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workout-templates/{id}": {
+      "put": {
+        "tags": [
+          "WorkoutTemplates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutTemplateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutTemplateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkoutTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTemplateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTemplateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkoutTemplateDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "WorkoutTemplates"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppRole": {
+        "enum": [
+          "Athlete",
+          "Coach"
+        ],
+        "type": "string"
+      },
+      "AuthResult": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/AppRole"
+          },
+          "isOnboarded": {
+            "type": "boolean"
+          },
+          "accessToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "accessTokenExpiresAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshToken": {
+            "type": "string",
+            "nullable": true
+          },
+          "refreshTokenExpiresAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthorizationUrlDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CheckInType": {
+        "enum": [
+          "Morning",
+          "Evening"
+        ],
+        "type": "string"
+      },
+      "CoachAthleteRelationshipDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coachUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coachName": {
+            "type": "string",
+            "nullable": true
+          },
+          "coachEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteName": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/RelationshipStatus"
+          },
+          "invitedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "startDateUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endDateUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "inviteNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "grantedScopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionScope"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CommentAuthorRole": {
+        "enum": [
+          "Coach",
+          "Athlete"
+        ],
+        "type": "string"
+      },
+      "CommentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorRole": {
+            "$ref": "#/components/schemas/CommentAuthorRole"
+          },
+          "authorName": {
+            "type": "string",
+            "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompletedActivityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "elevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "averageHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePowerWatts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "calories": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CopyWorkoutRequest": {
+        "type": "object",
+        "properties": {
+          "targetTrainingWeekId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateCommentRequest": {
+        "type": "object",
+        "properties": {
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateCustomAbbreviationRequest": {
+        "type": "object",
+        "properties": {
+          "abbreviation": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullText": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateFoodEntryRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consumedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mealType": {
+            "$ref": "#/components/schemas/MealType"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatedCarbsGrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimatedProteinGrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "relativeToWorkoutNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateGoalRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateHydrationEntryRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consumedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "drinkType": {
+            "$ref": "#/components/schemas/HydrationDrinkType"
+          },
+          "volumeMilliliters": {
+            "type": "number",
+            "format": "double"
+          },
+          "containsElectrolytes": {
+            "type": "boolean"
+          },
+          "caffeineMilligrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateManualActivityRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "elevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "averageHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePowerWatts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "calories": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePainOrHealthFlagRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "relatedCheckInId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/HealthFlagType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/HealthFlagSeverity"
+          },
+          "bodyPart": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedOnDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePersonalRecordRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "distanceLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "achievedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "raceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePlannedWorkoutRequest": {
+        "type": "object",
+        "properties": {
+          "trainingWeekId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "coachDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRestDay": {
+            "type": "boolean"
+          },
+          "plannedDistanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "plannedDurationSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "plannedElevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateRaceRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "goalId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "elevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "targetTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetResultNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateSeasonRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateTrainingPlanRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateTrainingWeekRequest": {
+        "type": "object",
+        "properties": {
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateWorkoutTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CustomAbbreviationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coachUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "abbreviation": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullText": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DailyCheckInDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CheckInType"
+          },
+          "energy": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "fatigue": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "legsFeeling": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "stress": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "hasPainOrIllness": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "sleepQuality": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "muscleSoreness": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "motivation": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "hydrationLiters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "mealQuality": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "completedPlannedWorkout": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "rpe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DataSource": {
+        "enum": [
+          "Manual",
+          "FileImport",
+          "Strava",
+          "GarminDemoProvider",
+          "MySasyDemoProvider"
+        ],
+        "type": "string"
+      },
+      "FoodEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consumedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mealType": {
+            "$ref": "#/components/schemas/MealType"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatedCarbsGrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimatedProteinGrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "relativeToWorkoutNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GeneratedReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "generatedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "narrativeText": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveryChannel": {
+            "$ref": "#/components/schemas/ReportDeliveryChannel"
+          },
+          "deliveryStatus": {
+            "$ref": "#/components/schemas/ReportDeliveryStatus"
+          },
+          "insights": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedReportInsightDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GeneratedReportInsightDto": {
+        "type": "object",
+        "properties": {
+          "ruleCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "severity": {
+            "$ref": "#/components/schemas/InsightSeverity"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoalDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "isAchieved": {
+            "type": "boolean"
+          },
+          "achievedNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoalPriority": {
+        "enum": [
+          "A",
+          "B",
+          "C"
+        ],
+        "type": "string"
+      },
+      "HealthFlagSeverity": {
+        "enum": [
+          "Mild",
+          "Moderate",
+          "Severe"
+        ],
+        "type": "string"
+      },
+      "HealthFlagStatus": {
+        "enum": [
+          "Active",
+          "Improving",
+          "Resolved"
+        ],
+        "type": "string"
+      },
+      "HealthFlagType": {
+        "enum": [
+          "Pain",
+          "Illness",
+          "Injury",
+          "Other"
+        ],
+        "type": "string"
+      },
+      "HeartRateZoneDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zoneNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "minBpm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxBpm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minPaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxPaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "effectiveFromDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HeartRateZoneInput": {
+        "type": "object",
+        "properties": {
+          "zoneNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "minBpm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxBpm": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minPaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxPaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HrvMeasurementDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rmssdMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          },
+          "measuredAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HydrationDrinkType": {
+        "enum": [
+          "Water",
+          "ElectrolyteDrink",
+          "Coffee",
+          "Tea",
+          "Alcohol",
+          "Other"
+        ],
+        "type": "string"
+      },
+      "HydrationEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consumedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "drinkType": {
+            "$ref": "#/components/schemas/HydrationDrinkType"
+          },
+          "volumeMilliliters": {
+            "type": "number",
+            "format": "double"
+          },
+          "containsElectrolytes": {
+            "type": "boolean"
+          },
+          "caffeineMilligrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImportConfirmResultDto": {
+        "type": "object",
+        "properties": {
+          "importedFileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rowsImported": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rowsSkippedDuplicate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rowsSkippedInvalid": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImportFileType": {
+        "enum": [
+          "GoogleSheetsExportCsv",
+          "StandardCsvTemplate",
+          "GarminActivityExport",
+          "MySasyExport"
+        ],
+        "type": "string"
+      },
+      "ImportPreviewDto": {
+        "type": "object",
+        "properties": {
+          "importedFileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originalFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "rowsTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rowsValid": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rowsWithWarnings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rowsWithErrors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportPreviewRowDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImportPreviewRowDto": {
+        "type": "object",
+        "properties": {
+          "rowNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "distanceKm": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "elevationM": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "averageHeartRate": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportRowStatus"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImportRowStatus": {
+        "enum": [
+          "Valid",
+          "Warning",
+          "Error",
+          "DuplicateSkipped"
+        ],
+        "type": "string"
+      },
+      "InsightSeverity": {
+        "enum": [
+          "Info",
+          "Notice",
+          "Attention"
+        ],
+        "type": "string"
+      },
+      "IntegrationConnectionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/IntegrationProviderType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IntegrationConnectionStatus"
+          },
+          "externalAccountId": {
+            "type": "string",
+            "nullable": true
+          },
+          "connectedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastSyncedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IntegrationConnectionStatus": {
+        "enum": [
+          "NotConnected",
+          "Connected",
+          "Error",
+          "Revoked"
+        ],
+        "type": "string"
+      },
+      "IntegrationProviderType": {
+        "enum": [
+          "Strava",
+          "GarminDemoProvider",
+          "MySasyDemoProvider"
+        ],
+        "type": "string"
+      },
+      "IntensityTargetType": {
+        "enum": [
+          "Free",
+          "HeartRateZone",
+          "Pace",
+          "Rpe",
+          "Power"
+        ],
+        "type": "string"
+      },
+      "InviteAthleteRequest": {
+        "type": "object",
+        "properties": {
+          "athleteEmail": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MealType": {
+        "enum": [
+          "Breakfast",
+          "Lunch",
+          "Dinner",
+          "Snack",
+          "PreWorkout",
+          "DuringWorkout",
+          "PostWorkout"
+        ],
+        "type": "string"
+      },
+      "NotificationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipientUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NotificationType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "linkUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NotificationType": {
+        "enum": [
+          "InviteReceived",
+          "InviteAccepted",
+          "PlanUpdated",
+          "CommentAdded",
+          "ReportReady",
+          "PermissionChanged",
+          "HealthFlagRaised",
+          "AccessRevoked"
+        ],
+        "type": "string"
+      },
+      "OAuthCallbackRequest": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PainOrHealthFlagDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "relatedCheckInId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/HealthFlagType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/HealthFlagSeverity"
+          },
+          "status": {
+            "$ref": "#/components/schemas/HealthFlagStatus"
+          },
+          "bodyPart": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedOnDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "resolvedOnDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PermissionScope": {
+        "enum": [
+          "ViewTrainingPlan",
+          "EditTrainingPlan",
+          "ViewCompletedActivities",
+          "ViewWellness",
+          "ViewNutrition",
+          "ViewHealthFlags",
+          "CommentOnWorkouts",
+          "ViewPersonalRecords"
+        ],
+        "type": "string"
+      },
+      "PersonalRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "distanceLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "achievedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "raceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlannedWorkoutDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainingWeekId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "coachDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRestDay": {
+            "type": "boolean"
+          },
+          "plannedDistanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "plannedDurationSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "plannedElevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RaceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "goalId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "elevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "targetTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetResultNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "actualResultNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoveryMetricDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "restingHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "readinessScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stressScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/AppRole"
+          },
+          "timeZoneId": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelationshipStatus": {
+        "enum": [
+          "PendingInvite",
+          "Active",
+          "Revoked",
+          "Ended",
+          "Declined"
+        ],
+        "type": "string"
+      },
+      "ReportDeliveryChannel": {
+        "enum": [
+          "InApp",
+          "Email",
+          "Push",
+          "Telegram"
+        ],
+        "type": "string"
+      },
+      "ReportDeliveryStatus": {
+        "enum": [
+          "Pending",
+          "Delivered",
+          "Failed",
+          "NotConfigured"
+        ],
+        "type": "string"
+      },
+      "ReportType": {
+        "enum": [
+          "Morning",
+          "Evening"
+        ],
+        "type": "string"
+      },
+      "RespondToInviteRequest": {
+        "type": "object",
+        "properties": {
+          "accept": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RevokeAccessRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SeasonDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetHeartRateZonesRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "effectiveFromDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "zones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeartRateZoneInput"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SetPermissionRequest": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "$ref": "#/components/schemas/PermissionScope"
+          },
+          "granted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SleepRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "deepSleepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "remSleepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SportType": {
+        "enum": [
+          "Running",
+          "Cycling",
+          "Swimming",
+          "Strength",
+          "CrossTraining",
+          "Rest",
+          "Other"
+        ],
+        "type": "string"
+      },
+      "SubmitCheckInRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CheckInType"
+          },
+          "energy": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "fatigue": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "legsFeeling": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "stress": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "hasPainOrIllness": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "sleepQuality": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "muscleSoreness": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "motivation": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "hydrationLiters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "mealQuality": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "completedPlannedWorkout": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "rpe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SyncRunStatus": {
+        "enum": [
+          "Pending",
+          "Running",
+          "Succeeded",
+          "Failed"
+        ],
+        "type": "string"
+      },
+      "SynchronizationRunDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/IntegrationProviderType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SyncRunStatus"
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "itemsFetched": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsSkippedDuplicate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainingFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "completedActivityId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rpe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "legsFeeling": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "overallRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "painNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "freeText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainingPlanDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coachUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "weeks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrainingWeekDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainingPlanDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coachUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainingWeekDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainingPlanId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coachWeekSummary": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteWeekReflection": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatWasMissingNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteWeeklyRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "workouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlannedWorkoutDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateCustomAbbreviationRequest": {
+        "type": "object",
+        "properties": {
+          "abbreviation": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullText": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateGoalRequest": {
+        "type": "object",
+        "properties": {
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "isAchieved": {
+            "type": "boolean"
+          },
+          "achievedNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateHealthFlagStatusRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthFlagStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePersonalRecordRequest": {
+        "type": "object",
+        "properties": {
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "distanceLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "achievedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "raceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePlannedWorkoutRequest": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "coachDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRestDay": {
+            "type": "boolean"
+          },
+          "plannedDistanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "plannedDurationSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "plannedElevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateRaceRequest": {
+        "type": "object",
+        "properties": {
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "goalId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "elevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "targetTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetResultNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "actualResultNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateSeasonRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateTrainingWeekRequest": {
+        "type": "object",
+        "properties": {
+          "coachWeekSummary": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteWeekReflection": {
+            "type": "string",
+            "nullable": true
+          },
+          "whatWasMissingNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteWeeklyRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateWorkoutTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertHrvMeasurementRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rmssdMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          },
+          "measuredAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertRecoveryMetricRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "restingHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "readinessScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stressScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertSleepRecordRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "deepSleepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "remSleepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertTrainingFeedbackRequest": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "completedActivityId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rpe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "legsFeeling": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "overallRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "painNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "freeText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WellnessScale": {
+        "enum": [
+          "VeryPoor",
+          "Poor",
+          "Moderate",
+          "Good",
+          "VeryGood"
+        ],
+        "type": "string"
+      },
+      "WorkoutSegmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WorkoutSegmentType"
+          },
+          "repeatCount": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "intensityTargetType": {
+            "$ref": "#/components/schemas/IntensityTargetType"
+          },
+          "targetHeartRateZoneId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "targetPaceSecondsPerKmMin": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetPaceSecondsPerKmMax": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetRpe": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetPowerWatts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WorkoutSegmentType": {
+        "enum": [
+          "WarmUp",
+          "Main",
+          "Interval",
+          "Rest",
+          "CoolDown",
+          "Repeat",
+          "Drill",
+          "Strides"
+        ],
+        "type": "string"
+      },
+      "WorkoutTemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coachUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Zadejte JWT access token (bez prefixu \"Bearer \").",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}
