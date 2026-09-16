@@ -8,7 +8,9 @@ namespace TrainCoach.Application.Relationships;
 public class CoachAthleteRelationshipService(
     IApplicationDbContext db,
     IUserLookupService userLookup,
-    IDateTimeProvider clock) : ICoachAthleteRelationshipService
+    IDateTimeProvider clock,
+    IAuditLogService auditLog,
+    ICurrentUserService currentUser) : ICoachAthleteRelationshipService
 {
     // Granted automatically when an athlete accepts an invite, so the core flow (coach builds a
     // plan, sees activity/wellness, comments) works immediately. The athlete can revoke any of
@@ -87,6 +89,14 @@ public class CoachAthleteRelationshipService(
                     GrantedAtUtc = clock.UtcNow,
                 });
             }
+
+            auditLog.Record(
+                athleteUserId,
+                AuditAction.AccessGranted,
+                nameof(CoachAthleteRelationship),
+                relationship.Id,
+                $"Pozvání přijato, výchozí oprávnění udělena trenérovi {relationship.CoachUserId}: {string.Join(", ", DefaultScopesOnAccept)}.",
+                currentUser.IpAddress);
         }
         else
         {
@@ -125,6 +135,14 @@ public class CoachAthleteRelationshipService(
             permission.RevokedByUserId = actingUserId;
         }
 
+        auditLog.Record(
+            actingUserId,
+            AuditAction.AccessRevoked,
+            nameof(CoachAthleteRelationship),
+            relationship.Id,
+            $"Spolupráce mezi trenérem {relationship.CoachUserId} a sportovcem {relationship.AthleteUserId} ukončena." + (request.Reason is null ? "" : $" Důvod: {request.Reason}"),
+            currentUser.IpAddress);
+
         await db.SaveChangesAsync(cancellationToken);
         return await ToDtoAsync(relationship, cancellationToken);
     }
@@ -155,11 +173,27 @@ public class CoachAthleteRelationshipService(
                 GrantedByUserId = athleteUserId,
                 GrantedAtUtc = clock.UtcNow,
             });
+
+            auditLog.Record(
+                athleteUserId,
+                AuditAction.AccessGranted,
+                nameof(RelationshipPermission),
+                relationshipId,
+                $"Oprávnění {request.Scope} uděleno trenérovi {relationship.CoachUserId}.",
+                currentUser.IpAddress);
         }
         else if (!request.Granted && existing is not null)
         {
             existing.RevokedAtUtc = clock.UtcNow;
             existing.RevokedByUserId = athleteUserId;
+
+            auditLog.Record(
+                athleteUserId,
+                AuditAction.AccessRevoked,
+                nameof(RelationshipPermission),
+                relationshipId,
+                $"Oprávnění {request.Scope} odebráno trenérovi {relationship.CoachUserId}.",
+                currentUser.IpAddress);
         }
 
         await db.SaveChangesAsync(cancellationToken);

@@ -8,4 +8,5 @@ public interface ICurrentUserService
     bool IsAuthenticated { get; }
     Guid UserId { get; }
     AppRole Role { get; }
+    string? IpAddress { get; }
 }

@@ -27,4 +27,6 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
             return Enum.TryParse<AppRole>(value, out var role) ? role : default;
         }
     }
+
+    public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 }

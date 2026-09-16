@@ -17,6 +17,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
+        services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IRelationshipAccessGuard, RelationshipAccessGuard>();
         services.AddScoped<ICoachAthleteRelationshipService, CoachAthleteRelationshipService>();
         services.AddScoped<ITrainingPlanService, TrainingPlanService>();

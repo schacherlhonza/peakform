@@ -14,7 +14,8 @@ public class AuthService(
     SignInManager<ApplicationUser> signInManager,
     TrainCoachDbContext db,
     JwtTokenGenerator tokenGenerator,
-    IDateTimeProvider clock) : IAuthService
+    IDateTimeProvider clock,
+    IAuditLogService auditLog) : IAuthService
 {
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, string? ipAddress, CancellationToken cancellationToken = default)
     {
@@ -83,6 +84,8 @@ public class AuthService(
         var profile = await db.UserProfiles.FirstOrDefaultAsync(p => p.Id == user.Id, cancellationToken)
             ?? throw new AuthenticationFailedException("Profil uživatele nebyl nalezen.");
 
+        auditLog.Record(user.Id, AuditAction.LoggedIn, nameof(ApplicationUser), user.Id, ipAddress: ipAddress);
+
         return await IssueTokensAsync(user, profile, ipAddress, cancellationToken);
     }
 
@@ -117,6 +120,7 @@ public class AuthService(
         {
             existing.RevokedAtUtc = clock.UtcNow;
             existing.RevokedByIp = ipAddress;
+            auditLog.Record(existing.UserId, AuditAction.AccessRevoked, nameof(RefreshToken), existing.Id, "Odhlášení (jedna relace).", ipAddress);
             await db.SaveChangesAsync(cancellationToken);
         }
     }
@@ -130,6 +134,11 @@ public class AuthService(
         foreach (var token in active)
         {
             token.RevokedAtUtc = clock.UtcNow;
+        }
+
+        if (active.Count > 0)
+        {
+            auditLog.Record(userId, AuditAction.AccessRevoked, nameof(RefreshToken), details: $"Odhlášení ze všech relací ({active.Count}).");
         }
 
         await db.SaveChangesAsync(cancellationToken);
