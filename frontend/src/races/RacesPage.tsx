@@ -4,26 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  Badge,
-  Button,
-  Card,
-  Group,
-  Loader,
-  Modal,
-  NumberInput,
-  Select,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Group, NumberInput, Select, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { DateInput, DateTimePicker } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { IconFlag, IconPlus, IconTrophy } from '@tabler/icons-react';
+import { IconFlag, IconPlus, IconTarget, IconTrophy } from '@tabler/icons-react';
+import { Panel, CardHeader, Button, Modal, FormField, Skeleton, EmptyState, Badge, showToast, type BadgeTone } from '../design-system/components';
 import {
   useGetApiAthletesAthleteUserIdGoals,
   getGetApiAthletesAthleteUserIdGoalsQueryKey,
@@ -43,10 +28,12 @@ import { toIsoDate } from '../calendar/dateUtils';
 const sportOptions = Object.values(SportType).map((value) => ({ value, label: value }));
 const priorityOptions = Object.values(GoalPriority).map((value) => ({ value, label: value }));
 
-const priorityColor: Record<string, string> = {
-  [GoalPriority.A]: 'red',
-  [GoalPriority.B]: 'yellow',
-  [GoalPriority.C]: 'gray',
+// Priority pill mapping, reused wherever a goal/race priority is shown: A (highest priority,
+// demands the most attention) = danger, B (normal) = warning, C (low) = neutral.
+const priorityTone: Record<string, BadgeTone> = {
+  [GoalPriority.A]: 'danger',
+  [GoalPriority.B]: 'warning',
+  [GoalPriority.C]: 'neutral',
 };
 
 function parseDuration(input: string | undefined): number | undefined {
@@ -93,6 +80,16 @@ const resultSchema = z.object({
 });
 type ResultFormValues = z.infer<typeof resultSchema>;
 
+function ListSkeleton() {
+  return (
+    <Stack gap="sm">
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} height={64} radius="var(--radius-md)" />
+      ))}
+    </Stack>
+  );
+}
+
 function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -129,12 +126,12 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
           priority: values.priority,
         },
       });
-      notifications.show({ color: 'green', message: t('races.goalCreated') });
+      showToast({ tone: 'positive', message: t('races.goalCreated') });
       reset();
       close();
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdGoalsQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
@@ -152,87 +149,97 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
           isAchieved: true,
         },
       });
-      notifications.show({ color: 'green', message: t('races.goalAchieved') });
+      showToast({ tone: 'positive', message: t('races.goalAchieved') });
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdGoalsQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Group justify="space-between" mb="sm">
-        <Title order={4}>{t('races.goalsSection')}</Title>
-        <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
-          {t('races.addGoal')}
-        </Button>
-      </Group>
+    <Panel>
+      <CardHeader
+        kicker={t('races.goalsSection')}
+        right={
+          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
+            {t('races.addGoal')}
+          </Button>
+        }
+      />
 
       {goalsQuery.isLoading ? (
-        <Loader size="sm" />
+        <ListSkeleton />
       ) : goals.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          {t('races.noGoals')}
-        </Text>
+        <EmptyState
+          icon={<IconTarget size={28} stroke={1.6} />}
+          title={t('races.noGoals')}
+          action={
+            <Button size="xs" variant="light" leftSection={<IconPlus size={16} />} onClick={open}>
+              {t('races.addGoal')}
+            </Button>
+          }
+        />
       ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+        <Stack gap={0}>
           {goals.map((goal) => (
-            <Card key={goal.id} withBorder radius="sm" p="md">
-              <Group justify="space-between" mb={4}>
-                <Text fw={600} size="sm">
-                  {goal.title}
-                </Text>
-                <Badge color={priorityColor[goal.priority ?? GoalPriority.C]} variant="light">
-                  {goal.priority}
-                </Badge>
-              </Group>
-              {goal.description && (
-                <Text size="xs" c="dimmed" lineClamp={3} mb={4}>
-                  {goal.description}
-                </Text>
-              )}
-              {goal.targetDate && (
-                <Text size="xs" c="dimmed">
-                  {t('races.targetDate')}: {goal.targetDate}
-                </Text>
-              )}
-              <Group justify="space-between" mt="sm">
-                {goal.isAchieved ? (
-                  <Badge color="green" variant="light">
-                    {t('races.achieved')}
-                  </Badge>
-                ) : (
+            <div key={goal.id} className="ds-list-row">
+              <Group justify="space-between" align="flex-start" wrap="wrap">
+                <div style={{ minWidth: 0 }}>
+                  <Group gap={6} mb={4}>
+                    <Text fw={600} size="sm">
+                      {goal.title}
+                    </Text>
+                    <Badge tone={priorityTone[goal.priority ?? GoalPriority.C]}>{goal.priority}</Badge>
+                    {goal.isAchieved && <Badge tone="positive">{t('races.achieved')}</Badge>}
+                  </Group>
+                  {goal.description && (
+                    <Text className="ds-body" lineClamp={3} mb={4}>
+                      {goal.description}
+                    </Text>
+                  )}
+                  {goal.targetDate && (
+                    <Text className="ds-metadata">
+                      {t('races.targetDate')}: {goal.targetDate}
+                    </Text>
+                  )}
+                </div>
+                {!goal.isAchieved && (
                   <Button size="xs" variant="light" onClick={() => markAchieved(goal)} loading={achieveMutation.isPending}>
                     {t('races.markAchieved')}
                   </Button>
                 )}
               </Group>
-            </Card>
+            </div>
           ))}
-        </SimpleGrid>
+        </Stack>
       )}
 
       <Modal opened={opened} onClose={close} title={t('races.addGoal')}>
         <form onSubmit={onSubmit}>
           <Stack gap="sm">
-            <TextInput label={t('races.goalTitle')} error={errors.title?.message} {...register('title')} />
-            <Textarea label={t('races.goalDescription')} minRows={2} {...register('description')} />
+            <FormField label={t('races.goalTitle')} error={errors.title?.message}>
+              <TextInput {...register('title')} />
+            </FormField>
+            <FormField label={t('races.goalDescription')}>
+              <Textarea minRows={2} {...register('description')} />
+            </FormField>
             <Controller
               name="targetDate"
               control={control}
               render={({ field }) => (
-                <DateInput
-                  label={t('races.targetDate')}
-                  value={field.value ?? null}
-                  onChange={(v) => field.onChange(v ? new Date(v) : null)}
-                  clearable
-                />
+                <FormField label={t('races.targetDate')}>
+                  <DateInput value={field.value ?? null} onChange={(v) => field.onChange(v ? new Date(v) : null)} clearable />
+                </FormField>
               )}
             />
             <Controller
               name="priority"
               control={control}
-              render={({ field }) => <Select label={t('races.priority')} data={priorityOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('races.priority')}>
+                  <Select data={priorityOptions} {...field} />
+                </FormField>
+              )}
             />
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
               {t('races.createGoal')}
@@ -240,7 +247,7 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
           </Stack>
         </form>
       </Modal>
-    </Card>
+    </Panel>
   );
 }
 
@@ -286,12 +293,12 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
           targetTimeSeconds: parseDuration(values.targetTime),
         },
       });
-      notifications.show({ color: 'green', message: t('races.raceCreated') });
+      showToast({ tone: 'positive', message: t('races.raceCreated') });
       reset();
       closeCreate();
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdRacesQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
@@ -334,69 +341,87 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
           resultNotes: values.resultNotes || undefined,
         },
       });
-      notifications.show({ color: 'green', message: t('races.resultSaved') });
+      showToast({ tone: 'positive', message: t('races.resultSaved') });
       closeResult();
       setSelectedRace(null);
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdRacesQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   const now = Date.now();
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Group justify="space-between" mb="sm">
-        <Title order={4}>{t('races.racesSection')}</Title>
-        <Button size="xs" leftSection={<IconPlus size={16} />} onClick={openCreate}>
-          {t('races.addRace')}
-        </Button>
-      </Group>
+    <Panel>
+      <CardHeader
+        kicker={t('races.racesSection')}
+        right={
+          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={openCreate}>
+            {t('races.addRace')}
+          </Button>
+        }
+      />
 
       {racesQuery.isLoading ? (
-        <Loader size="sm" />
+        <ListSkeleton />
       ) : races.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          {t('races.noRaces')}
-        </Text>
+        <EmptyState
+          icon={<IconFlag size={28} stroke={1.6} />}
+          title={t('races.noRaces')}
+          action={
+            <Button size="xs" variant="light" leftSection={<IconPlus size={16} />} onClick={openCreate}>
+              {t('races.addRace')}
+            </Button>
+          }
+        />
       ) : (
         <Stack gap="sm">
           {races.map((race) => {
             const isPast = race.startsAtUtc ? new Date(race.startsAtUtc).getTime() < now : false;
             return (
-              <Card key={race.id} withBorder radius="sm" p="md">
+              <div
+                key={race.id}
+                style={{
+                  background: 'var(--color-surface-inset)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: 'var(--space-4)',
+                }}
+              >
                 <Group justify="space-between" align="flex-start" wrap="wrap">
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <Group gap="xs" mb={4}>
-                      <IconFlag size={16} />
+                      <IconFlag size={16} color="var(--color-text-subtle)" />
                       <Text fw={600} size="sm">
                         {race.name}
                       </Text>
-                      <Badge size="sm" variant="light">
-                        {t(`sport.${race.sport}`)}
-                      </Badge>
-                      <Badge size="sm" color={priorityColor[race.priority ?? GoalPriority.C]} variant="light">
-                        {race.priority}
-                      </Badge>
+                      <Badge tone="info">{t(`sport.${race.sport}`)}</Badge>
+                      <Badge tone={priorityTone[race.priority ?? GoalPriority.C]}>{race.priority}</Badge>
                     </Group>
-                    <Text size="xs" c="dimmed">
+                    <Text className="ds-body">
                       {race.startsAtUtc && new Date(race.startsAtUtc).toLocaleString('cs-CZ')}
                       {race.location ? ` · ${race.location}` : ''}
                       {race.distanceMeters ? ` · ${(race.distanceMeters / 1000).toFixed(1)} km` : ''}
                     </Text>
+                    {race.targetTimeSeconds != null && (
+                      <Group gap={4} mt={4}>
+                        <Text className="ds-metadata">{t('races.targetTime')}:</Text>
+                        <Text className="ds-key-metric" fz={14}>
+                          {formatDuration(race.targetTimeSeconds)}
+                        </Text>
+                      </Group>
+                    )}
                     {race.actualTimeSeconds != null ? (
                       <Group gap={4} mt={4}>
-                        <IconTrophy size={14} />
-                        <Text size="xs">{formatDuration(race.actualTimeSeconds)}</Text>
-                        {race.actualResultNote && (
-                          <Text size="xs" c="dimmed">
-                            – {race.actualResultNote}
-                          </Text>
-                        )}
+                        <IconTrophy size={14} color="var(--color-accent)" />
+                        <Text className="ds-key-metric" fz={14}>
+                          {formatDuration(race.actualTimeSeconds)}
+                        </Text>
+                        {race.actualResultNote && <Text className="ds-metadata">– {race.actualResultNote}</Text>}
                       </Group>
                     ) : isPast ? (
-                      <Text size="xs" c="dimmed" mt={4}>
+                      <Text className="ds-metadata" mt={4}>
                         {t('races.noResultYet')}
                       </Text>
                     ) : null}
@@ -407,7 +432,7 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
                     </Button>
                   )}
                 </Group>
-              </Card>
+              </div>
             );
           })}
         </Stack>
@@ -416,52 +441,60 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
       <Modal opened={createOpened} onClose={closeCreate} title={t('races.addRace')}>
         <form onSubmit={onSubmit}>
           <Stack gap="sm">
-            <TextInput label={t('races.raceName')} error={errors.name?.message} {...register('name')} />
+            <FormField label={t('races.raceName')} error={errors.name?.message}>
+              <TextInput {...register('name')} />
+            </FormField>
             <Controller
               name="sport"
               control={control}
-              render={({ field }) => <Select label={t('races.sport')} data={sportOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('races.sport')}>
+                  <Select data={sportOptions} {...field} />
+                </FormField>
+              )}
             />
             <Controller
               name="startsAt"
               control={control}
               render={({ field }) => (
-                <DateTimePicker
-                  label={t('races.startsAt')}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v ? new Date(v) : new Date())}
-                />
+                <FormField label={t('races.startsAt')}>
+                  <DateTimePicker value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                </FormField>
               )}
             />
-            <TextInput label={t('races.location')} {...register('location')} />
+            <FormField label={t('races.location')}>
+              <TextInput {...register('location')} />
+            </FormField>
             <Controller
               name="distanceMeters"
               control={control}
               render={({ field }) => (
-                <NumberInput
-                  label={t('races.distance')}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v === '' ? undefined : Number(v))}
-                />
+                <FormField label={t('races.distance')}>
+                  <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? undefined : Number(v))} />
+                </FormField>
               )}
             />
             <Controller
               name="elevationGainMeters"
               control={control}
               render={({ field }) => (
-                <NumberInput
-                  label={t('races.elevationGain')}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v === '' ? undefined : Number(v))}
-                />
+                <FormField label={t('races.elevationGain')}>
+                  <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? undefined : Number(v))} />
+                </FormField>
               )}
             />
             <Controller
               name="priority"
               control={control}
-              render={({ field }) => <Select label={t('races.priority')} data={priorityOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('races.priority')}>
+                  <Select data={priorityOptions} {...field} />
+                </FormField>
+              )}
             />
-            <TextInput label={t('races.targetTime')} placeholder="hh:mm:ss" {...register('targetTime')} />
+            <FormField label={t('races.targetTime')}>
+              <TextInput placeholder="hh:mm:ss" {...register('targetTime')} />
+            </FormField>
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
               {t('races.createRace')}
             </Button>
@@ -472,16 +505,22 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
       <Modal opened={resultOpened} onClose={closeResult} title={t('races.recordResult')}>
         <form onSubmit={onResultSubmit}>
           <Stack gap="sm">
-            <TextInput label={t('races.actualTime')} placeholder="hh:mm:ss" {...registerResult('actualTime')} />
-            <TextInput label={t('races.actualResultNote')} {...registerResult('actualResultNote')} />
-            <Textarea label={t('races.resultNotes')} minRows={2} {...registerResult('resultNotes')} />
+            <FormField label={t('races.actualTime')}>
+              <TextInput placeholder="hh:mm:ss" {...registerResult('actualTime')} />
+            </FormField>
+            <FormField label={t('races.actualResultNote')}>
+              <TextInput {...registerResult('actualResultNote')} />
+            </FormField>
+            <FormField label={t('races.resultNotes')}>
+              <Textarea minRows={2} {...registerResult('resultNotes')} />
+            </FormField>
             <Button type="submit" loading={isSubmittingResult} fullWidth mt="sm">
               {t('races.saveResult')}
             </Button>
           </Stack>
         </form>
       </Modal>
-    </Card>
+    </Panel>
   );
 }
 
@@ -492,7 +531,9 @@ function RacesPage() {
 
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('races.title')}</Title>
+      <Title className="ds-page-title" order={2}>
+        {t('races.title')}
+      </Title>
       <GoalsSection athleteUserId={athleteUserId} />
       <RacesSection athleteUserId={athleteUserId} />
     </Stack>

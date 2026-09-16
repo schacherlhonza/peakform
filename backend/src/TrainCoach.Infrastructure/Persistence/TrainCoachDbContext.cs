@@ -78,6 +78,11 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
         // Blanket precision for all decimal columns (distances, paces, macros, ...) so the
         // model never relies on provider-specific default numeric precision.
         configurationBuilder.Properties<decimal>().HavePrecision(12, 3);
+
+        // Every DateTime property is a UTC instant; stamp Kind=Utc uniformly so Npgsql's
+        // "timestamp with time zone" columns accept values from DateOnly.ToDateTime(...) etc.
+        // without every call site having to remember DateTime.SpecifyKind.
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder builder)

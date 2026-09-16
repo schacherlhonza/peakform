@@ -6,23 +6,34 @@ interface SparklinePoint {
   value: number;
 }
 
+/** Semantic color per docs/DESIGN_SYSTEM.md §8: HRV/recovery = accent, sleep = info, load = warning. */
+export type SparklineTone = 'accent' | 'info' | 'warning';
+
 interface SparklineProps {
   data: SparklinePoint[];
-  color?: string;
+  tone?: SparklineTone;
   height?: number;
   unit?: string;
 }
 
 const WIDTH = 320;
 
+const toneColor: Record<SparklineTone, string> = {
+  accent: 'var(--color-accent)',
+  info: 'var(--color-info)',
+  warning: 'var(--color-warning)',
+};
+
 /**
  * Minimal dependency-free inline SVG line chart. No charting library is
  * installed in this project, so trend data is rendered as a simple sparkline
  * with a subtle filled area, a few gridlines, and value labels at the ends.
+ * `tone` maps to the app's semantic chart palette — see docs/DESIGN_SYSTEM.md §8.
  */
-export function Sparkline({ data, color = 'var(--mantine-color-brand-6)', height = 80, unit }: SparklineProps) {
+export function Sparkline({ data, tone = 'accent', height = 80, unit }: SparklineProps) {
   const { t } = useTranslation();
   const points = data.filter((d) => Number.isFinite(d.value));
+  const color = toneColor[tone];
 
   if (points.length === 0) {
     return (
@@ -52,9 +63,16 @@ export function Sparkline({ data, color = 'var(--mantine-color-brand-6)', height
   const last = coords[coords.length - 1];
   const first = coords[0];
 
+  // Textual fallback for the chart (docs/DESIGN_SYSTEM.md §8/§10): summarizes the same
+  // latest/min/max values shown visually below, exposed via <title> and aria-label so screen
+  // readers get it even though the SVG itself carries no accessible text nodes.
+  const rangeSummary = first.date !== last.date ? ` · min ${min}${unit ?? ''} / max ${max}${unit ?? ''}` : '';
+  const summary = `${t('wellness.latestValue', { value: last.value, unit: unit ?? '' })}${rangeSummary}`;
+
   return (
     <div>
-      <svg viewBox={`0 0 ${WIDTH} ${height}`} width="100%" height={height} preserveAspectRatio="none" role="img">
+      <svg viewBox={`0 0 ${WIDTH} ${height}`} width="100%" height={height} preserveAspectRatio="none" role="img" aria-label={summary}>
+        <title>{summary}</title>
         <path d={areaPath} fill={color} opacity={0.12} />
         <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {coords.map((c) => (
@@ -63,7 +81,7 @@ export function Sparkline({ data, color = 'var(--mantine-color-brand-6)', height
       </svg>
       <Text size="xs" c="dimmed" ta="right">
         {t('wellness.latestValue', { value: last.value, unit: unit ?? '' })}
-        {first.date !== last.date && ` · min ${min}${unit ?? ''} / max ${max}${unit ?? ''}`}
+        {rangeSummary}
       </Text>
     </div>
   );

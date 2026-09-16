@@ -1,0 +1,16 @@
+.row {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.row:hover {
+  background-color: var(--color-surface-inset);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

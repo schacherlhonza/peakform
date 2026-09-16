@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Avatar, Badge, Button, Card, Checkbox, Group, Loader, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Avatar, Checkbox, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { IconLock } from '@tabler/icons-react';
+import { Panel, Badge, Button, Modal, Skeleton, EmptyState, showToast } from '../design-system/components';
 import {
   useGetApiRelationships,
   getGetApiRelationshipsQueryKey,
@@ -9,12 +11,24 @@ import {
   getPostApiRelationshipsIdRevokeMutationOptions,
 } from '../api/generated/relationships/relationships';
 import { PermissionScope, RelationshipStatus } from '../api/generated/models';
+import type { CoachAthleteRelationshipDto } from '../api/generated/models';
 
 const scopes = Object.values(PermissionScope);
+
+function PermissionsSkeleton() {
+  return (
+    <Stack gap="md">
+      {[0, 1].map((i) => (
+        <Skeleton key={i} height={140} radius="var(--radius-panel)" />
+      ))}
+    </Stack>
+  );
+}
 
 export default function PermissionsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [pendingRevoke, setPendingRevoke] = useState<CoachAthleteRelationshipDto | null>(null);
 
   const relationshipsQuery = useGetApiRelationships();
   const relationships = (relationshipsQuery.data ?? []).filter((r) => r.status === RelationshipStatus.Active);
@@ -29,40 +43,41 @@ export default function PermissionsPage() {
       await permissionMutation.mutateAsync({ id: relationshipId, data: { scope, granted } });
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
-  const handleRevoke = async (relationshipId: string) => {
-    if (!window.confirm(t('relationships.revokeConfirm'))) return;
+  const confirmRevoke = async () => {
+    if (!pendingRevoke?.id) return;
     try {
-      await revokeMutation.mutateAsync({ id: relationshipId, data: {} });
+      await revokeMutation.mutateAsync({ id: pendingRevoke.id, data: {} });
+      setPendingRevoke(null);
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('nav.permissions')}</Title>
+      <Title className="ds-page-title" order={2}>
+        {t('nav.permissions')}
+      </Title>
 
       {relationshipsQuery.isLoading ? (
-        <Loader />
+        <PermissionsSkeleton />
       ) : relationships.length === 0 ? (
-        <Card withBorder radius="md" p="xl">
-          <Text c="dimmed" ta="center">
-            {t('settings.noCoaches')}
-          </Text>
-        </Card>
+        <Panel>
+          <EmptyState icon={<IconLock size={28} stroke={1.6} />} title={t('settings.noCoaches')} />
+        </Panel>
       ) : (
         <Stack gap="md">
           {relationships.map((rel) => {
             const isTogglingScope = (scope: PermissionScope) =>
               permissionMutation.isPending && permissionMutation.variables?.id === rel.id && permissionMutation.variables?.data?.scope === scope;
             return (
-              <Card key={rel.id} withBorder radius="md" p="lg">
-                <Group justify="space-between" mb="sm">
+              <Panel key={rel.id}>
+                <Group justify="space-between" mb="sm" align="flex-start">
                   <Group gap="sm">
                     <Avatar radius="xl" color="brand">
                       {rel.coachName?.[0] ?? '?'}
@@ -73,16 +88,14 @@ export default function PermissionsPage() {
                         {rel.coachEmail}
                       </Text>
                     </div>
-                    <Badge color="green" variant="light">
-                      {t(`relationships.status.${rel.status}`)}
-                    </Badge>
+                    <Badge tone="positive">{t(`relationships.status.${rel.status}`)}</Badge>
                   </Group>
                   <Button
                     size="xs"
                     variant="subtle"
                     color="red"
                     loading={revokeMutation.isPending && revokeMutation.variables?.id === rel.id}
-                    onClick={() => void handleRevoke(rel.id!)}
+                    onClick={() => setPendingRevoke(rel)}
                   >
                     {t('relationships.revoke')}
                   </Button>
@@ -99,11 +112,25 @@ export default function PermissionsPage() {
                     />
                   ))}
                 </SimpleGrid>
-              </Card>
+              </Panel>
             );
           })}
         </Stack>
       )}
+
+      <Modal opened={pendingRevoke !== null} onClose={() => setPendingRevoke(null)} title={t('relationships.revoke')}>
+        <Stack gap="md">
+          <Text className="ds-body">{t('relationships.revokeConfirm')}</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setPendingRevoke(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button color="red" loading={revokeMutation.isPending} onClick={() => void confirmRevoke()}>
+              {t('relationships.revoke')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

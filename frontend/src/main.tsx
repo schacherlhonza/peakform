@@ -10,6 +10,10 @@ import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
 import './index.css';
+// Design-system tokens/globals load last so they win the cascade over Mantine's own
+// stylesheet (e.g. Mantine sets a body background via --mantine-color-body; ours must override).
+import './design-system/tokens.css';
+import './design-system/globals.css';
 
 import './i18n';
 import { theme } from './theme';
@@ -24,9 +28,9 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="light">
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <DatesProvider settings={{ locale: 'cs' }}>
-        <Notifications position="top-right" />
+        <Notifications position="bottom-right" />
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <AuthProvider>

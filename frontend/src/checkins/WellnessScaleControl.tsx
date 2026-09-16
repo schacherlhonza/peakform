@@ -1,4 +1,5 @@
-import { SegmentedControl, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
+import { SegmentedControl } from '../design-system/components';
 import { WellnessScale } from '../api/generated/models';
 
 const OPTIONS = [

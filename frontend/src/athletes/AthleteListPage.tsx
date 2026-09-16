@@ -4,12 +4,14 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, Badge, Button, Card, Group, Loader, Modal, SimpleGrid, Stack, Text, TextInput, Title } from '@mantine/core';
+import { Avatar, Group, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { IconUserPlus } from '@tabler/icons-react';
+import { IconUserPlus, IconUsers } from '@tabler/icons-react';
+import { Panel, Badge, Button, Modal, FormField, Skeleton, EmptyState, showToast } from '../design-system/components';
 import { useGetApiRelationships, getPostApiRelationshipsInviteMutationOptions, getGetApiRelationshipsQueryKey } from '../api/generated/relationships/relationships';
 import { RelationshipStatus } from '../api/generated/models';
+import type { CoachAthleteRelationshipDto } from '../api/generated/models';
+import classes from './AthleteListPage.module.css';
 
 const inviteSchema = z.object({
   athleteEmail: z.string().min(1).email(),
@@ -17,9 +19,74 @@ const inviteSchema = z.object({
 });
 type InviteFormValues = z.infer<typeof inviteSchema>;
 
-export function AthleteListPage() {
+function RosterSkeleton() {
+  return (
+    <div className={classes.roster}>
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} height={104} radius="var(--radius-panel)" />
+      ))}
+    </div>
+  );
+}
+
+function PendingInviteCard({ relationship }: { relationship: CoachAthleteRelationshipDto }) {
+  const { t } = useTranslation();
+  return (
+    <Panel>
+      <Group wrap="nowrap">
+        <Avatar radius="xl" color="gray">
+          {relationship.athleteName?.[0] ?? '?'}
+        </Avatar>
+        <div style={{ minWidth: 0 }}>
+          <Text fw={700} fz={14} truncate>
+            {relationship.athleteName}
+          </Text>
+          <Text className="ds-metadata" truncate>
+            {relationship.athleteEmail}
+          </Text>
+        </div>
+        <Badge tone="warning">{t(`relationships.status.${relationship.status}`)}</Badge>
+      </Group>
+    </Panel>
+  );
+}
+
+function ActiveAthleteCard({ relationship }: { relationship: CoachAthleteRelationshipDto }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const goToDetail = () => navigate(`/athletes/${relationship.athleteUserId}`);
+
+  return (
+    <Panel
+      className={classes.card}
+      role="button"
+      tabIndex={0}
+      onClick={goToDetail}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') goToDetail();
+      }}
+    >
+      <Group wrap="nowrap">
+        <Avatar radius="xl" color="brand">
+          {relationship.athleteName?.[0] ?? '?'}
+        </Avatar>
+        <div style={{ minWidth: 0 }}>
+          <Text fw={700} fz={14} truncate>
+            {relationship.athleteName}
+          </Text>
+          <Text className="ds-metadata" truncate>
+            {relationship.athleteEmail}
+          </Text>
+        </div>
+        <Badge tone="positive">{t(`relationships.status.${relationship.status}`)}</Badge>
+      </Group>
+    </Panel>
+  );
+}
+
+export function AthleteListPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure();
 
@@ -40,94 +107,66 @@ export function AthleteListPage() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await inviteMutation.mutateAsync({ data: values });
-      notifications.show({ color: 'green', message: 'Pozvání bylo odesláno.' });
+      showToast({ tone: 'positive', message: t('relationships.sendInvite') });
       reset();
       close();
       await queryClient.invalidateQueries({ queryKey: getGetApiRelationshipsQueryKey() });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   return (
     <Stack gap="lg">
       <Group justify="space-between">
-        <Title order={2}>{t('nav.athletes')}</Title>
+        <Title className="ds-page-title" order={2}>
+          {t('nav.athletes')}
+        </Title>
         <Button leftSection={<IconUserPlus size={16} />} onClick={open}>
           {t('relationships.invite')}
         </Button>
       </Group>
 
       {relationshipsQuery.isLoading ? (
-        <Loader />
+        <RosterSkeleton />
+      ) : relationshipsQuery.isError ? (
+        <EmptyState
+          icon={<IconUsers size={28} stroke={1.6} />}
+          title={t('common.error')}
+          description={t('common.unknownError')}
+          action={
+            <Button variant="default" onClick={() => relationshipsQuery.refetch()}>
+              {t('common.back')}
+            </Button>
+          }
+        />
       ) : (
         <Stack gap="xl">
           {pending.length > 0 && (
-            <Stack gap="xs">
-              <Text fw={500} size="sm" c="dimmed">
-                {t('relationships.pendingInvites')}
-              </Text>
-              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+            <Stack gap="sm">
+              <Text className="ds-eyebrow">{t('relationships.pendingInvites')}</Text>
+              <div className={classes.roster}>
                 {pending.map((rel) => (
-                  <Card key={rel.id} withBorder radius="md" p="md">
-                    <Group>
-                      <Avatar radius="xl" color="gray">
-                        {rel.athleteName?.[0] ?? '?'}
-                      </Avatar>
-                      <div>
-                        <Text fw={500}>{rel.athleteName}</Text>
-                        <Text size="xs" c="dimmed">
-                          {rel.athleteEmail}
-                        </Text>
-                      </div>
-                      <Badge ml="auto" color="yellow" variant="light">
-                        {t(`relationships.status.${rel.status}`)}
-                      </Badge>
-                    </Group>
-                  </Card>
+                  <PendingInviteCard key={rel.id} relationship={rel} />
                 ))}
-              </SimpleGrid>
+              </div>
             </Stack>
           )}
 
-          <Stack gap="xs">
-            <Text fw={500} size="sm" c="dimmed">
-              {t('nav.athletes')}
-            </Text>
+          <Stack gap="sm">
+            <Text className="ds-eyebrow">{t('nav.athletes')}</Text>
             {active.length === 0 ? (
-              <Card withBorder radius="md" p="xl">
-                <Text c="dimmed" ta="center">
-                  {t('dashboard.noAthletes')}
-                </Text>
-              </Card>
+              <EmptyState
+                icon={<IconUsers size={28} stroke={1.6} />}
+                title={t('dashboard.noAthletes')}
+                action={<Button onClick={open}>{t('relationships.invite')}</Button>}
+              />
             ) : (
-              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+              <div className={classes.roster}>
                 {active.map((rel) => (
-                  <Card
-                    key={rel.id}
-                    withBorder
-                    radius="md"
-                    p="lg"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/athletes/${rel.athleteUserId}`)}
-                  >
-                    <Group>
-                      <Avatar radius="xl" color="brand">
-                        {rel.athleteName?.[0] ?? '?'}
-                      </Avatar>
-                      <div>
-                        <Text fw={500}>{rel.athleteName}</Text>
-                        <Text size="xs" c="dimmed">
-                          {rel.athleteEmail}
-                        </Text>
-                      </div>
-                      <Badge ml="auto" color="green" variant="light">
-                        {t(`relationships.status.${rel.status}`)}
-                      </Badge>
-                    </Group>
-                  </Card>
+                  <ActiveAthleteCard key={rel.id} relationship={rel} />
                 ))}
-              </SimpleGrid>
+              </div>
             )}
           </Stack>
         </Stack>
@@ -136,12 +175,12 @@ export function AthleteListPage() {
       <Modal opened={opened} onClose={close} title={t('relationships.invite')}>
         <form onSubmit={onSubmit}>
           <Stack gap="sm">
-            <TextInput
-              label={t('relationships.inviteEmail')}
-              error={errors.athleteEmail?.message}
-              {...register('athleteEmail')}
-            />
-            <TextInput label={t('relationships.inviteNote')} {...register('note')} />
+            <FormField label={t('relationships.inviteEmail')} error={errors.athleteEmail?.message}>
+              <TextInput {...register('athleteEmail')} />
+            </FormField>
+            <FormField label={t('relationships.inviteNote')}>
+              <TextInput {...register('note')} />
+            </FormField>
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
               {t('relationships.sendInvite')}
             </Button>

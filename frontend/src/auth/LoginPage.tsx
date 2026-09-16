@@ -2,11 +2,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { Anchor, Button, Center, Paper, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Anchor, Center, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { getPostApiAuthLoginMutationOptions } from '../api/generated/auth/auth';
+import { Panel, Button, showToast } from '../design-system/components';
 import { useAuth } from './AuthContext';
 
 const schema = z.object({
@@ -36,19 +36,19 @@ export function LoginPage() {
         navigate('/dashboard');
       }
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('auth.invalidCredentials') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('auth.invalidCredentials') });
     }
   });
 
   return (
-    <Center mih="100vh" bg="gray.0">
-      <Paper withBorder shadow="sm" p="xl" radius="md" w={380}>
+    <Center mih="100vh">
+      <Panel w={380}>
         <Stack gap="md">
           <div>
-            <Title order={2}>{t('app.name')}</Title>
-            <Text c="dimmed" size="sm">
-              {t('auth.login')}
-            </Text>
+            <Title className="ds-card-headline" order={2}>
+              {t('app.name')}
+            </Title>
+            <Text className="ds-body">{t('auth.login')}</Text>
           </div>
           <form onSubmit={onSubmit}>
             <Stack gap="sm">
@@ -76,7 +76,7 @@ export function LoginPage() {
             </Anchor>
           </Text>
         </Stack>
-      </Paper>
+      </Panel>
     </Center>
   );
 }

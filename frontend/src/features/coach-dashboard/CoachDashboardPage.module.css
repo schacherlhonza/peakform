@@ -1,0 +1,20 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 17px;
+  align-items: start;
+}
+
+.roster {
+  display: grid;
+  /* auto-fit (not auto-fill) so cards actually stretch to fill the row instead of staying
+     pinned at the minmax minimum with invisible empty tracks reserved beside them. */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

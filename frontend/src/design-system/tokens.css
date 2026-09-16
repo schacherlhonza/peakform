@@ -1,0 +1,72 @@
+/**
+ * Honza Performance design tokens — see docs/DESIGN_SYSTEM.md §2.
+ * These are the single source of truth for color/spacing/radius/shadow values.
+ * Components must not hardcode hex values or ad-hoc spacing outside this file.
+ */
+:root {
+  --color-bg: #07110f;
+  --color-surface: rgba(17, 31, 27, 0.94);
+  --color-surface-2: #152a24;
+  --color-surface-3: #1b352e;
+  --color-surface-inset: #10231d;
+  --color-surface-input: #0b1a15;
+  --color-sidebar: rgba(6, 17, 14, 0.78);
+
+  --color-border: rgba(188, 218, 203, 0.12);
+  --color-border-strong: rgba(199, 243, 77, 0.35);
+
+  --color-text: #f4faf7;
+  --color-text-muted: #91a79e;
+  --color-text-subtle: #668078;
+
+  --color-accent: #c7f34d;
+  --color-accent-hover: #d8ff6c;
+  --color-accent-deep: #99ca2f;
+  --color-success: #51dfb0;
+  --color-info: #72a8ff;
+  --color-warning: #ff9a61;
+  --color-danger: #ff7e72;
+
+  --shadow-panel: 0 28px 70px rgba(0, 0, 0, 0.22);
+  --shadow-modal: 0 35px 100px rgba(0, 0, 0, 0.55);
+  --shadow-accent: 0 8px 24px rgba(159, 205, 50, 0.15);
+
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-panel: 22px;
+  --radius-modal: 24px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-12: 48px;
+
+  --sidebar-width: 246px;
+  --sidebar-width-condensed: 205px;
+  --content-max-width: 1720px;
+  --topbar-height: 108px;
+  --topbar-height-mobile: 87px;
+  --transition-fast: 200ms ease;
+}
+
+/* !important: overriding Mantine's own scoped background rules on these same elements, which
+   otherwise win the cascade regardless of CSS import order (see MIGRATION.md). */
+html,
+body,
+#root {
+  min-height: 100%;
+  height: 100%;
+  margin: 0;
+  color: var(--color-text) !important;
+  background:
+    radial-gradient(circle at 72% 0%, #123328 0, transparent 30%),
+    var(--color-bg) !important;
+}

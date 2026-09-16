@@ -1,37 +1,32 @@
-import { Alert, Card, Stack, Text, Title } from '@mantine/core';
-import { IconInfoCircle } from '@tabler/icons-react';
+import { Stack, Text } from '@mantine/core';
+import { IconBulb } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { Panel, CardHeader, Badge, EmptyState } from '../design-system/components';
 import type { GeneratedReportDto } from '../api/generated/models';
-import { InsightSeverity } from '../api/generated/models';
-
-const severityColor: Record<string, string> = {
-  [InsightSeverity.Info]: 'gray',
-  [InsightSeverity.Notice]: 'yellow',
-  [InsightSeverity.Attention]: 'red',
-};
+import { severityTone } from '../features/athlete-dashboard/RecoveryInsightsSection';
 
 export function ReportCard({ title, report }: { title: string; report: GeneratedReportDto | undefined | null }) {
   const { t } = useTranslation();
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Title order={4} mb="sm">
-        {title}
-      </Title>
+    <Panel>
+      <CardHeader kicker={title} />
       {!report ? (
-        <Text c="dimmed" size="sm">
-          {t('report.notGenerated')}
-        </Text>
+        <EmptyState icon={<IconBulb size={28} stroke={1.6} />} title={t('report.notGenerated')} />
       ) : (
         <Stack gap="sm">
-          <Text size="sm">{report.narrativeText}</Text>
+          <Text className="ds-body">{report.narrativeText}</Text>
           {report.insights?.map((insight, i) => (
-            <Alert key={i} color={severityColor[insight.severity ?? 'Info']} icon={<IconInfoCircle size={16} />} p="xs">
-              {insight.message}
-            </Alert>
+            <div key={insight.ruleCode ?? i} className="ds-list-row">
+              <Badge tone={severityTone[insight.severity ?? ''] ?? 'neutral'}>{insight.ruleCode ?? ''}</Badge>
+              <Text className="ds-body" mt={4}>
+                {insight.message}
+              </Text>
+            </div>
           ))}
+          <Text className="ds-metadata">{t('report.disclaimer')}</Text>
         </Stack>
       )}
-    </Card>
+    </Panel>
   );
 }

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Alert, Badge, Button, Card, FileInput, Group, Select, Stack, Table, Text, Title } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Alert, FileInput, Group, Select, Stack, Table, Text, Title } from '@mantine/core';
 import { IconCheck, IconFileImport, IconUpload } from '@tabler/icons-react';
+import { Panel, CardHeader, Button, Badge, Skeleton, showToast } from '../design-system/components';
+import type { BadgeTone } from '../design-system/components';
 import {
   getPostApiImportPreviewMutationOptions,
   getPostApiImportImportedFileIdConfirmMutationOptions,
@@ -12,18 +13,36 @@ import { ImportFileType, ImportRowStatus } from '../api/generated/models';
 
 const fileTypeOptions = Object.values(ImportFileType).map((value) => ({ value, label: value }));
 
-function rowColor(status?: string): string | undefined {
-  if (status === ImportRowStatus.Valid) return 'var(--mantine-color-green-0)';
-  if (status === ImportRowStatus.Warning) return 'var(--mantine-color-yellow-0)';
-  if (status === ImportRowStatus.Error) return 'var(--mantine-color-red-0)';
-  return undefined;
+function statusTone(status?: string): BadgeTone {
+  if (status === ImportRowStatus.Valid) return 'positive';
+  if (status === ImportRowStatus.Warning) return 'warning';
+  if (status === ImportRowStatus.Error) return 'danger';
+  return 'neutral';
 }
 
-function badgeColor(status?: string): string {
-  if (status === ImportRowStatus.Valid) return 'green';
-  if (status === ImportRowStatus.Warning) return 'yellow';
-  if (status === ImportRowStatus.Error) return 'red';
-  return 'gray';
+// Row tint mirrors Badge.tsx's `toneStyle` bg colors (same rgba hues) at a lower opacity —
+// a full-width row needs a subtler fill than a small pill to stay readable against the dark
+// surface. DuplicateSkipped (neutral) rows are left untinted, matching prior behavior.
+function rowBackground(status?: string): string | undefined {
+  switch (statusTone(status)) {
+    case 'positive':
+      return 'rgba(199, 243, 77, 0.08)';
+    case 'warning':
+      return 'rgba(255, 154, 97, 0.08)';
+    case 'danger':
+      return 'rgba(255, 126, 114, 0.08)';
+    default:
+      return undefined;
+  }
+}
+
+function PreviewSkeleton() {
+  return (
+    <Stack gap="sm">
+      <Skeleton height={20} width={240} radius="var(--radius-panel)" />
+      <Skeleton height={220} radius="var(--radius-panel)" />
+    </Stack>
+  );
 }
 
 export default function ImportPage() {
@@ -43,7 +62,7 @@ export default function ImportPage() {
     try {
       await previewMutation.mutateAsync({ data: { file, fileType } });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
@@ -51,17 +70,20 @@ export default function ImportPage() {
     if (!preview?.importedFileId) return;
     try {
       await confirmMutation.mutateAsync({ importedFileId: preview.importedFileId });
-      notifications.show({ color: 'green', message: t('import.confirmed') });
+      showToast({ tone: 'positive', message: t('import.confirmed') });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('nav.import')}</Title>
+      <Title className="ds-page-title" order={2}>
+        {t('nav.import')}
+      </Title>
 
-      <Card withBorder radius="md" p="lg">
+      <Panel>
+        <CardHeader kicker={t('nav.import')} title={t('import.selectFile')} />
         <Stack gap="sm">
           <Group align="end" wrap="wrap">
             <FileInput
@@ -91,26 +113,23 @@ export default function ImportPage() {
             </Button>
           </Group>
         </Stack>
-      </Card>
+      </Panel>
 
-      {preview && (
-        <Card withBorder radius="md" p="lg">
+      {previewMutation.isPending && (
+        <Panel>
+          <PreviewSkeleton />
+        </Panel>
+      )}
+
+      {!previewMutation.isPending && preview && (
+        <Panel>
+          <CardHeader kicker={t('import.status')} title={t('import.reviewNotice')} />
           <Stack gap="md">
-            <Text size="sm" c="dimmed">
-              {t('import.reviewNotice')}
-            </Text>
-
             <Group gap="xs">
-              <Badge variant="light">{t('import.rowsTotal', { count: preview.rowsTotal ?? 0 })}</Badge>
-              <Badge color="green" variant="light">
-                {t('import.rowsValid', { count: preview.rowsValid ?? 0 })}
-              </Badge>
-              <Badge color="yellow" variant="light">
-                {t('import.rowsWithWarnings', { count: preview.rowsWithWarnings ?? 0 })}
-              </Badge>
-              <Badge color="red" variant="light">
-                {t('import.rowsWithErrors', { count: preview.rowsWithErrors ?? 0 })}
-              </Badge>
+              <Badge tone="neutral">{t('import.rowsTotal', { count: preview.rowsTotal ?? 0 })}</Badge>
+              <Badge tone="positive">{t('import.rowsValid', { count: preview.rowsValid ?? 0 })}</Badge>
+              <Badge tone="warning">{t('import.rowsWithWarnings', { count: preview.rowsWithWarnings ?? 0 })}</Badge>
+              <Badge tone="danger">{t('import.rowsWithErrors', { count: preview.rowsWithErrors ?? 0 })}</Badge>
             </Group>
 
             <Table>
@@ -127,16 +146,14 @@ export default function ImportPage() {
               </Table.Thead>
               <Table.Tbody>
                 {(preview.rows ?? []).map((row) => (
-                  <Table.Tr key={row.rowNumber} bg={rowColor(row.status)}>
+                  <Table.Tr key={row.rowNumber} bg={rowBackground(row.status)}>
                     <Table.Td>{row.rowNumber}</Table.Td>
                     <Table.Td>{row.date ?? '—'}</Table.Td>
                     <Table.Td>{row.sport ? t(`sport.${row.sport}`) : '—'}</Table.Td>
                     <Table.Td>{row.distanceKm != null ? `${row.distanceKm} km` : '—'}</Table.Td>
                     <Table.Td>{row.durationMinutes != null ? `${row.durationMinutes} min` : '—'}</Table.Td>
                     <Table.Td>
-                      <Badge size="sm" color={badgeColor(row.status)} variant="light">
-                        {t(`import.rowStatus.${row.status}`)}
-                      </Badge>
+                      <Badge tone={statusTone(row.status)}>{t(`import.rowStatus.${row.status}`)}</Badge>
                     </Table.Td>
                     <Table.Td>
                       {(row.messages ?? []).map((m, i) => (
@@ -159,7 +176,16 @@ export default function ImportPage() {
             )}
 
             {confirmResult && (
-              <Alert color="green" icon={<IconCheck size={18} />} title={t('import.confirmed')}>
+              <Alert
+                icon={<IconCheck size={18} />}
+                title={t('import.confirmed')}
+                styles={{
+                  root: { backgroundColor: 'rgba(199, 243, 77, 0.14)', borderColor: 'rgba(199, 243, 77, 0.3)' },
+                  title: { color: 'var(--color-accent)' },
+                  message: { color: 'var(--color-text-muted)' },
+                  icon: { color: 'var(--color-accent)' },
+                }}
+              >
                 {t('import.confirmSummary', {
                   imported: confirmResult.rowsImported ?? 0,
                   skippedDuplicate: confirmResult.rowsSkippedDuplicate ?? 0,
@@ -168,7 +194,7 @@ export default function ImportPage() {
               </Alert>
             )}
           </Stack>
-        </Card>
+        </Panel>
       )}
     </Stack>
   );

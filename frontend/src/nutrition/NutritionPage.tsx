@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Card, Checkbox, Group, Loader, NumberInput, Select, SimpleGrid, Stack, Text, Textarea, Title } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Checkbox, Group, NumberInput, Select, SimpleGrid, Stack, Text, Textarea, Title } from '@mantine/core';
 import { IconDroplet, IconSalad } from '@tabler/icons-react';
+import { Panel, CardHeader, Badge, FormField, Button, Skeleton, EmptyState, showToast } from '../design-system/components';
 import {
   useGetApiAthletesAthleteUserIdFood,
   getGetApiAthletesAthleteUserIdFoodQueryKey,
@@ -45,11 +45,35 @@ function isToday(isoDateTime: string | undefined): boolean {
   return toIsoDate(new Date(isoDateTime)) === toIsoDate(new Date());
 }
 
+/** The food/hydration list endpoints require from/to — without them the backend binds both
+ * to DateTime.MinValue, which filters out every entry. */
+function todayRange(): { from: string; to: string } {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  return { from: start.toISOString(), to: end.toISOString() };
+}
+
+function formatTime(isoDateTime: string | undefined): string {
+  return isoDateTime ? new Date(isoDateTime).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) : '';
+}
+
+function EntriesSkeleton() {
+  return (
+    <Stack gap="sm" mt="lg">
+      {[0, 1].map((i) => (
+        <Skeleton key={i} height={40} radius="var(--radius-md)" />
+      ))}
+    </Stack>
+  );
+}
+
 function FoodSection({ athleteUserId }: { athleteUserId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const foodQuery = useGetApiAthletesAthleteUserIdFood(athleteUserId);
+  const foodQuery = useGetApiAthletesAthleteUserIdFood(athleteUserId, todayRange());
   const todayEntries = useMemo(
     () =>
       [...(foodQuery.data ?? [])]
@@ -84,20 +108,17 @@ function FoodSection({ athleteUserId }: { athleteUserId: string }) {
           estimatedProteinGrams: values.estimatedProteinGrams,
         },
       });
-      notifications.show({ color: 'green', message: t('nutrition.foodAdded') });
+      showToast({ tone: 'positive', message: t('nutrition.foodAdded') });
       reset({ mealType: values.mealType, description: '' });
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdFoodQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Group mb="sm" gap="xs">
-        <IconSalad size={20} />
-        <Title order={4}>{t('nutrition.foodTab')}</Title>
-      </Group>
+    <Panel>
+      <CardHeader kicker={t('nutrition.foodTab')} right={<IconSalad size={20} stroke={1.8} color="var(--color-accent)" />} />
 
       <form onSubmit={onSubmit}>
         <Stack gap="sm">
@@ -105,69 +126,83 @@ function FoodSection({ athleteUserId }: { athleteUserId: string }) {
             <Controller
               name="mealType"
               control={control}
-              render={({ field }) => <Select label={t('nutrition.mealType')} data={mealTypeOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('nutrition.mealType')}>
+                  <Select data={mealTypeOptions} {...field} />
+                </FormField>
+              )}
             />
             <Controller
               name="estimatedCarbsGrams"
               control={control}
               render={({ field }) => (
-                <NumberInput
-                  label={t('nutrition.carbs')}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v === '' ? undefined : Number(v))}
-                />
+                <FormField label={t('nutrition.carbs')} unit="g">
+                  <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? undefined : Number(v))} />
+                </FormField>
               )}
             />
             <Controller
               name="estimatedProteinGrams"
               control={control}
               render={({ field }) => (
-                <NumberInput
-                  label={t('nutrition.protein')}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v === '' ? undefined : Number(v))}
-                />
+                <FormField label={t('nutrition.protein')} unit="g">
+                  <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? undefined : Number(v))} />
+                </FormField>
               )}
             />
           </Group>
-          <Textarea label={t('nutrition.description')} minRows={1} error={errors.description?.message} {...register('description')} />
+          <FormField label={t('nutrition.description')} error={errors.description?.message}>
+            <Textarea minRows={1} {...register('description')} />
+          </FormField>
           <Button type="submit" loading={isSubmitting}>
             {t('nutrition.addFood')}
           </Button>
         </Stack>
       </form>
 
-      <Text fw={500} size="sm" mt="lg" mb="xs">
+      <Text className="ds-eyebrow" mt="lg" mb="xs">
         {t('nutrition.todayFood')}
       </Text>
       {foodQuery.isLoading ? (
-        <Loader size="sm" />
+        <EntriesSkeleton />
       ) : todayEntries.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          {t('nutrition.noFoodToday')}
-        </Text>
+        <EmptyState icon={<IconSalad size={28} stroke={1.6} />} title={t('nutrition.noFoodToday')} />
       ) : (
-        <Stack gap="xs">
+        <Stack gap={0}>
           {todayEntries.map((entry) => (
-            <Card key={entry.id} withBorder radius="sm" p="xs">
-              <Group justify="space-between" wrap="wrap">
-                <Group gap="xs">
-                  <Badge size="sm" variant="light">
-                    {t(`mealType.${entry.mealType}`)}
-                  </Badge>
-                  <Text size="sm">{entry.description}</Text>
+            <div key={entry.id} className="ds-list-row">
+              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                <div style={{ minWidth: 0 }}>
+                  <Group gap={6} mb={2}>
+                    <Badge tone="neutral">{t(`mealType.${entry.mealType}`)}</Badge>
+                    <Text className="ds-metadata">{formatTime(entry.consumedAtUtc)}</Text>
+                  </Group>
+                  <Text fz={14}>{entry.description}</Text>
+                </div>
+                <Group gap="md" wrap="nowrap">
+                  {entry.estimatedCarbsGrams != null && (
+                    <div style={{ textAlign: 'right' }}>
+                      <Text className="ds-key-metric" fz={16}>
+                        {entry.estimatedCarbsGrams}g
+                      </Text>
+                      <Text className="ds-metadata">S</Text>
+                    </div>
+                  )}
+                  {entry.estimatedProteinGrams != null && (
+                    <div style={{ textAlign: 'right' }}>
+                      <Text className="ds-key-metric" fz={16}>
+                        {entry.estimatedProteinGrams}g
+                      </Text>
+                      <Text className="ds-metadata">B</Text>
+                    </div>
+                  )}
                 </Group>
-                <Text size="xs" c="dimmed">
-                  {entry.consumedAtUtc && new Date(entry.consumedAtUtc).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
-                  {entry.estimatedCarbsGrams != null ? ` · ${entry.estimatedCarbsGrams} g S` : ''}
-                  {entry.estimatedProteinGrams != null ? ` · ${entry.estimatedProteinGrams} g B` : ''}
-                </Text>
               </Group>
-            </Card>
+            </div>
           ))}
         </Stack>
       )}
-    </Card>
+    </Panel>
   );
 }
 
@@ -175,7 +210,7 @@ function HydrationSection({ athleteUserId }: { athleteUserId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const hydrationQuery = useGetApiAthletesAthleteUserIdHydration(athleteUserId);
+  const hydrationQuery = useGetApiAthletesAthleteUserIdHydration(athleteUserId, todayRange());
   const todayEntries = useMemo(
     () =>
       [...(hydrationQuery.data ?? [])]
@@ -209,20 +244,17 @@ function HydrationSection({ athleteUserId }: { athleteUserId: string }) {
           caffeineMilligrams: values.caffeineMilligrams,
         },
       });
-      notifications.show({ color: 'green', message: t('nutrition.hydrationAdded') });
+      showToast({ tone: 'positive', message: t('nutrition.hydrationAdded') });
       reset({ drinkType: values.drinkType, volumeMilliliters: 250, containsElectrolytes: false });
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdHydrationQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Group mb="sm" gap="xs">
-        <IconDroplet size={20} />
-        <Title order={4}>{t('nutrition.hydrationTab')}</Title>
-      </Group>
+    <Panel>
+      <CardHeader kicker={t('nutrition.hydrationTab')} right={<IconDroplet size={20} stroke={1.8} color="var(--color-info)" />} />
 
       <form onSubmit={onSubmit}>
         <Stack gap="sm">
@@ -230,24 +262,28 @@ function HydrationSection({ athleteUserId }: { athleteUserId: string }) {
             <Controller
               name="drinkType"
               control={control}
-              render={({ field }) => <Select label={t('nutrition.drinkType')} data={drinkTypeOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('nutrition.drinkType')}>
+                  <Select data={drinkTypeOptions} {...field} />
+                </FormField>
+              )}
             />
             <Controller
               name="volumeMilliliters"
               control={control}
               render={({ field }) => (
-                <NumberInput label={t('nutrition.volume')} min={0} value={field.value} onChange={(v) => field.onChange(Number(v))} />
+                <FormField label={t('nutrition.volume')} unit="ml">
+                  <NumberInput min={0} value={field.value} onChange={(v) => field.onChange(Number(v))} />
+                </FormField>
               )}
             />
             <Controller
               name="caffeineMilligrams"
               control={control}
               render={({ field }) => (
-                <NumberInput
-                  label={t('nutrition.caffeine')}
-                  value={field.value ?? undefined}
-                  onChange={(v) => field.onChange(v === '' ? undefined : Number(v))}
-                />
+                <FormField label={t('nutrition.caffeine')} unit="mg">
+                  <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? undefined : Number(v))} />
+                </FormField>
               )}
             />
           </Group>
@@ -268,41 +304,37 @@ function HydrationSection({ athleteUserId }: { athleteUserId: string }) {
         </Stack>
       </form>
 
-      <Text fw={500} size="sm" mt="lg" mb="xs">
+      <Text className="ds-eyebrow" mt="lg" mb="xs">
         {t('nutrition.todayHydration')}
       </Text>
       {hydrationQuery.isLoading ? (
-        <Loader size="sm" />
+        <EntriesSkeleton />
       ) : todayEntries.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          {t('nutrition.noHydrationToday')}
-        </Text>
+        <EmptyState icon={<IconDroplet size={28} stroke={1.6} />} title={t('nutrition.noHydrationToday')} />
       ) : (
-        <Stack gap="xs">
+        <Stack gap={0}>
           {todayEntries.map((entry) => (
-            <Card key={entry.id} withBorder radius="sm" p="xs">
-              <Group justify="space-between" wrap="wrap">
-                <Group gap="xs">
-                  <Badge size="sm" variant="light">
-                    {t(`drinkType.${entry.drinkType}`)}
-                  </Badge>
-                  <Text size="sm">{entry.volumeMilliliters} ml</Text>
-                  {entry.containsElectrolytes && (
-                    <Badge size="xs" color="teal" variant="light">
-                      {t('nutrition.electrolytes')}
-                    </Badge>
-                  )}
-                </Group>
-                <Text size="xs" c="dimmed">
-                  {entry.consumedAtUtc && new Date(entry.consumedAtUtc).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
-                  {entry.caffeineMilligrams != null ? ` · ${entry.caffeineMilligrams} mg kofeinu` : ''}
+            <div key={entry.id} className="ds-list-row">
+              <Group justify="space-between" align="flex-start" wrap="nowrap">
+                <div style={{ minWidth: 0 }}>
+                  <Group gap={6} mb={2}>
+                    <Badge tone="neutral">{t(`drinkType.${entry.drinkType}`)}</Badge>
+                    {entry.containsElectrolytes && <Badge tone="info">{t('nutrition.electrolytes')}</Badge>}
+                  </Group>
+                  <Text className="ds-metadata">
+                    {formatTime(entry.consumedAtUtc)}
+                    {entry.caffeineMilligrams != null ? ` · ${entry.caffeineMilligrams} mg kofeinu` : ''}
+                  </Text>
+                </div>
+                <Text className="ds-key-metric" fz={16}>
+                  {entry.volumeMilliliters} ml
                 </Text>
               </Group>
-            </Card>
+            </div>
           ))}
         </Stack>
       )}
-    </Card>
+    </Panel>
   );
 }
 
@@ -313,7 +345,9 @@ function NutritionPage() {
 
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('nutrition.title')}</Title>
+      <Title className="ds-page-title" order={2}>
+        {t('nutrition.title')}
+      </Title>
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         <FoodSection athleteUserId={athleteUserId} />
         <HydrationSection athleteUserId={athleteUserId} />

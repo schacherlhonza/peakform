@@ -47,12 +47,14 @@
     "races": "Závody a cíle",
     "nutrition": "Jídlo a pití",
     "wellness": "Regenerace",
-    "reports": "Reporty",
+    "reports": "Souvislosti",
     "settings": "Nastavení",
     "integrations": "Integrace",
     "permissions": "Oprávnění",
     "import": "Import dat",
-    "abbreviations": "Zkratky"
+    "abbreviations": "Zkratky",
+    "templates": "Šablony",
+    "notifications": "Upozornění"
   },
   "dashboard": {
     "athleteTitle": "Ahoj, {{name}}",
@@ -67,7 +69,41 @@
     "noAthletes": "Zatím nemáte žádné sportovce. Pozvěte prvního.",
     "lastComment": "Poslední zpráva",
     "fillMorningCheckIn": "Vyplnit ranní check-in",
-    "fillEveningCheckIn": "Vyplnit večerní check-in"
+    "fillEveningCheckIn": "Vyplnit večerní check-in",
+    "readiness": "Připravenost",
+    "readinessGood": "Výborná",
+    "readinessModerate": "Snížená",
+    "readinessLow": "Nízká",
+    "readinessEmptyTitle": "Zatím žádná data o regeneraci",
+    "readinessEmptyDescription": "Jakmile proběhne synchronizace nositelného zařízení nebo zapíšete ranní check-in, uvidíte tu skóre připravenosti.",
+    "readinessFresh": "Dnešní data",
+    "readinessStale": "Naposledy {{date}}",
+    "readinessScoreLabel": "Skóre připravenosti {{score}} ze 100",
+    "readinessExplain": "Skóre je orientační odhad na základě klidové tepové frekvence, HRV a spánku — není to diagnóza.",
+    "todayWorkoutRest": "Dnes máš v plánu odpočinek.",
+    "todayWorkoutEmptyTitle": "Bez naplánovaného tréninku",
+    "todayWorkoutEmptyDescription": "Trenér zatím na dnešek nenaplánoval žádný trénink.",
+    "todayWorkoutNoPlanTitle": "Zatím žádný aktivní plán",
+    "todayWorkoutNoPlanDescription": "Až trenér vytvoří tréninkový plán, uvidíš tu dnešní dávku.",
+    "openWorkout": "Zobrazit detail",
+    "fuelHydration": "Palivo a hydratace",
+    "carbsToday": "Sacharidy dnes",
+    "hydrationToday": "Tekutiny dnes",
+    "fuelHydrationEntries": "{{count}} záznamů",
+    "fuelHydrationEmpty": "Dnes zatím nemáš žádný záznam jídla ani pití.",
+    "logNutrition": "Zapsat jídlo nebo pití",
+    "weekTimeline": "Plán vs. realita",
+    "weekTimelineEmpty": "Pro tento týden zatím nejsou žádná data.",
+    "planned": "Plán",
+    "actual": "Realita",
+    "insights": "Souvislosti",
+    "insightsEmptyTitle": "Zatím nic nevybočuje",
+    "insightsEmptyDescription": "Podle dostupných dat nevidíme nic, co by se lišilo od tvého obvyklého vzorce.",
+    "viewAllInsights": "Zobrazit všechny reporty"
+  },
+  "athletes": {
+    "notFoundTitle": "Sportovec nenalezen",
+    "notFoundDescription": "Tento vztah trenér–sportovec neexistuje nebo k němu nemáte přístup."
   },
   "relationships": {
     "invite": "Pozvat sportovce",
@@ -133,6 +169,9 @@
     "noSegments": "Trénink zatím nemá strukturované úseky.",
     "segmentOrder": "Pořadí",
     "segmentType": "Typ",
+    "distance": "Vzdálenost",
+    "duration": "Doba",
+    "target": "Cíl",
     "comments": "Komentáře",
     "addComment": "Přidat komentář",
     "noComments": "Zatím žádné komentáře.",
@@ -354,5 +393,36 @@
     "confirmButton": "Potvrdit import",
     "confirmed": "Import byl potvrzen",
     "confirmSummary": "Naimportováno: {{imported}}, přeskočeno (duplicita): {{skippedDuplicate}}, přeskočeno (neplatné): {{skippedInvalid}}"
+  },
+  "templates": {
+    "title": "Šablony tréninků",
+    "subtitle": "Znovupoužitelné tréninky, které můžete rychle přiřadit do plánu.",
+    "createTemplate": "Nová šablona",
+    "name": "Název",
+    "sport": "Sport",
+    "description": "Popis",
+    "empty": "Zatím nemáte žádné šablony tréninků.",
+    "emptyAction": "Vytvořte první šablonu.",
+    "created": "Šablona byla vytvořena.",
+    "deleted": "Šablona byla smazána.",
+    "deleteConfirmTitle": "Smazat šablonu?",
+    "deleteConfirmBody": "Tuto akci nelze vrátit zpět."
+  },
+  "notifications": {
+    "title": "Upozornění",
+    "empty": "Žádná upozornění.",
+    "emptyAction": "Až se něco stane, uvidíte to tady.",
+    "markAsRead": "Označit jako přečtené",
+    "unread": "{{count}} nepřečtených",
+    "types": {
+      "InviteReceived": "Nová pozvánka",
+      "InviteAccepted": "Pozvánka přijata",
+      "PlanUpdated": "Plán aktualizován",
+      "CommentAdded": "Nový komentář",
+      "ReportReady": "Report připraven",
+      "PermissionChanged": "Změna oprávnění",
+      "HealthFlagRaised": "Zdravotní upozornění",
+      "AccessRevoked": "Přístup odebrán"
+    }
   }
 }

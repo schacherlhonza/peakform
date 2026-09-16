@@ -1,0 +1,39 @@
+.panel {
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.ring {
+  width: 166px;
+  height: 166px;
+  border-radius: 50%;
+  margin: var(--space-4) auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast);
+}
+
+.ringInner {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .ring {
+    width: 140px;
+    height: 140px;
+  }
+
+  .ringInner {
+    width: 110px;
+    height: 110px;
+  }
+}

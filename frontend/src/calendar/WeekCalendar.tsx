@@ -5,26 +5,10 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import {
-  Badge,
-  Button,
-  Card,
-  Checkbox,
-  Group,
-  Loader,
-  Modal,
-  Select,
-  SimpleGrid,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { Checkbox, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
+import { IconCalendarOff, IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
 import {
   useGetApiAthletesAthleteUserIdPlans,
   useGetApiPlansId,
@@ -33,7 +17,9 @@ import {
   getPostApiWorkoutsMutationOptions,
 } from '../api/generated/training-plans/training-plans';
 import { SportType, type PlannedWorkoutDto } from '../api/generated/models';
+import { Panel, CardHeader, Badge, Button, Modal, FormField, EmptyState, Skeleton, showToast } from '../design-system/components';
 import { addDays, mondayOf, toIsoDate } from './dateUtils';
+import classes from './WeekCalendar.module.css';
 
 const sportOptions = Object.values(SportType).map((value) => ({ value, label: value }));
 
@@ -46,6 +32,24 @@ const createWorkoutSchema = z.object({
 });
 type CreateWorkoutValues = z.infer<typeof createWorkoutSchema>;
 
+function WeekCalendarSkeleton() {
+  return (
+    <Panel>
+      <Skeleton height={16} width={160} mb="md" />
+      <div className={classes.dayGrid}>
+        {Array.from({ length: 7 }, (_, i) => (
+          <Skeleton key={i} height={120} radius="var(--radius-md)" />
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * Weekly training calendar — athlete's own read-only view (CalendarPage) and coach's editable
+ * view of one athlete (AthleteDetailPage). See docs/DESIGN_SYSTEM.md §7 "WeekTimeline" for the
+ * visual spec (today gets an accent border, 730px+ horizontally-scrollable axis on mobile).
+ */
 export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string; canEdit: boolean }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -65,6 +69,7 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
 
   const weekIso = toIsoDate(weekStart);
   const week = plan?.weeks?.find((w) => w.weekStartDate === weekIso);
+  const todayIso = toIsoDate(new Date());
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const workoutsByDate = new Map<string, PlannedWorkoutDto>();
@@ -111,80 +116,85 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
         },
       });
 
-      notifications.show({ color: 'green', message: 'Trénink byl vytvořen.' });
+      showToast({ tone: 'positive', message: t('calendar.createWorkout') + ' ✓' });
       reset();
       closeModal();
       await queryClient.invalidateQueries({ queryKey: getGetApiPlansIdQueryKey(activePlan.id) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
-  if (plansQuery.isLoading) return <Loader />;
+  if (plansQuery.isLoading) return <WeekCalendarSkeleton />;
 
   if (!activePlan) {
     return (
-      <Card withBorder radius="md" p="xl">
-        <Text c="dimmed" ta="center">
-          {t('calendar.noPlan')}
-        </Text>
-      </Card>
+      <Panel>
+        <EmptyState icon={<IconCalendarOff size={28} stroke={1.6} />} title={t('calendar.noPlan')} />
+      </Panel>
     );
   }
 
   return (
-    <Stack gap="md">
-      <Group justify="space-between">
-        <Group>
-          <Button variant="subtle" leftSection={<IconChevronLeft size={16} />} onClick={() => setWeekStart(addDays(weekStart, -7))}>
-            {t('calendar.previousWeek')}
-          </Button>
-          <Title order={4}>{weekIso}</Title>
-          <Button variant="subtle" rightSection={<IconChevronRight size={16} />} onClick={() => setWeekStart(addDays(weekStart, 7))}>
-            {t('calendar.nextWeek')}
-          </Button>
-        </Group>
-        {canEdit && (
-          <Button leftSection={<IconPlus size={16} />} onClick={openModal}>
-            {t('calendar.addWorkout')}
-          </Button>
-        )}
-      </Group>
+    <Panel>
+      <CardHeader
+        kicker={t('nav.calendar')}
+        title={weekIso}
+        right={
+          <Stack gap={4} align="flex-end">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button variant="default" size="compact-sm" leftSection={<IconChevronLeft size={14} />} onClick={() => setWeekStart(addDays(weekStart, -7))}>
+                {t('calendar.previousWeek')}
+              </Button>
+              <Button variant="default" size="compact-sm" rightSection={<IconChevronRight size={14} />} onClick={() => setWeekStart(addDays(weekStart, 7))}>
+                {t('calendar.nextWeek')}
+              </Button>
+            </div>
+          </Stack>
+        }
+      />
 
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 4, lg: 7 }} spacing="sm">
+      {canEdit && (
+        <Button leftSection={<IconPlus size={16} />} onClick={openModal} mb="md">
+          {t('calendar.addWorkout')}
+        </Button>
+      )}
+
+      <div className={classes.dayGrid}>
         {days.map((day) => {
           const iso = toIsoDate(day);
           const workout = workoutsByDate.get(iso);
+          const isToday = iso === todayIso;
+          const clickable = !!workout?.id;
+          const dayClasses = [classes.day, isToday && classes.dayToday, clickable && classes.dayClickable].filter(Boolean).join(' ');
           return (
-            <Card
+            <div
               key={iso}
-              withBorder
-              radius="md"
-              p="sm"
-              style={{ cursor: workout ? 'pointer' : 'default', minHeight: 110 }}
+              className={dayClasses}
+              role={clickable ? 'button' : undefined}
+              tabIndex={clickable ? 0 : undefined}
               onClick={() => workout?.id && navigate(`/workouts/${workout.id}`)}
+              onKeyDown={(e) => {
+                if (clickable && (e.key === 'Enter' || e.key === ' ')) navigate(`/workouts/${workout!.id}`);
+              }}
             >
-              <Text size="xs" c="dimmed">
+              <Text className="ds-eyebrow">
                 {t(`weekday.${day.getDay() === 0 ? 6 : day.getDay() - 1}`)} · {iso.slice(5)}
               </Text>
               {workout ? (
-                <Stack gap={4} mt={4}>
-                  <Badge size="sm" variant="light">
-                    {t(`sport.${workout.sport}`)}
-                  </Badge>
-                  <Text size="sm" fw={500} lineClamp={2}>
+                <Stack gap={4}>
+                  <Badge tone={workout.isRestDay ? 'neutral' : 'info'}>{t(`sport.${workout.sport}`)}</Badge>
+                  <Text fz={13} fw={600} lineClamp={2}>
                     {workout.isRestDay ? t('calendar.restDay') : workout.title}
                   </Text>
                 </Stack>
               ) : (
-                <Text size="xs" c="dimmed" mt={4}>
-                  —
-                </Text>
+                <Text className="ds-metadata">—</Text>
               )}
-            </Card>
+            </div>
           );
         })}
-      </SimpleGrid>
+      </div>
 
       <Modal opened={modalOpened} onClose={closeModal} title={t('calendar.addWorkout')}>
         <form onSubmit={onSubmit}>
@@ -193,7 +203,9 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
               name="date"
               control={control}
               render={({ field }) => (
-                <DateInput label={t('common.date')} value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                <FormField label={t('common.date')}>
+                  <DateInput value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                </FormField>
               )}
             />
             <Controller
@@ -208,10 +220,18 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
                 <Controller
                   name="sport"
                   control={control}
-                  render={({ field }) => <Select label={t('workout.detail')} data={sportOptions} {...field} />}
+                  render={({ field }) => (
+                    <FormField label={t('workout.detail')}>
+                      <Select data={sportOptions} {...field} />
+                    </FormField>
+                  )}
                 />
-                <TextInput label={t('calendar.title')} error={errors.title?.message} {...register('title')} />
-                <Textarea label={t('calendar.description')} minRows={3} {...register('coachDescription')} />
+                <FormField label={t('calendar.title')} error={errors.title?.message}>
+                  <TextInput {...register('title')} />
+                </FormField>
+                <FormField label={t('calendar.description')}>
+                  <Textarea minRows={3} {...register('coachDescription')} />
+                </FormField>
               </>
             )}
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
@@ -220,6 +240,6 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
           </Stack>
         </form>
       </Modal>
-    </Stack>
+    </Panel>
   );
 }

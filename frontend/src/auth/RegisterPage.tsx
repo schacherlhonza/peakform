@@ -2,23 +2,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import {
-  Anchor,
-  Button,
-  Center,
-  Paper,
-  PasswordInput,
-  SegmentedControl,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
+import { Anchor, Center, Group, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { getPostApiAuthRegisterMutationOptions } from '../api/generated/auth/auth';
 import { AppRole } from '../api/generated/models';
+import { Panel, Button, SegmentedControl, showToast } from '../design-system/components';
 import { useAuth } from './AuthContext';
 
 const schema = z.object({
@@ -63,19 +52,19 @@ export function RegisterPage() {
         navigate('/dashboard');
       }
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   return (
-    <Center mih="100vh" bg="gray.0" py="xl">
-      <Paper withBorder shadow="sm" p="xl" radius="md" w={420}>
+    <Center mih="100vh" py="xl">
+      <Panel w={420}>
         <Stack gap="md">
           <div>
-            <Title order={2}>{t('app.name')}</Title>
-            <Text c="dimmed" size="sm">
-              {t('auth.register')}
-            </Text>
+            <Title className="ds-card-headline" order={2}>
+              {t('app.name')}
+            </Title>
+            <Text className="ds-body">{t('auth.register')}</Text>
           </div>
           <form onSubmit={onSubmit}>
             <Stack gap="sm">
@@ -93,20 +82,10 @@ export function RegisterPage() {
                   />
                 )}
               />
-              <Stack gap="sm" style={{ flexDirection: 'row' }} display="flex">
-                <TextInput
-                  label={t('auth.firstName')}
-                  style={{ flex: 1 }}
-                  error={errors.firstName?.message}
-                  {...register('firstName')}
-                />
-                <TextInput
-                  label={t('auth.lastName')}
-                  style={{ flex: 1 }}
-                  error={errors.lastName?.message}
-                  {...register('lastName')}
-                />
-              </Stack>
+              <Group gap="sm" grow>
+                <TextInput label={t('auth.firstName')} error={errors.firstName?.message} {...register('firstName')} />
+                <TextInput label={t('auth.lastName')} error={errors.lastName?.message} {...register('lastName')} />
+              </Group>
               <TextInput
                 label={t('auth.email')}
                 autoComplete="email"
@@ -132,7 +111,7 @@ export function RegisterPage() {
             </Anchor>
           </Text>
         </Stack>
-      </Paper>
+      </Panel>
     </Center>
   );
 }

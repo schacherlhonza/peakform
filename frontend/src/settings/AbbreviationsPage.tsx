@@ -4,10 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ActionIcon, Button, Card, Group, Loader, Modal, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import { Group, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
-import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconAbc, IconEdit, IconTrash } from '@tabler/icons-react';
+import { Panel, Button, IconButton, Modal, FormField, Skeleton, EmptyState, showToast } from '../design-system/components';
 import {
   useGetApiAbbreviations,
   getGetApiAbbreviationsQueryKey,
@@ -24,11 +24,22 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+function AbbreviationsSkeleton() {
+  return (
+    <Stack gap="sm">
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} height={44} radius="var(--radius-panel)" />
+      ))}
+    </Stack>
+  );
+}
+
 export default function AbbreviationsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure();
   const [editing, setEditing] = useState<CustomAbbreviationDto | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CustomAbbreviationDto | null>(null);
 
   const abbreviationsQuery = useGetApiAbbreviations();
   const abbreviations = abbreviationsQuery.data ?? [];
@@ -54,11 +65,11 @@ export default function AbbreviationsPage() {
   const onCreate = createForm.handleSubmit(async (values) => {
     try {
       await createMutation.mutateAsync({ data: values });
-      notifications.show({ color: 'green', message: t('common.add') });
+      showToast({ tone: 'positive', message: t('common.add') });
       createForm.reset({ abbreviation: '', fullText: '', description: '' });
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
@@ -66,98 +77,102 @@ export default function AbbreviationsPage() {
     if (!editing?.id) return;
     try {
       await updateMutation.mutateAsync({ id: editing.id, data: values });
-      notifications.show({ color: 'green', message: t('common.save') });
+      showToast({ tone: 'positive', message: t('common.save') });
       closeEdit();
       setEditing(null);
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
-  const handleDelete = async (id?: string) => {
-    if (!id) return;
-    if (!window.confirm(t('settings.abbreviationDeleteConfirm'))) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete?.id) return;
     try {
-      await deleteMutation.mutateAsync({ id });
+      await deleteMutation.mutateAsync({ id: pendingDelete.id });
+      setPendingDelete(null);
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('nav.abbreviations')}</Title>
+      <Title className="ds-page-title" order={2}>
+        {t('nav.abbreviations')}
+      </Title>
 
-      <Card withBorder radius="md" p="lg">
+      <Panel>
         <form onSubmit={onCreate}>
           <Group align="end" wrap="wrap">
-            <TextInput
-              label={t('settings.abbreviation')}
-              w={140}
-              error={createForm.formState.errors.abbreviation?.message}
-              {...createForm.register('abbreviation')}
-            />
-            <TextInput
-              label={t('settings.fullText')}
-              w={240}
-              error={createForm.formState.errors.fullText?.message}
-              {...createForm.register('fullText')}
-            />
-            <TextInput label={t('settings.abbreviationDescription')} w={280} {...createForm.register('description')} />
+            <div style={{ width: 140 }}>
+              <FormField label={t('settings.abbreviation')} error={createForm.formState.errors.abbreviation?.message}>
+                <TextInput {...createForm.register('abbreviation')} />
+              </FormField>
+            </div>
+            <div style={{ width: 240 }}>
+              <FormField label={t('settings.fullText')} error={createForm.formState.errors.fullText?.message}>
+                <TextInput {...createForm.register('fullText')} />
+              </FormField>
+            </div>
+            <div style={{ width: 280 }}>
+              <FormField label={t('settings.abbreviationDescription')}>
+                <TextInput {...createForm.register('description')} />
+              </FormField>
+            </div>
             <Button type="submit" loading={createForm.formState.isSubmitting || createMutation.isPending}>
               {t('common.add')}
             </Button>
           </Group>
         </form>
-      </Card>
+      </Panel>
 
-      {abbreviationsQuery.isLoading ? (
-        <Loader />
-      ) : abbreviations.length === 0 ? (
-        <Card withBorder radius="md" p="xl">
-          <Text c="dimmed" ta="center">
-            {t('settings.noAbbreviations')}
-          </Text>
-        </Card>
-      ) : (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>{t('settings.abbreviation')}</Table.Th>
-              <Table.Th>{t('settings.fullText')}</Table.Th>
-              <Table.Th>{t('settings.abbreviationDescription')}</Table.Th>
-              <Table.Th />
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {abbreviations.map((a) => (
-              <Table.Tr key={a.id}>
-                <Table.Td fw={500}>{a.abbreviation}</Table.Td>
-                <Table.Td>{a.fullText}</Table.Td>
-                <Table.Td>{a.description}</Table.Td>
-                <Table.Td>
-                  <Group gap={4} justify="flex-end">
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => {
-                        setEditing(a);
-                        openEdit();
-                      }}
-                    >
-                      <IconEdit size={16} />
-                    </ActionIcon>
-                    <ActionIcon variant="subtle" color="red" onClick={() => void handleDelete(a.id)}>
-                      <IconTrash size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Table.Td>
+      <Panel>
+        {abbreviationsQuery.isLoading ? (
+          <AbbreviationsSkeleton />
+        ) : abbreviations.length === 0 ? (
+          <EmptyState icon={<IconAbc size={28} stroke={1.6} />} title={t('settings.noAbbreviations')} />
+        ) : (
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t('settings.abbreviation')}</Table.Th>
+                <Table.Th>{t('settings.fullText')}</Table.Th>
+                <Table.Th>{t('settings.abbreviationDescription')}</Table.Th>
+                <Table.Th />
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      )}
+            </Table.Thead>
+            <Table.Tbody>
+              {abbreviations.map((a) => (
+                <Table.Tr key={a.id}>
+                  <Table.Td fw={500}>{a.abbreviation}</Table.Td>
+                  <Table.Td>{a.fullText}</Table.Td>
+                  <Table.Td>{a.description}</Table.Td>
+                  <Table.Td>
+                    <Group gap={4} justify="flex-end">
+                      <IconButton
+                        icon={<IconEdit size={16} />}
+                        label={t('common.edit')}
+                        onClick={() => {
+                          setEditing(a);
+                          openEdit();
+                        }}
+                      />
+                      <IconButton
+                        icon={<IconTrash size={16} />}
+                        label={t('common.delete')}
+                        color="red"
+                        onClick={() => setPendingDelete(a)}
+                      />
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        )}
+      </Panel>
 
       <Modal
         opened={editOpened}
@@ -169,22 +184,34 @@ export default function AbbreviationsPage() {
       >
         <form onSubmit={onEdit}>
           <Stack gap="sm">
-            <TextInput
-              label={t('settings.abbreviation')}
-              error={editForm.formState.errors.abbreviation?.message}
-              {...editForm.register('abbreviation')}
-            />
-            <TextInput
-              label={t('settings.fullText')}
-              error={editForm.formState.errors.fullText?.message}
-              {...editForm.register('fullText')}
-            />
-            <TextInput label={t('settings.abbreviationDescription')} {...editForm.register('description')} />
+            <FormField label={t('settings.abbreviation')} error={editForm.formState.errors.abbreviation?.message}>
+              <TextInput {...editForm.register('abbreviation')} />
+            </FormField>
+            <FormField label={t('settings.fullText')} error={editForm.formState.errors.fullText?.message}>
+              <TextInput {...editForm.register('fullText')} />
+            </FormField>
+            <FormField label={t('settings.abbreviationDescription')}>
+              <TextInput {...editForm.register('description')} />
+            </FormField>
             <Button type="submit" loading={editForm.formState.isSubmitting || updateMutation.isPending} fullWidth mt="sm">
               {t('common.save')}
             </Button>
           </Stack>
         </form>
+      </Modal>
+
+      <Modal opened={pendingDelete !== null} onClose={() => setPendingDelete(null)} title={t('common.delete')}>
+        <Stack gap="md">
+          <Text className="ds-body">{t('settings.abbreviationDeleteConfirm')}</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setPendingDelete(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button color="red" loading={deleteMutation.isPending} onClick={() => void confirmDelete()}>
+              {t('common.delete')}
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
     </Stack>
   );

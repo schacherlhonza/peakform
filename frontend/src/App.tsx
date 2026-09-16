@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from './auth/LoginPage';
 import { RegisterPage } from './auth/RegisterPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
-import { AppLayout } from './layout/AppLayout';
+import { AppShell } from './app/AppShell';
 import { DashboardPage } from './dashboard/DashboardPage';
 import { CalendarPage } from './calendar/CalendarPage';
 import { WorkoutDetailPage } from './workouts/WorkoutDetailPage';
@@ -20,6 +20,8 @@ import AbbreviationsPage from './settings/AbbreviationsPage';
 import PermissionsPage from './settings/PermissionsPage';
 import IntegrationsPage from './integrations/IntegrationsPage';
 import ImportPage from './import/ImportPage';
+import TemplatesPage from './features/templates/TemplatesPage';
+import NotificationsPage from './features/notifications/NotificationsPage';
 import { AppRole } from './api/generated/models';
 
 function App() {
@@ -31,17 +33,33 @@ function App() {
       <Route
         element={
           <ProtectedRoute>
-            <AppLayout />
+            <AppShell />
           </ProtectedRoute>
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute roles={[AppRole.Athlete]}>
+              <CalendarPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/workouts/:workoutId" element={<WorkoutDetailPage />} />
         <Route path="/checkins/morning" element={<MorningCheckInPage />} />
         <Route path="/checkins/evening" element={<EveningCheckInPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route
+          path="/templates"
+          element={
+            <ProtectedRoute roles={[AppRole.Coach]}>
+              <TemplatesPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/races"
           element={

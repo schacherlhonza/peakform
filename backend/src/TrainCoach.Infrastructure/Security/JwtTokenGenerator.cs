@@ -22,6 +22,10 @@ public class JwtTokenGenerator(IOptions<JwtOptions> options)
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Role, role.ToString()),
+            // Short-form aliases: ClaimTypes.Role/NameIdentifier serialize as long XML-namespace
+            // URIs in the JWT payload, which the frontend's minimal decoder can't key on.
+            new Claim("role", role.ToString()),
+            new Claim("nameid", userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 

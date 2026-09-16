@@ -4,9 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Group, Loader, NumberInput, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import { Group, NumberInput, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { notifications } from '@mantine/notifications';
+import { IconHeartbeat } from '@tabler/icons-react';
+import { Panel, Button, FormField, Skeleton, EmptyState, showToast } from '../design-system/components';
 import {
   useGetApiAthletesAthleteUserIdHeartRateZones,
   getGetApiAthletesAthleteUserIdHeartRateZonesQueryKey,
@@ -30,6 +31,16 @@ type FormValues = z.infer<typeof schema>;
 
 function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+function ZonesSkeleton() {
+  return (
+    <Stack gap="sm">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Skeleton key={i} height={40} radius="var(--radius-xs)" />
+      ))}
+    </Stack>
+  );
 }
 
 export default function HeartRateZonesPage() {
@@ -90,94 +101,103 @@ export default function HeartRateZonesPage() {
           })),
         },
       });
-      notifications.show({ color: 'green', message: t('settings.heartRateZonesSaved') });
+      showToast({ tone: 'positive', message: t('settings.heartRateZonesSaved') });
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdHeartRateZonesQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   if (isCoach) {
     return (
       <Stack gap="lg">
-        <Title order={2}>{t('settings.heartRateZones')}</Title>
-        <Card withBorder radius="md" p="xl">
-          <Text c="dimmed" ta="center">
-            {t('settings.heartRateZonesCoachNotice')}
-          </Text>
-        </Card>
+        <Title className="ds-page-title" order={2}>
+          {t('settings.heartRateZones')}
+        </Title>
+        <Panel>
+          <EmptyState
+            icon={<IconHeartbeat size={28} stroke={1.6} />}
+            title={t('settings.heartRateZones')}
+            description={t('settings.heartRateZonesCoachNotice')}
+          />
+        </Panel>
       </Stack>
     );
   }
 
-  if (zonesQuery.isLoading) return <Loader />;
-
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('settings.heartRateZones')}</Title>
-      <form onSubmit={onSubmit}>
-        <Card withBorder radius="md" p="lg">
-          <Stack gap="md">
-            <Controller
-              name="effectiveFromDate"
-              control={control}
-              render={({ field }) => (
-                <DateInput
-                  label={t('settings.effectiveFromDate')}
-                  w={220}
-                  value={field.value}
-                  onChange={(v) => field.onChange(v ? new Date(v) : new Date())}
+      <Title className="ds-page-title" order={2}>
+        {t('settings.heartRateZones')}
+      </Title>
+      <Panel>
+        {zonesQuery.isLoading ? (
+          <ZonesSkeleton />
+        ) : (
+          <form onSubmit={onSubmit}>
+            <Stack gap="md">
+              <FormField label={t('settings.effectiveFromDate')}>
+                <Controller
+                  name="effectiveFromDate"
+                  control={control}
+                  render={({ field }) => (
+                    <DateInput w={220} value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                  )}
                 />
-              )}
-            />
+              </FormField>
 
-            <Table>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t('settings.zone')}</Table.Th>
-                  <Table.Th>{t('settings.zoneName')}</Table.Th>
-                  <Table.Th>{t('settings.minBpm')}</Table.Th>
-                  <Table.Th>{t('settings.maxBpm')}</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {fields.map((field, index) => (
-                  <Table.Tr key={field.id}>
-                    <Table.Td>{field.zoneNumber}</Table.Td>
-                    <Table.Td>
-                      <TextInput {...register(`zones.${index}.name`)} />
-                    </Table.Td>
-                    <Table.Td>
-                      <Controller
-                        control={control}
-                        name={`zones.${index}.minBpm`}
-                        render={({ field: f }) => (
-                          <NumberInput w={110} value={f.value} onChange={(v) => f.onChange(Number(v))} />
-                        )}
-                      />
-                    </Table.Td>
-                    <Table.Td>
-                      <Controller
-                        control={control}
-                        name={`zones.${index}.maxBpm`}
-                        render={({ field: f }) => (
-                          <NumberInput w={110} value={f.value} onChange={(v) => f.onChange(Number(v))} />
-                        )}
-                      />
-                    </Table.Td>
+              <Table verticalSpacing="sm" horizontalSpacing="md">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th className="ds-eyebrow">{t('settings.zone')}</Table.Th>
+                    <Table.Th className="ds-eyebrow">{t('settings.zoneName')}</Table.Th>
+                    <Table.Th className="ds-eyebrow">{t('settings.minBpm')}</Table.Th>
+                    <Table.Th className="ds-eyebrow">{t('settings.maxBpm')}</Table.Th>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
+                </Table.Thead>
+                <Table.Tbody>
+                  {fields.map((field, index) => (
+                    <Table.Tr key={field.id}>
+                      <Table.Td>
+                        <Text fw={700} c="var(--color-text)">
+                          {field.zoneNumber}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <TextInput {...register(`zones.${index}.name`)} />
+                      </Table.Td>
+                      <Table.Td>
+                        <Controller
+                          control={control}
+                          name={`zones.${index}.minBpm`}
+                          render={({ field: f }) => (
+                            <NumberInput w={110} value={f.value} onChange={(v) => f.onChange(Number(v))} />
+                          )}
+                        />
+                      </Table.Td>
+                      <Table.Td>
+                        <Controller
+                          control={control}
+                          name={`zones.${index}.maxBpm`}
+                          render={({ field: f }) => (
+                            <NumberInput w={110} value={f.value} onChange={(v) => f.onChange(Number(v))} />
+                          )}
+                        />
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
 
-            <Group justify="flex-end">
-              <Button type="submit" loading={isSubmitting || saveMutation.isPending}>
-                {t('common.save')}
-              </Button>
-            </Group>
-          </Stack>
-        </Card>
-      </form>
+              <Group justify="flex-end">
+                <Button type="submit" loading={isSubmitting || saveMutation.isPending}>
+                  {t('common.save')}
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        )}
+      </Panel>
     </Stack>
   );
 }

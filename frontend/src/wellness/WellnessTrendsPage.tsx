@@ -4,11 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Card, Group, Loader, Modal, Select, SimpleGrid, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
+import { Group, Select, SimpleGrid, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import { IconAlertTriangle, IconMedal, IconPlus } from '@tabler/icons-react';
+import { Badge, type BadgeTone, Button, CardHeader, EmptyState, FormField, Modal, Panel, Skeleton, showToast } from '../design-system/components';
 import { useGetApiAthletesAthleteUserIdHrv } from '../api/generated/hrv-measurements/hrv-measurements';
 import { useGetApiAthletesAthleteUserIdRecovery } from '../api/generated/recovery-metrics/recovery-metrics';
 import { useGetApiAthletesAthleteUserIdSleep } from '../api/generated/sleep-records/sleep-records';
@@ -28,14 +28,18 @@ import { useAuth } from '../auth/AuthContext';
 import { addDays, toIsoDate } from '../calendar/dateUtils';
 import { Sparkline } from './Sparkline';
 
-const sportOptions = Object.values(SportType).map((value) => ({ value, label: value }));
-const flagTypeOptions = Object.values(HealthFlagType).map((value) => ({ value, label: value }));
-const flagSeverityOptions = Object.values(HealthFlagSeverity).map((value) => ({ value, label: value }));
+// Severity/status → Badge tone maps (docs/DESIGN_SYSTEM.md §8/§9): color is always paired
+// with the translated label, never the sole signal.
+const severityTone: Record<HealthFlagSeverity, BadgeTone> = {
+  [HealthFlagSeverity.Mild]: 'neutral',
+  [HealthFlagSeverity.Moderate]: 'warning',
+  [HealthFlagSeverity.Severe]: 'danger',
+};
 
-const severityColor: Record<string, string> = {
-  [HealthFlagSeverity.Mild]: 'yellow',
-  [HealthFlagSeverity.Moderate]: 'orange',
-  [HealthFlagSeverity.Severe]: 'red',
+const statusTone: Record<HealthFlagStatus, BadgeTone> = {
+  [HealthFlagStatus.Active]: 'danger',
+  [HealthFlagStatus.Improving]: 'warning',
+  [HealthFlagStatus.Resolved]: 'positive',
 };
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -112,26 +116,29 @@ function TrendsSection({ athleteUserId }: { athleteUserId: string }) {
   );
 
   return (
-    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-      <Card withBorder radius="md" p="lg">
-        <Title order={4} mb="sm">
-          {t('wellness.hrv')}
-        </Title>
-        {hrvQuery.isLoading ? <Loader size="sm" /> : <Sparkline data={hrvData} color="var(--mantine-color-grape-6)" unit=" ms" />}
-      </Card>
-      <Card withBorder radius="md" p="lg">
-        <Title order={4} mb="sm">
-          {t('wellness.restingHr')}
-        </Title>
-        {recoveryQuery.isLoading ? <Loader size="sm" /> : <Sparkline data={rhrData} color="var(--mantine-color-red-6)" unit=" tep/min" />}
-      </Card>
-      <Card withBorder radius="md" p="lg">
-        <Title order={4} mb="sm">
-          {t('wellness.sleepDuration')}
-        </Title>
-        {sleepQuery.isLoading ? <Loader size="sm" /> : <Sparkline data={sleepData} color="var(--mantine-color-blue-6)" unit=" h" />}
-      </Card>
-    </SimpleGrid>
+    <Panel>
+      <CardHeader kicker={t('wellness.title')} />
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.hrv')}
+          </Text>
+          {hrvQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={hrvData} tone="accent" unit=" ms" />}
+        </div>
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.restingHr')}
+          </Text>
+          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={rhrData} tone="accent" unit=" tep/min" />}
+        </div>
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.sleepDuration')}
+          </Text>
+          {sleepQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={sleepData} tone="info" unit=" h" />}
+        </div>
+      </SimpleGrid>
+    </Panel>
   );
 }
 
@@ -172,55 +179,52 @@ function PersonalRecordsSection({ athleteUserId }: { athleteUserId: string }) {
           notes: values.notes || undefined,
         },
       });
-      notifications.show({ color: 'green', message: t('wellness.recordCreated') });
+      showToast({ tone: 'positive', message: t('wellness.recordCreated') });
       reset({ sport: values.sport, distanceLabel: '', achievedDate: new Date() });
       close();
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdPersonalRecordsQueryKey(athleteUserId) });
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Group justify="space-between" mb="sm">
-        <Title order={4}>{t('wellness.personalRecords')}</Title>
-        <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
-          {t('wellness.addRecord')}
-        </Button>
-      </Group>
+    <Panel>
+      <CardHeader
+        kicker={t('wellness.personalRecords')}
+        right={
+          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
+            {t('wellness.addRecord')}
+          </Button>
+        }
+      />
 
       {recordsQuery.isLoading ? (
-        <Loader size="sm" />
+        <Stack gap="sm">
+          {[0, 1].map((i) => (
+            <Skeleton key={i} height={60} radius="var(--radius-panel)" />
+          ))}
+        </Stack>
       ) : records.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          {t('wellness.noPersonalRecords')}
-        </Text>
+        <EmptyState icon={<IconMedal size={28} stroke={1.6} />} title={t('wellness.noPersonalRecords')} />
       ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+        <Stack gap={0}>
           {records.map((record) => (
-            <Card key={record.id} withBorder radius="sm" p="md">
-              <Group gap="xs" mb={4}>
-                <IconMedal size={16} />
-                <Badge size="sm" variant="light">
-                  {t(`sport.${record.sport}`)}
-                </Badge>
-              </Group>
-              <Text fw={600} size="sm">
-                {record.distanceLabel}
-              </Text>
-              <Text size="sm">{formatDuration(record.timeSeconds)}</Text>
-              <Text size="xs" c="dimmed">
-                {record.achievedDate}
-              </Text>
+            <div key={record.id} className="ds-list-row">
+              <CardHeader
+                kicker={t(`sport.${record.sport}`)}
+                title={record.distanceLabel}
+                right={<Text className="ds-metadata">{record.achievedDate}</Text>}
+              />
+              <Text className="ds-body">{formatDuration(record.timeSeconds)}</Text>
               {record.notes && (
-                <Text size="xs" c="dimmed" mt={4}>
+                <Text className="ds-body" mt={4}>
                   {record.notes}
                 </Text>
               )}
-            </Card>
+            </div>
           ))}
-        </SimpleGrid>
+        </Stack>
       )}
 
       <Modal opened={opened} onClose={close} title={t('wellness.addRecord')}>
@@ -229,25 +233,37 @@ function PersonalRecordsSection({ athleteUserId }: { athleteUserId: string }) {
             <Controller
               name="sport"
               control={control}
-              render={({ field }) => <Select label={t('races.sport')} data={sportOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('races.sport')}>
+                  <Select data={Object.values(SportType).map((v) => ({ value: v, label: t(`sport.${v}`) }))} {...field} />
+                </FormField>
+              )}
             />
-            <TextInput label={t('wellness.distanceLabel')} error={errors.distanceLabel?.message} {...register('distanceLabel')} />
-            <TextInput label={t('wellness.recordTime')} placeholder="hh:mm:ss" {...register('timeSeconds')} />
+            <FormField label={t('wellness.distanceLabel')} error={errors.distanceLabel?.message}>
+              <TextInput {...register('distanceLabel')} />
+            </FormField>
+            <FormField label={t('wellness.recordTime')} unit="hh:mm:ss">
+              <TextInput placeholder="hh:mm:ss" {...register('timeSeconds')} />
+            </FormField>
             <Controller
               name="achievedDate"
               control={control}
               render={({ field }) => (
-                <DateInput label={t('wellness.achievedDate')} value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                <FormField label={t('wellness.achievedDate')}>
+                  <DateInput value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                </FormField>
               )}
             />
-            <Textarea label={t('common.notes')} minRows={2} {...register('notes')} />
+            <FormField label={t('common.notes')}>
+              <Textarea minRows={2} {...register('notes')} />
+            </FormField>
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
               {t('common.save')}
             </Button>
           </Stack>
         </form>
       </Modal>
-    </Card>
+    </Panel>
   );
 }
 
@@ -288,12 +304,12 @@ function HealthFlagsSection({ athleteUserId }: { athleteUserId: string }) {
           startedOnDate: toIsoDate(values.startedOnDate),
         },
       });
-      notifications.show({ color: 'green', message: t('wellness.flagCreated') });
+      showToast({ tone: 'positive', message: t('wellness.flagCreated') });
       reset({ type: values.type, severity: values.severity, startedOnDate: new Date() });
       close();
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
 
@@ -301,61 +317,58 @@ function HealthFlagsSection({ athleteUserId }: { athleteUserId: string }) {
     if (!flag.id) return;
     try {
       await resolveMutation.mutateAsync({ athleteUserId, flagId: flag.id, data: { status: HealthFlagStatus.Resolved } });
-      notifications.show({ color: 'green', message: t('wellness.flagResolved') });
+      showToast({ tone: 'positive', message: t('wellness.flagResolved') });
       await invalidate();
     } catch {
-      notifications.show({ color: 'red', title: t('common.error'), message: t('common.unknownError') });
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   };
 
   return (
-    <Card withBorder radius="md" p="lg">
-      <Group justify="space-between" mb="sm">
-        <Title order={4}>{t('wellness.healthFlags')}</Title>
-        <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
-          {t('wellness.reportFlag')}
-        </Button>
-      </Group>
+    <Panel>
+      <CardHeader
+        kicker={t('wellness.healthFlags')}
+        right={
+          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
+            {t('wellness.reportFlag')}
+          </Button>
+        }
+      />
 
       {flagsQuery.isLoading ? (
-        <Loader size="sm" />
+        <Stack gap="sm">
+          {[0, 1].map((i) => (
+            <Skeleton key={i} height={60} radius="var(--radius-panel)" />
+          ))}
+        </Stack>
       ) : flags.length === 0 ? (
-        <Text c="dimmed" size="sm">
-          {t('wellness.noHealthFlags')}
-        </Text>
+        <EmptyState icon={<IconAlertTriangle size={28} stroke={1.6} />} title={t('wellness.noHealthFlags')} />
       ) : (
-        <Stack gap="xs">
+        <Stack gap={0}>
           {flags.map((flag) => (
-            <Card key={flag.id} withBorder radius="sm" p="md">
-              <Group justify="space-between" wrap="wrap">
-                <div>
-                  <Group gap="xs" mb={4}>
-                    <IconAlertTriangle size={16} />
-                    <Badge size="sm" variant="light">
-                      {t(`healthFlagType.${flag.type}`)}
-                    </Badge>
-                    <Badge size="sm" color={severityColor[flag.severity ?? HealthFlagSeverity.Mild]} variant="light">
+            <div key={flag.id} className="ds-list-row">
+              <CardHeader
+                kicker={t(`healthFlagType.${flag.type}`)}
+                title={flag.bodyPart || undefined}
+                right={
+                  <Group gap="xs" wrap="wrap" justify="flex-end">
+                    <Badge tone={severityTone[flag.severity ?? HealthFlagSeverity.Mild]}>
                       {t(`healthFlagSeverity.${flag.severity}`)}
                     </Badge>
-                    <Badge size="sm" variant="outline">
-                      {t(`healthFlagStatus.${flag.status}`)}
-                    </Badge>
+                    <Badge tone={statusTone[flag.status ?? HealthFlagStatus.Active]}>{t(`healthFlagStatus.${flag.status}`)}</Badge>
                   </Group>
-                  {flag.bodyPart && <Text size="sm">{flag.bodyPart}</Text>}
-                  {flag.description && (
-                    <Text size="xs" c="dimmed">
-                      {flag.description}
-                    </Text>
-                  )}
-                  <Text size="xs" c="dimmed">
-                    {t('wellness.startedOn')}: {flag.startedOnDate}
-                  </Text>
-                </div>
+                }
+              />
+              {flag.description && <Text className="ds-body">{flag.description}</Text>}
+              <Group justify="space-between" align="center" mt="xs" wrap="wrap">
+                <Text className="ds-metadata">
+                  {t('wellness.startedOn')}: {flag.startedOnDate}
+                </Text>
                 <Button size="xs" variant="light" onClick={() => markResolved(flag)} loading={resolveMutation.isPending}>
                   {t('wellness.markResolved')}
                 </Button>
               </Group>
-            </Card>
+            </div>
           ))}
         </Stack>
       )}
@@ -366,20 +379,34 @@ function HealthFlagsSection({ athleteUserId }: { athleteUserId: string }) {
             <Controller
               name="type"
               control={control}
-              render={({ field }) => <Select label={t('wellness.flagType')} data={flagTypeOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('wellness.flagType')}>
+                  <Select data={Object.values(HealthFlagType).map((v) => ({ value: v, label: t(`healthFlagType.${v}`) }))} {...field} />
+                </FormField>
+              )}
             />
             <Controller
               name="severity"
               control={control}
-              render={({ field }) => <Select label={t('wellness.severity')} data={flagSeverityOptions} {...field} />}
+              render={({ field }) => (
+                <FormField label={t('wellness.severity')}>
+                  <Select data={Object.values(HealthFlagSeverity).map((v) => ({ value: v, label: t(`healthFlagSeverity.${v}`) }))} {...field} />
+                </FormField>
+              )}
             />
-            <TextInput label={t('wellness.bodyPart')} {...register('bodyPart')} />
-            <Textarea label={t('common.notes')} minRows={2} {...register('description')} />
+            <FormField label={t('wellness.bodyPart')}>
+              <TextInput {...register('bodyPart')} />
+            </FormField>
+            <FormField label={t('common.notes')}>
+              <Textarea minRows={2} {...register('description')} />
+            </FormField>
             <Controller
               name="startedOnDate"
               control={control}
               render={({ field }) => (
-                <DateInput label={t('wellness.startedOn')} value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                <FormField label={t('wellness.startedOn')}>
+                  <DateInput value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                </FormField>
               )}
             />
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
@@ -388,7 +415,7 @@ function HealthFlagsSection({ athleteUserId }: { athleteUserId: string }) {
           </Stack>
         </form>
       </Modal>
-    </Card>
+    </Panel>
   );
 }
 
@@ -399,7 +426,9 @@ function WellnessTrendsPage() {
 
   return (
     <Stack gap="lg">
-      <Title order={2}>{t('wellness.title')}</Title>
+      <Title className="ds-page-title" order={2}>
+        {t('wellness.title')}
+      </Title>
       <TrendsSection athleteUserId={athleteUserId} />
       <PersonalRecordsSection athleteUserId={athleteUserId} />
       <HealthFlagsSection athleteUserId={athleteUserId} />
