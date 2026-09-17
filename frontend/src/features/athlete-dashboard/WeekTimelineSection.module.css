@@ -30,3 +30,17 @@
   flex-direction: column;
   gap: 2px;
 }
+
+.activityLink {
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+}
+
+.activityLink:hover {
+  color: var(--color-accent);
+}
+
+.activityLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

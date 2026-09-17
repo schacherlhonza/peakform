@@ -16,11 +16,13 @@ namespace TrainCoach.Integrations.Strava;
 /// returns a URL but Strava will reject it, which is the expected "not configured yet" state.
 /// </summary>
 public class StravaIntegrationProvider(IHttpClientFactory httpClientFactory, IOptions<StravaOptions> options)
-    : IIntegrationProvider
+    : IIntegrationProvider, IActivityStreamProvider
 {
     private const string AuthorizeUrl = "https://www.strava.com/oauth/authorize";
     private const string TokenUrl = "https://www.strava.com/oauth/token";
     private const string ActivitiesUrl = "https://www.strava.com/api/v3/athlete/activities";
+    private const string ActivityDetailUrl = "https://www.strava.com/api/v3/activities";
+    private const string StreamKeys = "time,heartrate,watts,cadence,distance,altitude,velocity_smooth,grade_smooth";
 
     private readonly StravaOptions _options = options.Value;
 
@@ -99,6 +101,42 @@ public class StravaIntegrationProvider(IHttpClientFactory httpClientFactory, IOp
             AveragePaceSecondsPerKm: a.AverageSpeedMetersPerSecond is > 0 ? (int)Math.Round(1000m / a.AverageSpeedMetersPerSecond.Value) : null,
             AveragePowerWatts: a.AverageWatts.HasValue ? (int)Math.Round(a.AverageWatts.Value) : null,
             Calories: a.Calories.HasValue ? (int)Math.Round(a.Calories.Value) : null)).ToList();
+    }
+
+    public async Task<ExternalActivityStreams?> FetchActivityStreamsAsync(string accessToken, string externalActivityId, CancellationToken cancellationToken = default)
+    {
+        var client = httpClientFactory.CreateClient(nameof(StravaIntegrationProvider));
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync(
+            $"{ActivityDetailUrl}/{externalActivityId}/streams?keys={StreamKeys}&key_by_type=true", cancellationToken);
+
+        if (response.StatusCode is System.Net.HttpStatusCode.NotFound or System.Net.HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new BusinessRuleException($"Strava API vrátilo chybu {(int)response.StatusCode} při načítání detailu aktivity.");
+        }
+
+        var streams = await response.Content.ReadFromJsonAsync<Dictionary<string, StravaStreamSet>>(cancellationToken: cancellationToken)
+            ?? [];
+
+        if (!streams.TryGetValue("time", out var time) || time.Data.Count == 0)
+        {
+            return null;
+        }
+
+        return new ExternalActivityStreams(
+            TimeOffsetsSeconds: time.Data.Select(v => (int)(v ?? 0)).ToList(),
+            HeartRateBpm: streams.GetValueOrDefault("heartrate")?.Data,
+            WattsOutput: streams.GetValueOrDefault("watts")?.Data,
+            CadenceRpm: streams.GetValueOrDefault("cadence")?.Data,
+            DistanceMeters: streams.GetValueOrDefault("distance")?.Data,
+            AltitudeMeters: streams.GetValueOrDefault("altitude")?.Data,
+            VelocityMetersPerSecond: streams.GetValueOrDefault("velocity_smooth")?.Data,
+            GradePercent: streams.GetValueOrDefault("grade_smooth")?.Data);
     }
 
     private void RequireConfigured()

@@ -36,6 +36,8 @@ services:
       Integrations__Strava__RedirectUri: ${STRAVA_REDIRECT_URI:-http://localhost:5173/integrations/strava/callback}
     ports:
       - "5158:8080"
+    volumes:
+      - traincoach_dataprotection_keys:/app/dataprotection-keys
 
   frontend:
     build:
@@ -51,3 +53,4 @@ services:
 
 volumes:
   traincoach_postgres_data:
+  traincoach_dataprotection_keys:

@@ -10,7 +10,7 @@ namespace TrainCoach.Application.Integrations;
 public class SyncOrchestrator(
     IApplicationDbContext db,
     IEnumerable<IIntegrationProvider> providers,
-    ITokenEncryptor tokenEncryptor,
+    IAccessTokenResolver tokenResolver,
     IDateTimeProvider clock) : ISyncOrchestrator
 {
     public async Task RunAsync(Guid integrationConnectionId, SyncTrigger trigger, CancellationToken cancellationToken = default)
@@ -40,19 +40,8 @@ public class SyncOrchestrator(
             var provider = providers.FirstOrDefault(p => p.ProviderType == connection.Provider)
                 ?? throw new BusinessRuleException($"Poskytovatel {connection.Provider} není zaregistrován.");
 
-            var accessToken = tokenEncryptor.Unprotect(connection.Credential.EncryptedAccessToken);
-
-            if (connection.Credential.AccessTokenExpiresAtUtc is { } expiresAt && expiresAt <= clock.UtcNow && connection.Credential.EncryptedRefreshToken is not null)
-            {
-                var refreshed = await provider.RefreshTokenAsync(tokenEncryptor.Unprotect(connection.Credential.EncryptedRefreshToken), cancellationToken);
-                connection.Credential.EncryptedAccessToken = tokenEncryptor.Protect(refreshed.AccessToken);
-                if (refreshed.RefreshToken is not null)
-                {
-                    connection.Credential.EncryptedRefreshToken = tokenEncryptor.Protect(refreshed.RefreshToken);
-                }
-                connection.Credential.AccessTokenExpiresAtUtc = refreshed.ExpiresAtUtc;
-                accessToken = refreshed.AccessToken;
-            }
+            var accessToken = await tokenResolver.ResolveFreshAccessTokenAsync(connection.AthleteUserId, connection.Provider, cancellationToken)
+                ?? throw new BusinessRuleException("Propojení nemá uložené přihlašovací údaje.");
 
             var sinceUtc = connection.LastSyncedAtUtc ?? clock.UtcNow.AddDays(-30);
             var activities = await provider.FetchRecentActivitiesAsync(accessToken, sinceUtc, cancellationToken);

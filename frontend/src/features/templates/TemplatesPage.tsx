@@ -6,12 +6,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Group, Select, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconClipboardList, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconClipboardList, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { Panel, CardHeader, Button, IconButton, Modal, FormField, Skeleton, EmptyState, showToast } from '../../design-system/components';
 import {
   useGetApiWorkoutTemplates,
   getGetApiWorkoutTemplatesQueryKey,
   getPostApiWorkoutTemplatesMutationOptions,
+  getPutApiWorkoutTemplatesIdMutationOptions,
   getDeleteApiWorkoutTemplatesIdMutationOptions,
 } from '../../api/generated/workout-templates/workout-templates';
 import { SportType } from '../../api/generated/models';
@@ -37,13 +38,15 @@ function TemplatesSkeleton() {
 export function TemplatesPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure();
+  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure();
+  const [editingTemplate, setEditingTemplate] = useState<WorkoutTemplateDto | null>(null);
   const [pendingDelete, setPendingDelete] = useState<WorkoutTemplateDto | null>(null);
 
   const templatesQuery = useGetApiWorkoutTemplates();
   const templates = templatesQuery.data ?? [];
 
   const createMutation = useMutation(getPostApiWorkoutTemplatesMutationOptions());
+  const updateMutation = useMutation(getPutApiWorkoutTemplatesIdMutationOptions());
   const deleteMutation = useMutation(getDeleteApiWorkoutTemplatesIdMutationOptions());
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getGetApiWorkoutTemplatesQueryKey() });
 
@@ -52,12 +55,30 @@ export function TemplatesPage() {
     defaultValues: { name: '', sport: SportType.Running, description: '' },
   });
 
-  const onCreate = form.handleSubmit(async (values) => {
+  const openCreate = () => {
+    setEditingTemplate(null);
+    form.reset({ name: '', sport: SportType.Running, description: '' });
+    openModal();
+  };
+
+  const openEdit = (tpl: WorkoutTemplateDto) => {
+    setEditingTemplate(tpl);
+    form.reset({ name: tpl.name ?? '', sport: tpl.sport ?? SportType.Running, description: tpl.description ?? '' });
+    openModal();
+  };
+
+  const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await createMutation.mutateAsync({ data: { name: values.name, sport: values.sport, description: values.description, segments: [] } });
+      if (editingTemplate?.id) {
+        await updateMutation.mutateAsync({
+          id: editingTemplate.id,
+          data: { name: values.name, sport: values.sport, description: values.description, segments: editingTemplate.segments ?? [] },
+        });
+      } else {
+        await createMutation.mutateAsync({ data: { name: values.name, sport: values.sport, description: values.description, segments: [] } });
+      }
       showToast({ tone: 'positive', message: t('templates.created') });
-      form.reset({ name: '', sport: SportType.Running, description: '' });
-      closeCreate();
+      closeModal();
       await invalidate();
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
@@ -114,12 +135,15 @@ export function TemplatesPage() {
                   kicker={tpl.sport ? t(`sport.${tpl.sport}`) : ''}
                   title={tpl.name}
                   right={
-                    <IconButton
-                      icon={<IconTrash size={16} />}
-                      label={t('common.delete')}
-                      color="red"
-                      onClick={() => setPendingDelete(tpl)}
-                    />
+                    <Group gap={4}>
+                      <IconButton icon={<IconPencil size={16} />} label={t('common.edit')} onClick={() => openEdit(tpl)} />
+                      <IconButton
+                        icon={<IconTrash size={16} />}
+                        label={t('common.delete')}
+                        color="red"
+                        onClick={() => setPendingDelete(tpl)}
+                      />
+                    </Group>
                   }
                 />
                 {tpl.description && <Text className="ds-body">{tpl.description}</Text>}
@@ -129,8 +153,8 @@ export function TemplatesPage() {
         )}
       </Panel>
 
-      <Modal opened={createOpened} onClose={closeCreate} title={t('templates.createTemplate')}>
-        <form onSubmit={onCreate}>
+      <Modal opened={modalOpened} onClose={closeModal} title={editingTemplate ? t('common.edit') : t('templates.createTemplate')}>
+        <form onSubmit={onSubmit}>
           <Stack gap="sm">
             <FormField label={t('templates.name')} error={form.formState.errors.name?.message}>
               <TextInput {...form.register('name')} />
@@ -147,7 +171,7 @@ export function TemplatesPage() {
             <FormField label={t('templates.description')}>
               <Textarea minRows={2} {...form.register('description')} />
             </FormField>
-            <Button type="submit" loading={form.formState.isSubmitting || createMutation.isPending} fullWidth mt="sm">
+            <Button type="submit" loading={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending} fullWidth mt="sm">
               {t('common.save')}
             </Button>
           </Stack>

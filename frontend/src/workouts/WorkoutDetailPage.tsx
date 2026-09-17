@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Group, NumberInput, Select, Stack, Table, Text, Textarea, Title } from '@mantine/core';
-import { IconClipboardX, IconPlus, IconTrash } from '@tabler/icons-react';
+import { Checkbox, Group, NumberInput, Select, Stack, Table, Text, TextInput, Textarea, Title } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
+import { useDisclosure } from '@mantine/hooks';
+import { IconClipboardX, IconClipboardPlus, IconPlus, IconTrash } from '@tabler/icons-react';
 import {
   useGetApiWorkoutsId,
   getGetApiWorkoutsIdQueryKey,
@@ -15,17 +19,41 @@ import {
   getGetApiWorkoutsWorkoutIdCommentsQueryKey,
   getPostApiCommentsMutationOptions,
 } from '../api/generated/comments/comments';
-import { IntensityTargetType, WorkoutSegmentType, type WorkoutSegmentDto } from '../api/generated/models';
+import { getGetApiWorkoutTemplatesQueryKey, getPostApiWorkoutTemplatesMutationOptions } from '../api/generated/workout-templates/workout-templates';
+import { IntensityTargetType, SportType, WorkoutSegmentType, type WorkoutSegmentDto } from '../api/generated/models';
 import { useAuth } from '../auth/AuthContext';
 import { AppRole } from '../api/generated/models';
-import { Panel, CardHeader, Badge, Button, IconButton, FormField, MetricStrip, EmptyState, Skeleton, showToast } from '../design-system/components';
+import { Panel, CardHeader, Badge, Button, IconButton, Modal, FormField, MetricStrip, EmptyState, Skeleton, showToast } from '../design-system/components';
+import { toIsoDate } from '../calendar/dateUtils';
 import classes from './WorkoutDetailPage.module.css';
 
 const segmentTypeOptions = Object.values(WorkoutSegmentType).map((v) => ({ value: v, label: v }));
+const sportOptions = Object.values(SportType).map((value) => ({ value, label: value }));
 
 interface SegmentFormValues {
   segments: WorkoutSegmentDto[];
 }
+
+const saveAsTemplateSchema = z.object({
+  name: z.string().min(1),
+  sport: z.nativeEnum(SportType),
+  description: z.string().optional(),
+});
+type SaveAsTemplateValues = z.infer<typeof saveAsTemplateSchema>;
+
+const editWorkoutSchema = z
+  .object({
+    date: z.date(),
+    sport: z.nativeEnum(SportType),
+    title: z.string().optional(),
+    coachDescription: z.string().optional(),
+    isRestDay: z.boolean(),
+    plannedDistanceMeters: z.number().nullable().optional(),
+    plannedDurationMinutes: z.number().nullable().optional(),
+    plannedElevationGainMeters: z.number().nullable().optional(),
+  })
+  .refine((v) => v.isRestDay || !!v.title?.trim(), { path: ['title'], message: 'Required' });
+type EditWorkoutValues = z.infer<typeof editWorkoutSchema>;
 
 function targetLabel(s: WorkoutSegmentDto): string {
   if (s.intensityTargetType === IntensityTargetType.Rpe && s.targetRpe) return `RPE ${s.targetRpe}`;
@@ -56,18 +84,39 @@ export function WorkoutDetailPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [editingStructure, setEditingStructure] = useState(false);
+  const [editingSummary, setEditingSummary] = useState(false);
   const [commentText, setCommentText] = useState('');
+  const [saveTemplateOpened, { open: openSaveTemplate, close: closeSaveTemplate }] = useDisclosure();
 
   const workoutQuery = useGetApiWorkoutsId(workoutId ?? '', { query: { enabled: !!workoutId } });
   const commentsQuery = useGetApiWorkoutsWorkoutIdComments(workoutId ?? '', { query: { enabled: !!workoutId } });
 
   const updateMutation = useMutation(getPutApiWorkoutsIdMutationOptions());
   const commentMutation = useMutation(getPostApiCommentsMutationOptions());
+  const createTemplateMutation = useMutation(getPostApiWorkoutTemplatesMutationOptions());
 
   const { control, register, handleSubmit, reset } = useForm<SegmentFormValues>({
     values: { segments: workoutQuery.data?.segments ?? [] },
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'segments' });
+
+  const {
+    control: summaryControl,
+    register: registerSummary,
+    handleSubmit: handleSubmitSummary,
+    reset: resetSummary,
+    watch: watchSummary,
+    formState: { errors: summaryErrors, isSubmitting: isSubmittingSummary },
+  } = useForm<EditWorkoutValues>({ resolver: zodResolver(editWorkoutSchema) });
+  const isSummaryRestDay = watchSummary('isRestDay');
+
+  const {
+    control: templateControl,
+    register: registerTemplate,
+    handleSubmit: handleSubmitTemplate,
+    reset: resetTemplate,
+    formState: { errors: templateErrors, isSubmitting: isSubmittingTemplate },
+  } = useForm<SaveAsTemplateValues>({ resolver: zodResolver(saveAsTemplateSchema) });
 
   if (!workoutId) return null;
   if (workoutQuery.isLoading) return <WorkoutDetailSkeleton />;
@@ -106,6 +155,66 @@ export function WorkoutDetailPage() {
     }
   });
 
+  const startEditSummary = () => {
+    resetSummary({
+      date: new Date(workout.date ?? ''),
+      sport: workout.sport ?? SportType.Running,
+      title: workout.title ?? '',
+      coachDescription: workout.coachDescription ?? '',
+      isRestDay: workout.isRestDay ?? false,
+      plannedDistanceMeters: workout.plannedDistanceMeters ?? null,
+      plannedDurationMinutes: workout.plannedDurationSeconds != null ? Math.round(workout.plannedDurationSeconds / 60) : null,
+      plannedElevationGainMeters: workout.plannedElevationGainMeters ?? null,
+    });
+    setEditingSummary(true);
+  };
+
+  const saveSummary = handleSubmitSummary(async (values) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: workoutId,
+        data: {
+          date: toIsoDate(values.date),
+          sport: values.isRestDay ? SportType.Rest : values.sport,
+          title: values.isRestDay ? t('calendar.restDay') : values.title,
+          coachDescription: values.coachDescription,
+          isRestDay: values.isRestDay,
+          plannedDistanceMeters: values.plannedDistanceMeters ?? null,
+          plannedDurationSeconds: values.plannedDurationMinutes != null ? Math.round(values.plannedDurationMinutes * 60) : null,
+          plannedElevationGainMeters: values.plannedElevationGainMeters ?? null,
+          segments: workout.segments ?? [],
+        },
+      });
+      showToast({ tone: 'positive', message: t('workout.detailsSaved') });
+      setEditingSummary(false);
+      await queryClient.invalidateQueries({ queryKey: getGetApiWorkoutsIdQueryKey(workoutId) });
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    }
+  });
+
+  const startSaveAsTemplate = () => {
+    resetTemplate({
+      name: workout.isRestDay ? t('calendar.restDay') : (workout.title ?? ''),
+      sport: workout.isRestDay ? SportType.Rest : (workout.sport ?? SportType.Running),
+      description: workout.coachDescription ?? '',
+    });
+    openSaveTemplate();
+  };
+
+  const saveAsTemplate = handleSubmitTemplate(async (values) => {
+    try {
+      await createTemplateMutation.mutateAsync({
+        data: { name: values.name, sport: values.sport, description: values.description, segments: workout.segments ?? [] },
+      });
+      showToast({ tone: 'positive', message: t('templates.created') });
+      closeSaveTemplate();
+      await queryClient.invalidateQueries({ queryKey: getGetApiWorkoutTemplatesQueryKey() });
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    }
+  });
+
   const submitComment = async () => {
     if (!commentText.trim()) return;
     try {
@@ -119,49 +228,140 @@ export function WorkoutDetailPage() {
 
   return (
     <Stack gap="lg">
-      <div>
-        <Group gap="xs" mb={4}>
-          <Badge tone="info">{t(`sport.${workout.sport}`)}</Badge>
-          {workout.isRestDay && <Badge tone="neutral">{t('calendar.restDay')}</Badge>}
-        </Group>
-        <Title className="ds-section-title" order={2}>
-          {workout.isRestDay ? t('calendar.restDay') : workout.title}
-        </Title>
-        <Text className="ds-metadata">{workout.date}</Text>
-      </div>
+      {!editingSummary ? (
+        <>
+          <Group justify="space-between" align="flex-start">
+            <div>
+              <Group gap="xs" mb={4}>
+                <Badge tone="info">{t(`sport.${workout.sport}`)}</Badge>
+                {workout.isRestDay && <Badge tone="neutral">{t('calendar.restDay')}</Badge>}
+              </Group>
+              <Title className="ds-section-title" order={2}>
+                {workout.isRestDay ? t('calendar.restDay') : workout.title}
+              </Title>
+              <Text className="ds-metadata">{workout.date}</Text>
+            </div>
+            {isCoach && (
+              <Group gap="xs">
+                <Button variant="default" size="compact-sm" leftSection={<IconClipboardPlus size={14} />} onClick={startSaveAsTemplate}>
+                  {t('workout.saveAsTemplate')}
+                </Button>
+                <Button variant="default" size="compact-sm" onClick={startEditSummary}>
+                  {t('common.edit')}
+                </Button>
+              </Group>
+            )}
+          </Group>
 
-      <Panel>
-        {workout.coachDescription && <Text className="ds-body">{workout.coachDescription}</Text>}
-        {(workout.plannedDistanceMeters != null || workout.plannedDurationSeconds != null || workout.plannedElevationGainMeters != null) && (
-          <MetricStrip
-            metrics={[
-              { label: t('workout.plannedDistance'), value: workout.plannedDistanceMeters != null ? `${(workout.plannedDistanceMeters / 1000).toFixed(1)} km` : '—' },
-              { label: t('workout.plannedDuration'), value: workout.plannedDurationSeconds != null ? `${Math.round(workout.plannedDurationSeconds / 60)} min` : '—' },
-              { label: t('workout.plannedElevation'), value: workout.plannedElevationGainMeters != null ? `${workout.plannedElevationGainMeters} m` : '—' },
-            ]}
-          />
-        )}
-      </Panel>
+          <Panel>
+            {workout.coachDescription && <Text className="ds-body">{workout.coachDescription}</Text>}
+            {(workout.plannedDistanceMeters != null || workout.plannedDurationSeconds != null || workout.plannedElevationGainMeters != null) && (
+              <MetricStrip
+                metrics={[
+                  { label: t('workout.plannedDistance'), value: workout.plannedDistanceMeters != null ? `${(workout.plannedDistanceMeters / 1000).toFixed(1)} km` : '—' },
+                  { label: t('workout.plannedDuration'), value: workout.plannedDurationSeconds != null ? `${Math.round(workout.plannedDurationSeconds / 60)} min` : '—' },
+                  { label: t('workout.plannedElevation'), value: workout.plannedElevationGainMeters != null ? `${workout.plannedElevationGainMeters} m` : '—' },
+                ]}
+              />
+            )}
+          </Panel>
+        </>
+      ) : (
+        <Panel>
+          <CardHeader kicker={t('workout.editDetails')} />
+          <form onSubmit={saveSummary}>
+            <Stack gap="sm">
+              <Controller
+                name="date"
+                control={summaryControl}
+                render={({ field }) => (
+                  <FormField label={t('common.date')}>
+                    <DateInput value={field.value} onChange={(v) => field.onChange(v ? new Date(v) : new Date())} />
+                  </FormField>
+                )}
+              />
+              <Controller
+                name="isRestDay"
+                control={summaryControl}
+                render={({ field }) => (
+                  <Checkbox label={t('calendar.isRestDay')} checked={field.value} onChange={(e) => field.onChange(e.currentTarget.checked)} />
+                )}
+              />
+              {!isSummaryRestDay && (
+                <>
+                  <Controller
+                    name="sport"
+                    control={summaryControl}
+                    render={({ field }) => (
+                      <FormField label={t('workout.detail')}>
+                        <Select data={sportOptions} {...field} />
+                      </FormField>
+                    )}
+                  />
+                  <FormField label={t('calendar.title')} error={summaryErrors.title?.message}>
+                    <TextInput {...registerSummary('title')} />
+                  </FormField>
+                </>
+              )}
+              <FormField label={t('calendar.description')}>
+                <Textarea minRows={3} {...registerSummary('coachDescription')} />
+              </FormField>
+              <Controller
+                name="plannedDistanceMeters"
+                control={summaryControl}
+                render={({ field }) => (
+                  <FormField label={t('workout.plannedDistance')} unit="m">
+                    <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? null : Number(v))} />
+                  </FormField>
+                )}
+              />
+              <Controller
+                name="plannedDurationMinutes"
+                control={summaryControl}
+                render={({ field }) => (
+                  <FormField label={t('workout.plannedDuration')} unit="min">
+                    <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? null : Number(v))} />
+                  </FormField>
+                )}
+              />
+              <Controller
+                name="plannedElevationGainMeters"
+                control={summaryControl}
+                render={({ field }) => (
+                  <FormField label={t('workout.plannedElevation')} unit="m">
+                    <NumberInput value={field.value ?? undefined} onChange={(v) => field.onChange(v === '' ? null : Number(v))} />
+                  </FormField>
+                )}
+              />
+              <Group gap="xs" mt="sm">
+                <Button type="submit" loading={isSubmittingSummary}>
+                  {t('common.save')}
+                </Button>
+                <Button variant="default" onClick={() => setEditingSummary(false)}>
+                  {t('common.cancel')}
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+        </Panel>
+      )}
 
       <Panel noPadding={editingStructure}>
         <div style={{ padding: editingStructure ? '22px 24px 0' : undefined }}>
           <CardHeader
             kicker={t('workout.structure')}
             right={
-              isCoach && (
+              isCoach &&
+              !editingStructure && (
                 <Button
-                  variant={editingStructure ? 'filled' : 'default'}
+                  variant="default"
                   size="compact-sm"
                   onClick={() => {
-                    if (editingStructure) {
-                      void saveStructure();
-                    } else {
-                      reset({ segments: workout.segments ?? [] });
-                      setEditingStructure(true);
-                    }
+                    reset({ segments: workout.segments ?? [] });
+                    setEditingStructure(true);
                   }}
                 >
-                  {editingStructure ? t('common.save') : t('workout.editStructure')}
+                  {t('workout.editStructure')}
                 </Button>
               )
             }
@@ -256,7 +456,10 @@ export function WorkoutDetailPage() {
                 {t('workout.addSegment')}
               </Button>
             </Stack>
-            <div className={classes.stickyBar}>
+            <div className={classes.actionBar}>
+              <Button variant="default" onClick={() => setEditingStructure(false)}>
+                {t('common.cancel')}
+              </Button>
               <Button onClick={() => void saveStructure()}>{t('common.save')}</Button>
             </div>
           </>
@@ -295,6 +498,36 @@ export function WorkoutDetailPage() {
           </Group>
         </Stack>
       </Panel>
+
+      {isCoach && (
+        <Modal opened={saveTemplateOpened} onClose={closeSaveTemplate} title={t('workout.saveAsTemplate')}>
+          <form onSubmit={saveAsTemplate}>
+            <Stack gap="sm">
+              <FormField label={t('templates.name')} error={templateErrors.name?.message}>
+                <TextInput {...registerTemplate('name')} />
+              </FormField>
+              <Controller
+                control={templateControl}
+                name="sport"
+                render={({ field }) => (
+                  <FormField label={t('templates.sport')}>
+                    <Select data={Object.values(SportType).map((v) => ({ value: v, label: t(`sport.${v}`) }))} {...field} />
+                  </FormField>
+                )}
+              />
+              <FormField label={t('templates.description')}>
+                <Textarea minRows={2} {...registerTemplate('description')} />
+              </FormField>
+              {(workout.segments?.length ?? 0) > 0 && (
+                <Text className="ds-metadata">{t('workout.saveAsTemplateSegmentsHint', { count: workout.segments?.length ?? 0 })}</Text>
+              )}
+              <Button type="submit" loading={isSubmittingTemplate} fullWidth mt="sm">
+                {t('common.save')}
+              </Button>
+            </Stack>
+          </form>
+        </Modal>
+      )}
     </Stack>
   );
 }

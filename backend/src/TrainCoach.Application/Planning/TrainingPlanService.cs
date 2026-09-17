@@ -161,7 +161,13 @@ public class TrainingPlanService(
         workout.UpdatedAtUtc = clock.UtcNow;
 
         db.WorkoutSegments.RemoveRange(workout.Segments);
-        workout.Segments = MapSegments(request.Segments);
+        var newSegments = MapSegments(request.Segments);
+        workout.Segments = newSegments;
+        // WorkoutSegment.Id is assigned client-side at construction (see Entity base type), so
+        // EF's change tracker can't tell these are new from the key alone — without an explicit
+        // Add, it infers Unchanged/Modified from graph fixup and issues an UPDATE against a row
+        // that was never inserted, throwing DbUpdateConcurrencyException (0 rows affected).
+        db.WorkoutSegments.AddRange(newSegments);
 
         await db.SaveChangesAsync(cancellationToken);
         return ToWorkoutDto(workout);

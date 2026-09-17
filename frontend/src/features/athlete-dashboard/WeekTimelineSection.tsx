@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Text } from '@mantine/core';
 import { IconCalendarStats } from '@tabler/icons-react';
 import { Panel, CardHeader, Badge, EmptyState, Skeleton } from '../../design-system/components';
@@ -20,6 +21,7 @@ const weekdayKeys = ['0', '1', '2', '3', '4', '5', '6'];
  * unreadable table (docs/DESIGN_SYSTEM.md §4, §7). */
 export function WeekTimelineSection({ data }: { data: WeekTimelineData }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const todayIso = toIsoDate(new Date());
 
   if (data.isLoading) {
@@ -51,7 +53,7 @@ export function WeekTimelineSection({ data }: { data: WeekTimelineData }) {
     activitiesByDate.set(date, [...(activitiesByDate.get(date) ?? []), a]);
   }
 
-  if (!data.week) {
+  if (!data.week && data.activities.length === 0) {
     return (
       <Panel>
         <CardHeader kicker={t('dashboard.weekTimeline')} />
@@ -81,9 +83,29 @@ export function WeekTimelineSection({ data }: { data: WeekTimelineData }) {
                 </div>
                 <div className={classes.row}>
                   <Badge tone={dayActivities.length > 0 ? 'positive' : 'neutral'}>{t('dashboard.actual')}</Badge>
-                  <Text fz={12} fw={600} lineClamp={2}>
-                    {dayActivities[0]?.title ?? (dayActivities.length > 0 ? t(`sport.${dayActivities[0].sport}`) : '—')}
-                  </Text>
+                  {dayActivities.length === 0 ? (
+                    <Text fz={12} fw={600}>
+                      —
+                    </Text>
+                  ) : (
+                    dayActivities.map((activity) => (
+                      <Text
+                        key={activity.id}
+                        fz={12}
+                        fw={600}
+                        lineClamp={2}
+                        className={activity.id ? classes.activityLink : undefined}
+                        role={activity.id ? 'button' : undefined}
+                        tabIndex={activity.id ? 0 : undefined}
+                        onClick={() => activity.id && navigate(`/activities/${activity.id}`)}
+                        onKeyDown={(e) => {
+                          if (activity.id && (e.key === 'Enter' || e.key === ' ')) navigate(`/activities/${activity.id}`);
+                        }}
+                      >
+                        {activity.title ?? t(`sport.${activity.sport}`)}
+                      </Text>
+                    ))
+                  )}
                 </div>
               </div>
             );

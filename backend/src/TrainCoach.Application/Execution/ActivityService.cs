@@ -1,11 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using TrainCoach.Application.Common;
+using TrainCoach.Application.Integrations;
 using TrainCoach.Domain.Enums;
 using TrainCoach.Domain.Execution;
 
 namespace TrainCoach.Application.Execution;
 
-public class ActivityService(IApplicationDbContext db, IRelationshipAccessGuard accessGuard, IDateTimeProvider clock) : IActivityService
+public class ActivityService(
+    IApplicationDbContext db,
+    IRelationshipAccessGuard accessGuard,
+    IEnumerable<IIntegrationProvider> providers,
+    IAccessTokenResolver tokenResolver,
+    IDateTimeProvider clock) : IActivityService
 {
     public async Task<IReadOnlyList<CompletedActivityDto>> GetForAthleteAsync(Guid athleteUserId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default)
     {
@@ -23,6 +29,38 @@ public class ActivityService(IApplicationDbContext db, IRelationshipAccessGuard 
 
         var activities = await query.OrderByDescending(a => a.StartedAtUtc).ToListAsync(cancellationToken);
         return activities.Select(ToDto).ToList();
+    }
+
+    public async Task<CompletedActivityDto> GetByIdAsync(Guid callerUserId, Guid activityId, CancellationToken cancellationToken = default)
+    {
+        var activity = await LoadOwnedActivityAsync(activityId, cancellationToken);
+        return ToDto(activity);
+    }
+
+    public async Task<ActivityStreamsDto?> GetActivityStreamsAsync(Guid callerUserId, Guid activityId, CancellationToken cancellationToken = default)
+    {
+        var activity = await LoadOwnedActivityAsync(activityId, cancellationToken);
+
+        if (activity.Provenance is not { Source: DataSource.Strava, ExternalId: { } externalId })
+        {
+            return null;
+        }
+
+        var streamProvider = providers.OfType<IActivityStreamProvider>()
+            .FirstOrDefault(p => ((IIntegrationProvider)p).ProviderType == IntegrationProviderType.Strava);
+        if (streamProvider is null)
+        {
+            return null;
+        }
+
+        var accessToken = await tokenResolver.ResolveFreshAccessTokenAsync(activity.AthleteUserId, IntegrationProviderType.Strava, cancellationToken);
+        if (accessToken is null)
+        {
+            return null;
+        }
+
+        var streams = await streamProvider.FetchActivityStreamsAsync(accessToken, externalId, cancellationToken);
+        return streams is null ? null : ToStreamsDto(activityId, streams);
     }
 
     public async Task<CompletedActivityDto> CreateManualAsync(Guid callerUserId, CreateManualActivityRequest request, CancellationToken cancellationToken = default)
@@ -111,6 +149,29 @@ public class ActivityService(IApplicationDbContext db, IRelationshipAccessGuard 
         var results = await query.OrderByDescending(f => f.Date).ToListAsync(cancellationToken);
         return results.Select(ToFeedbackDto).ToList();
     }
+
+    private async Task<CompletedActivity> LoadOwnedActivityAsync(Guid activityId, CancellationToken cancellationToken)
+    {
+        var activity = await db.CompletedActivities.Include(a => a.Provenance)
+            .FirstOrDefaultAsync(a => a.Id == activityId, cancellationToken)
+            ?? throw new NotFoundException(nameof(CompletedActivity), activityId);
+
+        await accessGuard.EnsureAthleteAccessAsync(activity.AthleteUserId, PermissionScope.ViewCompletedActivities, cancellationToken);
+        return activity;
+    }
+
+    private static ActivityStreamsDto ToStreamsDto(Guid activityId, ExternalActivityStreams s) => new(
+        activityId,
+        s.TimeOffsetsSeconds,
+        s.HeartRateBpm?.Select(RoundToInt).ToList(),
+        s.CadenceRpm?.Select(RoundToInt).ToList(),
+        s.WattsOutput?.Select(RoundToInt).ToList(),
+        s.DistanceMeters?.Select(v => (decimal?)v).ToList(),
+        s.AltitudeMeters?.Select(v => (decimal?)v).ToList(),
+        s.VelocityMetersPerSecond?.Select(v => v is > 0 ? (int?)Math.Round(1000d / v.Value) : null).ToList(),
+        s.GradePercent?.Select(v => (decimal?)v).ToList());
+
+    private static int? RoundToInt(double? value) => value.HasValue ? (int?)Math.Round(value.Value) : null;
 
     private static CompletedActivityDto ToDto(CompletedActivity a) => new(
         a.Id, a.AthleteUserId, a.PlannedWorkoutId, a.Sport, a.Title, a.StartedAtUtc, a.DurationSeconds,

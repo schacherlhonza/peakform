@@ -58,7 +58,10 @@ public class WorkoutTemplateService(
         template.UpdatedAtUtc = clock.UtcNow;
 
         db.WorkoutSegments.RemoveRange(template.Segments);
-        template.Segments = MapSegments(request.Segments);
+        var newSegments = MapSegments(request.Segments);
+        template.Segments = newSegments;
+        // See TrainingPlanService.UpdateWorkoutAsync for why this explicit AddRange is required.
+        db.WorkoutSegments.AddRange(newSegments);
 
         await db.SaveChangesAsync(cancellationToken);
         return ToDto(template);

@@ -9,6 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/charts/styles.css';
 import './index.css';
 // Design-system tokens/globals load last so they win the cascade over Mantine's own
 // stylesheet (e.g. Mantine sets a body background via --mantine-color-body; ours must override).

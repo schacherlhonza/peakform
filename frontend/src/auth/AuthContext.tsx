@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { jwtDecode } from './jwtDecode';
 import { getAccessToken, setTokens, clearTokens } from './tokenStore';
 import type { AppRole } from '../api/generated/models';
@@ -34,6 +35,7 @@ function readUserFromToken(): CurrentUser | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(() => readUserFromToken());
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Keep state in sync if tokens change in another tab.
@@ -47,15 +49,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isAuthenticated: user !== null,
       login: (accessToken, refreshToken) => {
+        // Query keys aren't scoped by user, so a stale cache from a previous session
+        // would otherwise be served as fresh (within staleTime) to the newly logged-in user.
+        queryClient.clear();
         setTokens(accessToken, refreshToken);
         setUser(readUserFromToken());
       },
       logout: () => {
+        queryClient.clear();
         clearTokens();
         setUser(null);
       },
     }),
-    [user],
+    [user, queryClient],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

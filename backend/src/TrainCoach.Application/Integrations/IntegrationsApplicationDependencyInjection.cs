@@ -8,6 +8,7 @@ public static class IntegrationsApplicationDependencyInjection
     {
         services.AddScoped<IIntegrationConnectionService, IntegrationConnectionService>();
         services.AddScoped<ISyncOrchestrator, SyncOrchestrator>();
+        services.AddScoped<IAccessTokenResolver, AccessTokenResolver>();
         services.AddScoped<IImportService, ImportService>();
 
         return services;

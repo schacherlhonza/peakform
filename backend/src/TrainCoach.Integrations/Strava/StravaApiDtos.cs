@@ -65,3 +65,14 @@ public class StravaActivity
     [JsonPropertyName("calories")]
     public double? Calories { get; set; }
 }
+
+/// <summary>
+/// Shape of one entry in the `/activities/{id}/streams?key_by_type=true` response — every stream
+/// type this app requests (time, heartrate, watts, cadence, distance, altitude, velocity_smooth,
+/// grade_smooth) is a flat numeric array, so a single shape covers all of them.
+/// </summary>
+public class StravaStreamSet
+{
+    [JsonPropertyName("data")]
+    public List<double?> Data { get; set; } = [];
+}
