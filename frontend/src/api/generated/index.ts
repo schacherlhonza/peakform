@@ -1,3 +1,4 @@
+export * from './account/account';
 export * from './activities/activities';
 export * from './auth/auth';
 export * from './comments/comments';

@@ -54,7 +54,8 @@
     "import": "Import dat",
     "abbreviations": "Zkratky",
     "templates": "Šablony",
-    "notifications": "Upozornění"
+    "notifications": "Upozornění",
+    "privacy": "Data a účet"
   },
   "dashboard": {
     "athleteTitle": "Ahoj, {{name}}",
@@ -134,6 +135,38 @@
     "Rest": "Odpočinek",
     "Other": "Jiné"
   },
+  "activity": {
+    "notFound": "Trénink nebyl nalezen.",
+    "distance": "Vzdálenost",
+    "duration": "Doba trvání",
+    "avgHeartRate": "Průměrná tepovka",
+    "maxHeartRate": "Maximální tepovka",
+    "avgPace": "Průměrné tempo",
+    "elevation": "Převýšení",
+    "avgPower": "Průměrný výkon",
+    "calories": "Kalorie",
+    "streamsUnavailable": "Podrobné grafy nejsou k dispozici",
+    "streamsUnavailableHint": "Detailní grafy (tepovka, tempo, převýšení, kadence, výkon v čase) jsou dostupné jen pro tréninky synchronizované ze Stravy, u kterých Strava tato senzorová data uchovává. Souhrnné hodnoty nahoře jsou vždy k dispozici.",
+    "source": {
+      "Manual": "ruční záznam",
+      "FileImport": "import ze souboru",
+      "Strava": "Strava",
+      "GarminDemoProvider": "Garmin (demo)",
+      "MySasyDemoProvider": "MySASY (demo)"
+    },
+    "metric": {
+      "heartRate": "Tepová frekvence",
+      "heartRateExplanation": "Kolikrát za minutu bije srdce, měřeno hrudním pásem nebo optickým senzorem na hodinkách. Ukazuje okamžitou fyziologickou zátěž — roste s intenzitou, ale i s únavou, teplem nebo stresem.",
+      "pace": "Tempo",
+      "paceExplanation": "Kolik minut a sekund trvá uběhnutí/ujetí jednoho kilometru, odvozeno z GPS rychlosti. Nižší hodnota = rychlejší úsek.",
+      "elevation": "Elevační profil",
+      "elevationExplanation": "Nadmořská výška v průběhu tréninku podle GPS/barometru. Ukazuje, kudy trať stoupala a klesala.",
+      "cadence": "Kadence",
+      "cadenceExplanation": "Počet kroků (běh) nebo otáček pedálů (kolo) za minutu. Vyšší kadence při stejné rychlosti obvykle znamená kratší, rychlejší krok/šlápnutí.",
+      "power": "Výkon",
+      "powerExplanation": "Okamžitý výkon ve wattech naměřený power metrem (kolo) nebo odhadnutý ze senzorů (běh). Přímější míra zátěže než tepovka, protože reaguje okamžitě a není ovlivněná únavou nebo teplem."
+    }
+  },
   "weekday": {
     "0": "Pondělí",
     "1": "Úterý",
@@ -165,6 +198,12 @@
     "plannedElevation": "Plánované převýšení",
     "structure": "Struktura tréninku",
     "editStructure": "Upravit strukturu",
+    "editDetails": "Upravit trénink",
+    "detailsSaved": "Trénink byl uložen.",
+    "saveAsTemplate": "Uložit jako šablonu",
+    "saveAsTemplateSegmentsHint": "Šablona ponese i {{count}} strukturovaných úseků tohoto tréninku.",
+    "startFromTemplate": "Začít ze šablony",
+    "startFromTemplatePlaceholder": "Vybrat šablonu (nepovinné)",
     "addSegment": "Přidat úsek",
     "noSegments": "Trénink zatím nemá strukturované úseky.",
     "segmentOrder": "Pořadí",
@@ -344,6 +383,21 @@
     "noAbbreviations": "Zatím nejsou definovány žádné zkratky.",
     "noCoaches": "Zatím nemáte žádného aktivního trenéra."
   },
+  "privacy": {
+    "title": "Data a účet",
+    "exportSection": "Export dat",
+    "exportDescription": "Stáhněte si strojově čitelnou kopii všech dat, která o vás aplikace uchovává (profil, tréninky, wellness záznamy, reporty, spolupráce a další).",
+    "exportButton": "Stáhnout export (JSON)",
+    "exportSuccess": "Export byl stažen.",
+    "exportError": "Export se nepodařilo stáhnout.",
+    "deleteSection": "Smazání účtu",
+    "deleteDescription": "Trvale zablokuje přihlášení a odosobní váš profil (jméno, telefon, poznámky). Spolupráce s trenérem/sportovci budou ukončeny. Agregovaná historie potřebná pro data druhé strany (např. komentáře k tréninkům) zůstane zachována bez vaší identifikace.",
+    "deleteButton": "Smazat účet",
+    "deleteConfirmTitle": "Opravdu smazat účet?",
+    "deleteConfirmBody": "Tato akce je nevratná. Budete okamžitě odhlášeni a přihlašovací údaje přestanou fungovat.",
+    "deleteSuccess": "Účet byl smazán.",
+    "deleteError": "Účet se nepodařilo smazat."
+  },
   "integrations": {
     "provider": {
       "Strava": "Strava",
@@ -359,7 +413,8 @@
     "syncNow": "Synchronizovat nyní",
     "disconnect": "Odpojit",
     "syncHistory": "Historie synchronizací",
-    "syncStarted": "Synchronizace byla spuštěna."
+    "syncStarted": "Synchronizace byla spuštěna.",
+    "connecting": "Dokončuji propojení se Stravou…"
   },
   "permissions": {
     "scope": {

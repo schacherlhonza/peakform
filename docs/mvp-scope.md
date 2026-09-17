@@ -42,3 +42,10 @@
 ### Poznámka k principu
 
 Ve všech třech blokovaných případech platí stejný architektonický přístup: `IIntegrationProvider` kontrakt existuje od začátku, takže po odblokování (schválení přístupu, získání API) stačí doplnit konkrétní implementaci adaptéru — Application vrstva a zbytek systému se nemění (viz `architecture.md`, `decisions/0006-integration-strategy.md`). Nikdy se nepoužívá scraping ani ukládání hesel uživatele k třetí straně jako náhrada za chybějící oficiální API.
+
+## 5. Známé mezery vůči vlastní dokumentaci (nalezeno auditem, mimo aktuální scope)
+
+| Mezera | Nalezeno při | Stav |
+|---|---|---|
+| **Změna hesla** — přihlášený uživatel nemá žádný způsob, jak si sám změnit heslo (`AuthController` má jen register/login/refresh/logout, žádné `change-password`). `security.md` §12 počítá s auditovaným `PasswordChanged` — enum `AuditAction.PasswordChanged` na to existuje, ale nemá se kam zapsat. | Implementace auditního logu (viz `security.md` §12) | Nevyřešeno — samostatná funkce k doplnění (endpoint + UI + audit log zápis) |
+| **Content-Security-Policy header** chybí; ostatní security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, HSTS) jsou nastavené v `Program.cs`. `security.md` §8 CSP zmiňuje vedle nich. | Audit bezpečnostní dokumentace vs. implementace | Nevyřešeno — nízké riziko (ostatní headers pokrývají clickjacking/MIME-sniffing), ale explicitní mezera vůči dokumentaci |

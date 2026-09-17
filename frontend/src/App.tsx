@@ -6,6 +6,7 @@ import { AppShell } from './app/AppShell';
 import { DashboardPage } from './dashboard/DashboardPage';
 import { CalendarPage } from './calendar/CalendarPage';
 import { WorkoutDetailPage } from './workouts/WorkoutDetailPage';
+import { ActivityDetailPage } from './activities/ActivityDetailPage';
 import { MorningCheckInPage } from './checkins/MorningCheckInPage';
 import { EveningCheckInPage } from './checkins/EveningCheckInPage';
 import { ReportsPage } from './reports/ReportsPage';
@@ -18,7 +19,9 @@ import SettingsPage from './settings/SettingsPage';
 import HeartRateZonesPage from './settings/HeartRateZonesPage';
 import AbbreviationsPage from './settings/AbbreviationsPage';
 import PermissionsPage from './settings/PermissionsPage';
+import PrivacyPage from './settings/PrivacyPage';
 import IntegrationsPage from './integrations/IntegrationsPage';
+import StravaCallbackPage from './integrations/StravaCallbackPage';
 import ImportPage from './import/ImportPage';
 import TemplatesPage from './features/templates/TemplatesPage';
 import NotificationsPage from './features/notifications/NotificationsPage';
@@ -47,6 +50,7 @@ function App() {
           }
         />
         <Route path="/workouts/:workoutId" element={<WorkoutDetailPage />} />
+        <Route path="/activities/:activityId" element={<ActivityDetailPage />} />
         <Route path="/checkins/morning" element={<MorningCheckInPage />} />
         <Route path="/checkins/evening" element={<EveningCheckInPage />} />
         <Route path="/reports" element={<ReportsPage />} />
@@ -109,6 +113,14 @@ function App() {
           }
         />
         <Route
+          path="/integrations/strava/callback"
+          element={
+            <ProtectedRoute roles={[AppRole.Athlete]}>
+              <StravaCallbackPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/settings/permissions"
           element={
             <ProtectedRoute roles={[AppRole.Athlete]}>
@@ -124,6 +136,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/settings/privacy" element={<PrivacyPage />} />
         <Route
           path="/athletes"
           element={

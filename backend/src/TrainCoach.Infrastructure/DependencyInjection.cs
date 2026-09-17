@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using TrainCoach.Application.Account;
 using TrainCoach.Application.Auth;
 using TrainCoach.Application.Common;
 using TrainCoach.Infrastructure.BackgroundJobs;
@@ -41,11 +42,19 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<TrainCoachDbContext>()
             .AddDefaultTokenProviders();
 
-        services.AddDataProtection().SetApplicationName("TrainCoach");
+        // Persisted to a fixed path (mounted as a durable volume in docker-compose.yml) so the key
+        // ring survives container restarts/recreates — otherwise every restart silently generates
+        // a fresh key and permanently orphans every credential (Strava tokens, etc.) encrypted
+        // with the previous one, since the default ephemeral-filesystem key store isn't kept.
+        var dataProtectionKeysPath = configuration["DataProtection:KeysPath"] ?? "dataprotection-keys";
+        services.AddDataProtection()
+            .SetApplicationName("TrainCoach")
+            .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<JwtTokenGenerator>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAccountDeletionService, AccountDeletionService>();
         services.AddScoped<IUserLookupService, UserLookupService>();
         services.AddScoped<ITokenEncryptor, DataProtectionTokenEncryptor>();
 

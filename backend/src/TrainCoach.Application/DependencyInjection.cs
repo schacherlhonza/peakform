@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using TrainCoach.Application.Account;
 using TrainCoach.Application.Common;
 using TrainCoach.Application.Execution;
 using TrainCoach.Application.Integrations;
@@ -18,6 +19,7 @@ public static class DependencyInjection
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IAccountExportService, AccountExportService>();
         services.AddScoped<IRelationshipAccessGuard, RelationshipAccessGuard>();
         services.AddScoped<ICoachAthleteRelationshipService, CoachAthleteRelationshipService>();
         services.AddScoped<ITrainingPlanService, TrainingPlanService>();

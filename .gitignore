@@ -9,6 +9,7 @@ backend/**/bin/
 backend/**/obj/
 backend/**/*.user
 backend/**/.vs/
+backend/**/dataprotection-keys/
 
 # --- Node / frontend ---
 frontend/node_modules/

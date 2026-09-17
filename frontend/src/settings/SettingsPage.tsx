@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Group, Stack, Text, Title, UnstyledButton } from '@mantine/core';
-import { IconAbc, IconChevronRight, IconHeartbeat, IconLink, IconLock } from '@tabler/icons-react';
+import { IconAbc, IconChevronRight, IconHeartbeat, IconLink, IconLock, IconShieldLock } from '@tabler/icons-react';
 import type { Icon } from '@tabler/icons-react';
 import { Panel } from '../design-system/components';
 import { useAuth } from '../auth/AuthContext';
@@ -20,13 +20,16 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const isCoach = user?.role === AppRole.Coach;
 
-  const links: SettingsLink[] = isCoach
-    ? [{ to: '/settings/abbreviations', icon: IconAbc, label: t('nav.abbreviations') }]
-    : [
-        { to: '/settings/heart-rate-zones', icon: IconHeartbeat, label: t('settings.heartRateZones') },
-        { to: '/settings/integrations', icon: IconLink, label: t('nav.integrations') },
-        { to: '/settings/permissions', icon: IconLock, label: t('nav.permissions') },
-      ];
+  const links: SettingsLink[] = [
+    ...(isCoach
+      ? [{ to: '/settings/abbreviations', icon: IconAbc, label: t('nav.abbreviations') }]
+      : [
+          { to: '/settings/heart-rate-zones', icon: IconHeartbeat, label: t('settings.heartRateZones') },
+          { to: '/settings/integrations', icon: IconLink, label: t('nav.integrations') },
+          { to: '/settings/permissions', icon: IconLock, label: t('nav.permissions') },
+        ]),
+    { to: '/settings/privacy', icon: IconShieldLock, label: t('nav.privacy') },
+  ];
 
   return (
     <Stack gap="lg">

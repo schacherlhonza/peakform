@@ -5,6 +5,47 @@
     "version": "v1"
   },
   "paths": {
+    "/api/account/export": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDataExportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDataExportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDataExportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/delete": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/athletes/{athleteUserId}/activities": {
       "get": {
         "tags": [
@@ -70,6 +111,46 @@
         }
       }
     },
+    "/api/activities/{activityId}": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/activities": {
       "post": {
         "tags": [
@@ -111,6 +192,46 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CompletedActivityDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activities/{activityId}/streams": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityStreamsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityStreamsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityStreamsDto"
                 }
               }
             }
@@ -4023,12 +4144,328 @@
   },
   "components": {
     "schemas": {
+      "AccountDataExportDto": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/ProfileExportDto"
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RelationshipExportDto"
+            },
+            "nullable": true
+          },
+          "athleteData": {
+            "$ref": "#/components/schemas/AthleteDataExportDto"
+          },
+          "commentsAuthored": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommentExportDto"
+            },
+            "nullable": true
+          },
+          "notifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationExportDto"
+            },
+            "nullable": true
+          },
+          "auditLogEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditLogExportDto"
+            },
+            "nullable": true
+          },
+          "exportedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ActivityStreamsDto": {
+        "type": "object",
+        "properties": {
+          "activityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "timeOffsetsSeconds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "heartRateBpm": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "cadenceRpm": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "powerWatts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "distanceMeters": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          },
+          "elevationMeters": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          },
+          "paceSecondsPerKm": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "gradePercent": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "AppRole": {
         "enum": [
           "Athlete",
           "Coach"
         ],
         "type": "string"
+      },
+      "AthleteDataExportDto": {
+        "type": "object",
+        "properties": {
+          "seasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeasonExportDto"
+            },
+            "nullable": true
+          },
+          "goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoalExportDto"
+            },
+            "nullable": true
+          },
+          "races": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RaceExportDto"
+            },
+            "nullable": true
+          },
+          "trainingPlans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrainingPlanExportDto"
+            },
+            "nullable": true
+          },
+          "completedActivities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedActivityExportDto"
+            },
+            "nullable": true
+          },
+          "checkIns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyCheckInExportDto"
+            },
+            "nullable": true
+          },
+          "healthFlags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PainOrHealthFlagExportDto"
+            },
+            "nullable": true
+          },
+          "sleepRecords": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SleepRecordExportDto"
+            },
+            "nullable": true
+          },
+          "recoveryMetrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecoveryMetricExportDto"
+            },
+            "nullable": true
+          },
+          "hrvMeasurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HrvMeasurementExportDto"
+            },
+            "nullable": true
+          },
+          "personalRecords": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonalRecordExportDto"
+            },
+            "nullable": true
+          },
+          "foodEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodEntryExportDto"
+            },
+            "nullable": true
+          },
+          "hydrationEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HydrationEntryExportDto"
+            },
+            "nullable": true
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedReportExportDto"
+            },
+            "nullable": true
+          },
+          "integrationConnections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationConnectionExportDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AthleteProfileExportDto": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sex": {
+            "type": "string",
+            "nullable": true
+          },
+          "heightCm": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "currentWeightKg": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "restingHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "primarySport": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuditAction": {
+        "enum": [
+          "Created",
+          "Updated",
+          "Deleted",
+          "AccessGranted",
+          "AccessRevoked",
+          "LoggedIn",
+          "PasswordChanged",
+          "DataExported",
+          "AccountDeleted"
+        ],
+        "type": "string"
+      },
+      "AuditLogExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "entityName": {
+            "type": "string",
+            "nullable": true
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "occurredAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
       },
       "AuthResult": {
         "type": "object",
@@ -4158,6 +4595,25 @@
         },
         "additionalProperties": false
       },
+      "CoachProfileExportDto": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "nullable": true
+          },
+          "certifications": {
+            "type": "string",
+            "nullable": true
+          },
+          "yearsOfExperience": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CommentAuthorRole": {
         "enum": [
           "Coach",
@@ -4186,6 +4642,31 @@
           "authorName": {
             "type": "string",
             "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CommentExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plannedWorkoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "authorRole": {
+            "$ref": "#/components/schemas/CommentAuthorRole"
           },
           "text": {
             "type": "string",
@@ -4266,6 +4747,70 @@
           },
           "source": {
             "$ref": "#/components/schemas/DataSource"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CompletedActivityExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "elevationGainMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "averageHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "averagePowerWatts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "calories": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "additionalMetricsCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -4844,6 +5389,54 @@
         },
         "additionalProperties": false
       },
+      "DailyCheckInExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CheckInType"
+          },
+          "energy": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "fatigue": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "stress": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "hasPainOrIllness": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "sleepQuality": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "muscleSoreness": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "motivation": {
+            "$ref": "#/components/schemas/WellnessScale"
+          },
+          "hydrationLiters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "DataSource": {
         "enum": [
           "Manual",
@@ -4897,6 +5490,37 @@
         },
         "additionalProperties": false
       },
+      "FoodEntryExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consumedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mealType": {
+            "$ref": "#/components/schemas/MealType"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "estimatedCarbsGrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "estimatedProteinGrams": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "GeneratedReportDto": {
         "type": "object",
         "properties": {
@@ -4939,6 +5563,38 @@
         },
         "additionalProperties": false
       },
+      "GeneratedReportExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "generatedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "narrativeText": {
+            "type": "string",
+            "nullable": true
+          },
+          "insightMessages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "GeneratedReportInsightDto": {
         "type": "object",
         "properties": {
@@ -4971,6 +5627,39 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "isAchieved": {
+            "type": "boolean"
+          },
+          "achievedNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GoalExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
           },
           "title": {
             "type": "string",
@@ -5141,6 +5830,31 @@
         },
         "additionalProperties": false
       },
+      "HrvMeasurementExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rmssdMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "HydrationDrinkType": {
         "enum": [
           "Water",
@@ -5184,6 +5898,35 @@
           },
           "note": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HydrationEntryExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consumedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "drinkType": {
+            "$ref": "#/components/schemas/HydrationDrinkType"
+          },
+          "volumeMilliliters": {
+            "type": "number",
+            "format": "double"
+          },
+          "containsElectrolytes": {
+            "type": "boolean"
+          },
+          "caffeineMilligrams": {
+            "type": "number",
+            "format": "double",
             "nullable": true
           }
         },
@@ -5360,6 +6103,41 @@
         },
         "additionalProperties": false
       },
+      "IntegrationConnectionExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/IntegrationProviderType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IntegrationConnectionStatus"
+          },
+          "externalAccountId": {
+            "type": "string",
+            "nullable": true
+          },
+          "connectedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastSyncedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "disconnectedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "IntegrationConnectionStatus": {
         "enum": [
           "NotConnected",
@@ -5465,6 +6243,36 @@
         },
         "additionalProperties": false
       },
+      "NotificationExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NotificationType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "NotificationType": {
         "enum": [
           "InviteReceived",
@@ -5507,6 +6315,42 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/HealthFlagType"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/HealthFlagSeverity"
+          },
+          "status": {
+            "$ref": "#/components/schemas/HealthFlagStatus"
+          },
+          "bodyPart": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedOnDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "resolvedOnDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PainOrHealthFlagExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
           },
           "type": {
             "$ref": "#/components/schemas/HealthFlagType"
@@ -5589,6 +6433,36 @@
         },
         "additionalProperties": false
       },
+      "PersonalRecordExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "distanceLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "achievedDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PlannedWorkoutDto": {
         "type": "object",
         "properties": {
@@ -5639,6 +6513,94 @@
               "$ref": "#/components/schemas/WorkoutSegmentDto"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlannedWorkoutExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "coachDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "isRestDay": {
+            "type": "boolean"
+          },
+          "plannedDistanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "plannedDurationSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProfileExportDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true
+          },
+          "primaryRole": {
+            "$ref": "#/components/schemas/AppRole"
+          },
+          "timeZoneId": {
+            "type": "string",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "isOnboarded": {
+            "type": "boolean"
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "athleteProfile": {
+            "$ref": "#/components/schemas/AthleteProfileExportDto"
+          },
+          "coachProfile": {
+            "$ref": "#/components/schemas/CoachProfileExportDto"
           }
         },
         "additionalProperties": false
@@ -5717,6 +6679,61 @@
         },
         "additionalProperties": false
       },
+      "RaceExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "startsAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/GoalPriority"
+          },
+          "targetTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "targetResultNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualTimeSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "actualResultNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "resultNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "RecoveryMetricDto": {
         "type": "object",
         "properties": {
@@ -5725,6 +6742,38 @@
             "format": "uuid"
           },
           "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "restingHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "readinessScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "stressScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RecoveryMetricExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "string",
             "format": "uuid"
           },
@@ -5791,6 +6840,66 @@
           },
           "locale": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RelationshipExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "myRole": {
+            "type": "string",
+            "nullable": true
+          },
+          "counterpartUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "counterpartName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/RelationshipStatus"
+          },
+          "invitedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "startDateUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endDateUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "revokedReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "activeScopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionScope"
+            },
             "nullable": true
           }
         },
@@ -5880,6 +6989,32 @@
         },
         "additionalProperties": false
       },
+      "SeasonExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "SetHeartRateZonesRequest": {
         "type": "object",
         "properties": {
@@ -5921,6 +7056,42 @@
             "format": "uuid"
           },
           "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "deepSleepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "remSleepMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/DataSource"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SleepRecordExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "string",
             "format": "uuid"
           },
@@ -6212,6 +7383,43 @@
         },
         "additionalProperties": false
       },
+      "TrainingPlanExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "coachUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weeks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrainingWeekExportDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "TrainingWeekDto": {
         "type": "object",
         "properties": {
@@ -6252,6 +7460,44 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PlannedWorkoutDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrainingWeekExportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "weekStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "weekIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coachWeekSummary": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteWeekReflection": {
+            "type": "string",
+            "nullable": true
+          },
+          "athleteWeeklyRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "workouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlannedWorkoutExportDto"
             },
             "nullable": true
           }
