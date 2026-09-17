@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — PeakForm</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #faf8f3;
+    --surface: #ffffff;
+    --text: #20261f;
+    --muted: #5c6b5e;
+    --accent: #2e6b4f;
+    --accent-soft: #e3efe7;
+    --border: #e5e1d6;
+    --notice-bg: #fbf3e2;
+    --notice-border: #e8c77e;
+    --notice-text: #6b5017;
+    --code-bg: #f1efe6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14180f; --surface: #1b2117; --text: #eaeee6; --muted: #9fac9a;
+      --accent: #74c99b; --accent-soft: #22301f; --border: #2b3327;
+      --notice-bg: #2c250f; --notice-border: #7a5f22; --notice-text: #e3c67e;
+      --code-bg: #232b1e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Public Sans', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 0 16px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding-block: 48px 80px; }
+  header.page-head { margin-bottom: 32px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .eyebrow::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    line-height: 1.15;
+    margin: 10px 0 6px;
+    text-wrap: balance;
+  }
+  .meta { color: var(--muted); font-size: 14.5px; }
+  .notice {
+    margin-top: 24px;
+    background: var(--notice-bg);
+    border: 1px solid var(--notice-border);
+    color: var(--notice-text);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  nav.toc {
+    margin: 32px 0 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  nav.toc .toc-title {
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+  nav.toc ol { columns: 2; column-gap: 24px; margin: 0; padding-left: 1.2em; font-size: 14.5px; }
+  nav.toc li { break-inside: avoid; margin-bottom: 6px; }
+  nav.toc a { color: var(--text); text-decoration: none; }
+  nav.toc a:hover { color: var(--accent); text-decoration: underline; }
+  section { padding-top: 36px; border-top: 1px solid var(--border); scroll-margin-top: 16px; }
+  section:first-of-type { border-top: none; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .sec-num {
+    font-family: 'Fraunces', serif; font-weight: 500; font-size: 15px;
+    color: var(--accent); background: var(--accent-soft); border-radius: 6px;
+    padding: 2px 8px; flex-shrink: 0;
+  }
+  h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1.25rem; margin: 0; text-wrap: balance; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  ul { margin: 0 0 14px; padding-left: 1.3em; }
+  li { margin-bottom: 6px; }
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0 20px; }
+  @media (max-width: 560px) { .fields { grid-template-columns: 1fr; } }
+  .field-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .field-card h3 { font-size: 14px; margin: 0 0 4px; font-weight: 700; }
+  .field-card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .placeholder {
+    background: var(--notice-bg); border: 1px dashed var(--notice-border); color: var(--notice-text);
+    border-radius: 6px; padding: 1px 6px; font-size: 0.92em;
+  }
+  footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13.5px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-head">
+    <span class="eyebrow">PeakForm</span>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: September 17, 2026 &nbsp;·&nbsp; Development / testing phase version</p>
+
+    <div class="notice">
+      <strong>This app is currently in development and testing.</strong> This document describes
+      how PeakForm actually handles data for its users (athletes and coaches) — it is not generic
+      boilerplate. Before public launch it will be updated with the operator's concrete contact
+      details (marked below) and reviewed legally.
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#about">About this document and the operator</a></li>
+      <li><a href="#data">What data we process</a></li>
+      <li><a href="#source">Where the data comes from</a></li>
+      <li><a href="#visibility">Who can see your data</a></li>
+      <li><a href="#security">How data is secured</a></li>
+      <li><a href="#retention">Retention and deletion</a></li>
+      <li><a href="#third-parties">Sharing with third parties</a></li>
+      <li><a href="#rights">Your rights</a></li>
+      <li><a href="#changes">Changes to this policy</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </nav>
+
+  <section id="about">
+    <div class="sec-head"><span class="sec-num">1</span><h2>About this document and the operator</h2></div>
+    <p>
+      PeakForm is an application for coaches and athletes — it lets a coach build training plans,
+      track completed activities, wellness data (sleep, recovery, heart rate) and communication
+      between coach and athlete in one place. This document explains what personal data we
+      process in connection with using PeakForm, why, and what rights you have.
+    </p>
+    <p>
+      Operator: <span class="placeholder">[operator name / registration number to be added]</span>,
+      contact e-mail: <span class="placeholder">[contact e-mail to be added]</span>.
+    </p>
+  </section>
+
+  <section id="data">
+    <div class="sec-head"><span class="sec-num">2</span><h2>What data we process</h2></div>
+    <p>Depending on how you use PeakForm (as an athlete or a coach), we process:</p>
+    <div class="fields">
+      <div class="field-card">
+        <h3>Account &amp; profile</h3>
+        <p>Name, e-mail, role (athlete/coach), password (stored only as a hash, never in readable form).</p>
+      </div>
+      <div class="field-card">
+        <h3>Training data</h3>
+        <p>Training plans, planned workouts, races and goals, personal records.</p>
+      </div>
+      <div class="field-card">
+        <h3>Completed activities</h3>
+        <p>Manually entered or synced activities — distance, time, heart rate, power, pace, calories.</p>
+      </div>
+      <div class="field-card">
+        <h3>Wellness data</h3>
+        <p>Sleep, resting heart rate, HRV, readiness/stress scores, morning and evening check-ins.</p>
+      </div>
+      <div class="field-card">
+        <h3>Nutrition &amp; hydration</h3>
+        <p>Food and fluid intake entries, if an athlete logs them.</p>
+      </div>
+      <div class="field-card">
+        <h3>Communication</h3>
+        <p>Comments on workouts between coach and athlete, in-app notifications.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="source">
+    <div class="sec-head"><span class="sec-num">3</span><h2>Where the data comes from</h2></div>
+    <p>Data can enter PeakForm three ways:</p>
+    <ul>
+      <li><strong>Manual entry</strong> — an athlete or coach types it directly into the app.</li>
+      <li><strong>File import</strong> — e.g. a spreadsheet export (CSV) that you upload yourself.</li>
+      <li>
+        <strong>Connecting a third-party account</strong> — if you choose to connect your
+        <strong>Strava</strong> or <strong>intervals.icu</strong> account, PeakForm downloads your
+        activities and wellness data from that account after your explicit consent (an OAuth
+        sign-in). If you have additional devices connected within your own intervals.icu account
+        (e.g. Garmin, Polar, Suunto, Coros, Oura, WHOOP), PeakForm receives that data too — only
+        what you've authorized, never more.
+      </li>
+    </ul>
+    <p>You can disconnect a third-party account at any time in the app's settings — we immediately delete the stored access credentials for that account.</p>
+  </section>
+
+  <section id="visibility">
+    <div class="sec-head"><span class="sec-num">4</span><h2>Who can see your data</h2></div>
+    <p>
+      Your data is visible to you, and — only if you've explicitly allowed it — to a coach you
+      have an established relationship with in the app. A coach's access is always split into
+      specific permissions you grant individually (e.g. view training plan, view completed
+      activities, view wellness data, view food and hydration, view health flags). A coach never
+      sees more than the permissions you've granted, and no other athlete or unapproved third
+      party can see your data at all.
+    </p>
+  </section>
+
+  <section id="security">
+    <div class="sec-head"><span class="sec-num">5</span><h2>How data is secured</h2></div>
+    <ul>
+      <li>Passwords are stored only as a hash, never in readable form.</li>
+      <li>Access and refresh tokens for connected accounts (Strava, intervals.icu) are stored encrypted.</li>
+      <li>Signing in to the app uses short-lived access tokens and rotating refresh tokens — if a
+        refresh token is reused (a sign of leakage), the whole session is invalidated.</li>
+      <li>All communication between your browser and the app is encrypted (HTTPS).</li>
+      <li>Data is stored in a database that no one outside the app's operation can access.</li>
+    </ul>
+  </section>
+
+  <section id="retention">
+    <div class="sec-head"><span class="sec-num">6</span><h2>Retention and deletion</h2></div>
+    <p>
+      We keep your data for as long as your account is active. You can request an
+      <strong>export</strong> of all your data at any time in settings, or <strong>request
+      account deletion</strong> — in which case we permanently remove your personal data, except
+      where we're legally required to retain it longer. When you disconnect Strava or
+      intervals.icu, we immediately delete the stored access credentials for that account.
+    </p>
+  </section>
+
+  <section id="third-parties">
+    <div class="sec-head"><span class="sec-num">7</span><h2>Sharing with third parties</h2></div>
+    <p>
+      We do not sell your data or share it with advertising or analytics third parties. The only
+      external services PeakForm works with are the ones you connect yourself (Strava,
+      intervals.icu) — they operate under their own terms of use and privacy policies, which we
+      recommend reviewing before connecting an account.
+    </p>
+  </section>
+
+  <section id="rights">
+    <div class="sec-head"><span class="sec-num">8</span><h2>Your rights</h2></div>
+    <p>Under GDPR, you have the right to:</p>
+    <ul>
+      <li>access your personal data and receive a copy (data export),</li>
+      <li>correct inaccurate data,</li>
+      <li>erasure ("the right to be forgotten"),</li>
+      <li>data portability to another provider,</li>
+      <li>withdraw consent for a connected third-party account at any time,</li>
+      <li>lodge a complaint with your national data protection authority.</li>
+    </ul>
+  </section>
+
+  <section id="changes">
+    <div class="sec-head"><span class="sec-num">9</span><h2>Changes to this policy</h2></div>
+    <p>
+      Because PeakForm is currently under active development, this policy may change as the app's
+      features grow. We'll notify users in-app of material changes. The date at the top of this
+      document reflects the last update.
+    </p>
+  </section>
+
+  <section id="contact">
+    <div class="sec-head"><span class="sec-num">10</span><h2>Contact</h2></div>
+    <p>
+      For questions about how your personal data is processed, or to exercise your rights,
+      contact <span class="placeholder">[contact e-mail to be added]</span>.
+    </p>
+  </section>
+
+  <footer>PeakForm — a training platform for coaches and athletes. This document is published for the project's development/testing phase.</footer>
+</div>
+</body>
+</html>

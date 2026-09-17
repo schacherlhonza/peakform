@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PeakForm</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #faf8f3;
+    --surface: #ffffff;
+    --text: #20261f;
+    --muted: #5c6b5e;
+    --accent: #2e6b4f;
+    --accent-soft: #e3efe7;
+    --border: #e5e1d6;
+    --notice-bg: #fbf3e2;
+    --notice-border: #e8c77e;
+    --notice-text: #6b5017;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14180f; --surface: #1b2117; --text: #eaeee6; --muted: #9fac9a;
+      --accent: #74c99b; --accent-soft: #22301f; --border: #2b3327;
+      --notice-bg: #2c250f; --notice-border: #7a5f22; --notice-text: #e3c67e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Public Sans', system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 0 16px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding-block: 64px 80px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .eyebrow::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2.1rem, 5vw, 3rem);
+    line-height: 1.12;
+    margin: 10px 0 18px;
+    text-wrap: balance;
+  }
+  p.lede { font-size: 1.1rem; color: var(--text); max-width: 58ch; margin: 0 0 32px; }
+  .notice {
+    background: var(--notice-bg);
+    border: 1px solid var(--notice-border);
+    color: var(--notice-text);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14.5px;
+    margin-bottom: 40px;
+    max-width: 58ch;
+  }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 40px; }
+  @media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card h3 { font-size: 14.5px; margin: 0 0 6px; }
+  .card p { font-size: 13.5px; color: var(--muted); margin: 0; }
+  .links { display: flex; gap: 18px; flex-wrap: wrap; }
+  .links a {
+    color: var(--accent); font-weight: 600; text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+  }
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13.5px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="eyebrow">PeakForm</span>
+    <h1>A shared home for a coach and their athletes' training.</h1>
+    <p class="lede">
+      PeakForm lets a coach build training plans, review completed activities, and track an
+      athlete's recovery — sleep, resting heart rate, HRV, readiness — in one place, with the
+      athlete controlling exactly what the coach can see.
+    </p>
+
+    <div class="notice">
+      <strong>PeakForm is currently in active development and testing</strong> — not yet
+      publicly launched. This page exists to describe the project during that phase, including
+      to third-party services (such as Strava and intervals.icu) we're integrating with.
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Training plans</h3>
+        <p>Seasons, goals, races and weekly training built by the coach, followed by the athlete.</p>
+      </div>
+      <div class="card">
+        <h3>Activities &amp; wellness</h3>
+        <p>Manual entry, file import, or synced from Strava / intervals.icu (and, through it, Garmin, Oura, WHOOP and more).</p>
+      </div>
+      <div class="card">
+        <h3>Consent-based sharing</h3>
+        <p>An athlete grants a coach access permission by permission — never more than they choose.</p>
+      </div>
+    </div>
+
+    <div class="links">
+      <a href="./privacy.html">Privacy Policy</a>
+      <a href="https://github.com/schacherlhonza/peakform">Source on GitHub</a>
+    </div>
+
+    <footer>PeakForm — a training platform for coaches and athletes.</footer>
+  </div>
+</body>
+</html>
