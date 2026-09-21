@@ -1,8 +1,8 @@
-# TrainCoach — Rešerše externích integrací (Strava, Garmin, MySASY, Google Sheets)
+# TrainCoach — Rešerše externích integrací (Strava, Garmin, MySASY, Google Sheets, intervals.icu)
 
-Tento dokument je podkladová rešerše pro `architecture.md`, `security.md` a `mvp-scope.md` — vysvětluje **proč** je zvolený integrační přístup takový, jaký je (Strava = reálný OAuth2 adaptér, Garmin/MySASY = kontrakt + mock provider + souborový import, Google Sheets = souborový import). Obsahuje jen fakta ověřená v této session z oficiálních zdrojů poskytovatelů, s přesnými odkazy a datem ověření. Kde se fakt nepodařilo ověřit z oficiálního zdroje, je to výslovně uvedeno — nic není odhadováno.
+Tento dokument je podkladová rešerše pro `architecture.md`, `security.md` a `mvp-scope.md` — vysvětluje **proč** je zvolený integrační přístup takový, jaký je (Strava = reálný OAuth2 adaptér, Garmin/MySASY = kontrakt + mock provider + souborový import, Google Sheets = souborový import, intervals.icu = doporučený reálný OAuth2 adaptér jako primární cesta k Garmin/wellness datům). Obsahuje jen fakta ověřená v této session z oficiálních zdrojů poskytovatelů, s přesnými odkazy a datem ověření. Kde se fakt nepodařilo ověřit z oficiálního zdroje, je to výslovně uvedeno — nic není odhadováno.
 
-**Datum ověření všech zdrojů v tomto dokumentu: 2026-09-15.**
+**Datum ověření zdrojů: sekce 1–4 dne 2026-09-15, sekce 5 (intervals.icu) dne 2026-09-17.**
 
 ---
 
@@ -209,11 +209,188 @@ CSV import (bez OAuth) jako jediná cesta v MVP. Google Sheets API v4 OAuth2 ada
 
 ---
 
-## 5. Souhrnná tabulka
+## 5. intervals.icu (agregátor: Garmin, Polar, Suunto, Coros, Huawei, Amazfit, Oura, WHOOP, Strava)
+
+### Dostupnost
+**Zdarma, ale registrace OAuth aplikace (na rozdíl od dřívějšího tvrzení v této sekci) NENÍ plně self-serve.** intervals.icu je bezplatná platforma pro analýzu tréninku (žádný trial, žádný time limit, bez nutnosti platební karty) — placený "Supporter" tier ($4/měsíc) přidává jen pohodlnostní funkce (počasí, plánovač sezóny, plný import historie ze Strava), **ne** přístup k API samotnému. Osobní API klíč (Settings → Developer Settings) si každý uživatel vygeneruje okamžitě, bez schvalování. **OAuth aplikace pro multi-user appku jako TrainCoach se ale zakládá přes formulář "Požádejte o OAuth přístup"** (Settings → Developer Settings → apps), který intervals.icu tým ručně posoudí a teprve poté e-mailem pošle hotový OAuth klient (client id/secret) — ověřeno přímo z tohoto formuláře 2026-09-17 (viz oprava v `### Autentizace` a `### Ověřené zdroje` níže). Počítejte tedy s prodlevou (řádově dny), ne s okamžitým self-serve jako u Stravy.
+
+**Klíčová vlastnost pro TrainCoach:** intervals.icu funguje jako **agregátor třetích stran** — uživatel si v rámci intervals.icu jednorázově propojí svá zařízení/služby (Garmin Connect, Polar, Suunto, Coros, Huawei, Amazfit, Oura, WHOOP, Apple Health přes 3rd party apps, Strava) přes jejich vlastní OAuth integrace, a TrainCoach pak čte **kombinovaná** data jediným API napojením na intervals.icu — bez nutnosti řešit Garminův byznysový schvalovací proces nebo budovat samostatné adaptéry pro Oura/WHOOP/Polar/Suunto/Coros.
+
+### Autentizace
+- **API klíč (Basic Auth)** — vhodné jen pro single-user scénář/prototyp: `Authorization: ApiKey API_KEY:<klíč>` nebo `curl -u API_KEY:<klíč> ...`. Klíč generuje a spravuje sám uživatel v Developer Settings, může ho kdykoliv regenerovat/zrušit.
+- **OAuth 2.0 (Bearer token)** — **doporučeno pro TrainCoach**, protože jde o multi-user aplikaci; formulář "Požádejte o OAuth přístup" to i sám doporučuje ("Pokud vytváříte aplikaci, kterou bude používat více sportovců... je nutné vytvořit OAuth aplikaci"). Registrace **vyžaduje ruční schválení intervals.icu týmem** (žádost → e-mail s hotovým klientem, viz `### Dostupnost` výše) — to je oprava dřívějšího tvrzení o self-serve registraci v této sekci. Formulář vyžaduje: název, popis, webovou stránku, zásady ochrany osobních údajů, **Redirect URLs** (produkční callback URL — `http://localhost/*` je vždy povoleno bez přidání), a volitelně **Webhook URLs** + výběr konkrétních webhook typů.
+- **6 kategorií scope, ne jen 2** (ověřeno na `forum.intervals.icu/t/intervals-icu-oauth-support/2759`, 2026-09-17): `ACTIVITY` (dokončené aktivity), `WELLNESS` (váha, klidová TF atd.), `CALENDAR` (naplánované tréninky), `CHATS` (chaty/skupiny/zprávy), `LIBRARY` (knihovna tréninků), `SETTINGS` (nastavení sportovce — FTP, zóny), každá s `:READ`/`:WRITE` variantou. TrainCoach používá jen `ACTIVITY:READ,WELLNESS:READ` (least privilege) — `SETTINGS:READ` (sync HR zón/FTP) a `CALENDAR`/`LIBRARY` (import tréninkových plánů z intervals.icu) jsou zdokumentované, ale zatím nevyužité možnosti pro budoucí rozšíření, viz `mvp-scope.md`-style poznámka v plánovacím souboru pro rozšíření dat.
+- **Token endpoint dvakrát nezávisle potvrzen**: `POST https://intervals.icu/api/oauth/token` — jednak živým testováním proti reálné aplikaci (viz níže), jednak přímo textem na fóru "Intervals.icu OAuth support". Vysoká jistota správnosti.
+- **Revokace tokenu**: `DELETE https://intervals.icu/api/v1/disconnect-app` (ověřeno na stejném fóru) — oficiální endpoint pro odvolání access tokenu při odpojení účtu. **Aktuálně TrainCoach tento endpoint nevolá** (`IntegrationConnectionService.DisconnectAsync` jen maže lokální credential) — doporučeno doplnit, viz plán rozšíření.
+- **Autorizační kód vyprší za 2 minuty** (ověřeno na fóru) — nesouvisí s TrainCoach vlastním 15minutovým `state` timeoutem (`IntegrationConnectionService.DecodeState`), je to samostatné, přísnější omezení na straně intervals.icu. Náš OAuth callback flow běží řádově sekundy, takže by neměl být problém, ale je to reálné omezení k zapamatování při budoucím ladění.
+- **Jeden aktivní token na aplikaci na sportovce** (ověřeno na fóru) — nová autorizace nahradí starý token. Odpovídá existujícímu chování `UpsertConnectionAsync` (přepisuje `IntegrationCredential` při reconnectu).
+- **Coach/athlete model uvnitř intervals.icu:** komunitně zdokumentovaný (ne oficiálně z dokumentace, ale z fóra — potvrzeno více uživateli) mechanismus, kdy "kouč" (držitel API klíče/OAuth aplikace) může číst data athletea přes endpoint `/api/v1/athlete/{athleteId}/...`, pokud athlete uvnitř intervals.icu přijme jeho "coaching request" — bez nutnosti athletea sdílet svůj vlastní klíč. **Pro produkční TrainCoach nedoporučujeme spoléhat na sdílený "coach" účet** (jeden kompromitovaný klíč = přístup ke všem athletům); správné řešení je standardní OAuth2 `authorization_code` flow per TrainCoach-uživatel (athlete si sám autorizuje TrainCoach OAuth app nad svým intervals.icu účtem), analogicky ke stávajícímu Strava adaptéru.
+- Athlete ID `0` v URL odkazuje na aktuálně autentizovaného uživatele (`/api/v1/athlete/0/...`).
+- **OAuth endpointy (ověřeno živě 2026-09-17 proti reálné schválené aplikaci, po dvou chybných pokusech):** autorizační endpoint `GET https://intervals.icu/oauth/authorize` funguje jak zdokumentováno. **Token endpoint je ale `POST https://intervals.icu/api/oauth/token`** — ani jedna z dřívějších dvou variant nefungovala: `https://intervals.icu/api/v1/oauth/token` (tvrzeno komunitním zdrojem) vrací `404 Not Found` přímo z aplikace (Spring Boot backend odpoví, ale takovou route nezná); `https://intervals.icu/oauth/token` (analogie k `/oauth/authorize`) vrací `405 Method Not Allowed` už na úrovni edge/nginx vrstvy před aplikací — to je GET-only route pro konzentní UI stránku, ne API endpoint. Skutečný token endpoint `/api/oauth/token` nemá segment `/v1/`, na rozdíl od všech ostatních datových endpointů v této integraci (activities, wellness, streams) — nekonzistence, kterou stojí za to mít na paměti. Ověřeno tak, že s reálným `client_id`/`client_secret` a neplatným kódem appka vrátí `{"status":404,"error":"Code not found (expired?)"}` — přesně chování reálného OAuth tokenu endpointu odmítajícího neplatný/prošlý kód, ne routing chybu. Opraveno v `IntervalsIcuIntegrationProvider` po prvním reálném pokusu o připojení.
+
+### Dostupná data
+**Wellness endpoint** (`GET/PUT /api/v1/athlete/{id}/wellness/{date}`, `PUT /api/v1/athlete/{id}/wellness` pro bulk) — doložená pole: `id` (datum), `weight`, `restingHR`, `hrv`, `hrvSDNN`, `sleepSecs`, `sleepScore`, `sleepQuality`, `avgSleepingHR`, `readiness`, `soreness`, `fatigue`, `stress`, `mood`, `motivation`, `injury`, `hydration`, `ctl`, `atl`, `rampRate`, `vo2max`, `steps`, `spO2` (dle přehledové stránky Wellness Integration — steps, weight, sleep, HRV, readiness, glukóza, menstruační cyklus, stress, mood, hydratace, SpO2, tlak), `comments`, `locked`.
+
+- **Toto přesně pokrývá díru, kterou má Strava** (žádný spánek/HRV/klidová TF) — a to bez nutnosti Garminova byznysového API.
+- `readiness` pole je typicky populováno ze zdrojových služeb, které readiness/recovery samy počítají (Oura, HRV4Training a podobné) — intervals.icu ho nepočítá vlastním proprietárním algoritmem, jen ho protahuje dál.
+- **Aktivity** (`GET /api/v1/athlete/{id}/activities`, `.csv` varianta, `GET /api/v1/activity/{id}?intervals=true` s intervalovou analýzou) — distance, čas, výkon, detekce intervalů/segmentů, CTL/ATL/forma (fitness/fatigue model), plus **upload/download** aktivit ve FIT/TCX/GPX/ZIP/GZ.
+- **Streams** (`GET /api/v1/activity/{id}/streams?types=...`) — sekundové senzorové řady: `watts`, `heartrate` (korigovaná ořezáním nad max HR) i `raw_heartrate`/`fixed_heartrate`, `cadence`, `distance`, `altitude`, `latlng`, `velocity_smooth`, `temp`, `moving`, `grade_smooth`, `time`. Prakticky identický rozsah jako Strava streams.
+- **Plánované tréninky/kalendář** (`GET/POST/PUT/DELETE /api/v1/athlete/{id}/events`) — umožňuje TrainCoach nejen číst, ale i **zapisovat naplánované tréninky zpět** do intervals.icu kalendáře athletea (obousměrná synchronizace), což jde nad rámec toho, co nabízí Strava.
+- **External ID mapping** — obousměrné mapování ID mezi intervals.icu a externím systémem (TrainCoach), užitečné pro idempotentní sync bez nutnosti vlastní deduplikace podle timestampu/aktivity.
+
+### Zdrojová zařízení/služby, ze kterých intervals.icu agreguje wellness+aktivity
+Dle oficiální přehledové stránky (`intervals.icu/features/wellness/`): **přímé integrace** — Garmin, Polar, Suunto, Coros, Huawei, Amazfit, Oura, WHOOP; **nepřímo** Apple Health a další přes aplikace třetích stran. Plus samostatně Strava sync (aktivity) zmíněný na hlavní/pricing stránce. To znamená: jediný adaptér `IntervalsIcuIntegrationProvider` v `TrainCoach.Integrations` může nahradit (nebo doplnit) potřebu samostatných adaptérů pro Garmin/Oura/WHOOP/Polar/Suunto/Coros zvlášť.
+
+### Webhooks vs. pull
+**Přesný seznam nyní ověřen přímo z formuláře "Požádejte o OAuth přístup"** (na rozdíl od dřívějšího komunitně dohledaného seznamu v této sekci, který wellness event postrádal). Podporované webhook typy, s příslušným OAuth scope, který je pro daný typ nutný:
+
+| Webhook typ | Vyžadovaný scope | Popis |
+|---|---|---|
+| `CONNECTED_SERVICE` | `SETTINGS` | Athlete připojil/odpojil Garmin, Polar, Suunto atd. — užitečné pro TrainCoach vědět, kdy sportovec rozšířil/změnil zdroje dat |
+| `APP_SCOPE_CHANGED` | — | Athlete změnil oprávnění pro tuto appku |
+| `CALENDAR_UPDATED` | `CALENDAR` | Aktuální standard pro události kalendáře vytvořené/smazané/upravené |
+| `CALENDAR_EVENT_UPDATED` | `CALENDAR` | **Deprecated** — nepoužívat, viz `CALENDAR_UPDATED` |
+| `CALENDAR_EVENT_DELETED` | `CALENDAR` | **Deprecated** — nepoužívat, viz `CALENDAR_UPDATED` |
+| `ACTIVITY_UPLOADED` | `ACTIVITY` | Nová aktivita nahrána — **nedoručuje se pro aktivity synchronizované ze Stravy** (viz níže) |
+| `ACTIVITY_ANALYZED` | `ACTIVITY` | Existující aktivita přeanalyzována |
+| `ACTIVITY_UPDATED` | `ACTIVITY` | Aktivita upravena (např. přejmenování) |
+| `ACTIVITY_DELETED` | `ACTIVITY` | Aktivita smazána |
+| `ACTIVITY_ACHIEVEMENTS` | `ACTIVITY` | Sportovec dosáhl něčeho (např. nové FTP) |
+| **`WELLNESS_UPDATED`** | `WELLNESS` | **Váha, klidová TF, HRV atd. aktualizovány** — přesně ten wellness event, jehož existenci se dříve nepodařilo ověřit |
+| `FITNESS_UPDATED` | `WELLNESS` | Fitness, fatigue, eFTP atd. aktualizováno |
+| `SPORT_SETTINGS_UPDATED` | `SETTINGS` | Nastavení sportu (FTP, zóny atd.) |
+| `CHAT_UPDATE` | `CHATS` | Nová/upravená zpráva v chatu |
+
+**Důležitá výjimka potvrzená ve formuláři:** "activity webhooks are not delivered for Strava activities. Please use CALENDAR_UPDATED and not CALENDAR_EVENT_UPDATED or CALENDAR_EVENT_DELETED" — pokud sportovec v intervals.icu synchronizuje aktivity ze Stravy (ne přímo z Garmin/Polar/atd.), `ACTIVITY_UPLOADED`/`ACTIVITY_UPDATED`/`ACTIVITY_DELETED` se pro tyto aktivity nespustí. Pro takové sportovce je nutné se spolehnout na pravidelný pull (`SyncOrchestrator`), ne na webhook.
+
+Payload dle dřívějšího komunitního zdroje obsahuje `secret` (pro ověření pravosti) a pole `events` s `athlete_id`, `type`, `timestamp` — tato část nebyla formulářem samotným potvrzena, jen odvozena z fóra, takže přesný payload tvar je vhodné ověřit až s reálným OAuth klientem.
+
+### Rate limity
+**Ověřeno přímo na stránce "Limity rychlosti" v nastavení schválené OAuth aplikace** (nejautoritativnější dostupný zdroj — přímo z produkčního účtu TrainCoach/PeakForm, 2026-09-17), potvrzuje a upřesňuje dřívější komunitní odhad z fóra:
+- **OAuth aplikace (multi-user):** výchozí denní limit je **100 požadavků/uživatele/den, až pro 500 uživatelů (maximálně 50 000 požadavků/den celkem), s minimem 8 000/den** — tj. i s malým počtem uživatelů appka vždy má aspoň 8 000 požadavků/den k dispozici. Denní limit se obnovuje o půlnoci UTC.
+- **15minutové okno:** 1/8 denního limitu, s minimem **2 500 požadavků/15 min** (potvrzeno, souhlasí s dřívějším komunitním odhadem).
+- **Další, nezávislý limit:** 10 volání/s na IP adresu (nevrací vlastní rate-limit hlavičky).
+- Pokud appka poroste nad 500 uživatelů a potřebuje vyšší denní limit (nebo naopak nižší z bezpečnostních důvodů), je nutné kontaktovat `support@intervals.icu`.
+- **API klíč (single-user, jen pro referenci — TrainCoach ho nepoužívá):** dle dřívějšího komunitního zdroje (fórum) 5 000 požadavků/den, 2 500/15min, 10 req/s na IP — nebylo ověřeno stejným způsobem jako OAuth limity výše.
+- Pro TrainCoach v MVP fázi (řádově jednotky až nízké desítky athletů) jsou tyto limity dostatečné bez nutnosti žádat o navýšení.
+
+### Omezení ukládání/zpracování dat (API Terms and Conditions, účinné od 23. 10. 2025)
+Doloženo z oficiálního fóra intervals.icu (vlákno "Intervals.icu API Terms and Conditions"):
+- **Licence:** nevýhradní, celosvětová, bezplatná (royalty-free), trvalá licence k přístupu a použití API pro jakýkoliv zákonný účel **včetně komerčního použití** — bez nutnosti dalšího schvalování, na rozdíl od Garmina.
+- **Garmin attribution povinnost:** protože intervals.icu sama čerpá data z Garmin Connect, přenáší se na TrainCoach povinnost dodržet Garmin brand/attribution guidelines při zobrazení dat, která pocházejí z Garmin zařízení — pole `device_name` (obsahuje "garmin" u Garmin aktivit) slouží k identifikaci; pro wellness data bez jasného zdroje stačí obecné upozornění typu "Grafy mohou obsahovat data ze zařízení Garmin". **Toto je přímý dopad na TrainCoach UI** (viz `security.md`/branding sekce) — je nutné do UI doplnit odpovídající attribution text.
+- **Zákaz zneužití API** (malware, nelegální aktivity) — standardní klauzule.
+- intervals.icu smí použít **agregovaná, anonymizovaná** usage data ke zlepšení služby.
+- **Ukončení:** kterákoliv strana může ukončit přístup, s snahou o 7denní předchozí upozornění při porušení podmínek.
+- **Odpovědnost:** API poskytováno "AS IS", bez záruk, vyloučení odpovědnosti za nepřímé/následné škody.
+- **Změny podmínek:** 30denní emailové upozornění před změnou.
+- **Rozhodné právo: jihoafrické právo** (na rozdíl od Stravy/Google, kde nebylo explicitně zmíněno) — relevantní pro TrainCoach právní/DPA posouzení, pokud by šlo o zpracování osobních/zdravotních dat EU občanů přes API poskytovatele mimo EU/UK.
+- **Nedoloženo/mezera:** žádná explicitní politika rate-limit navýšení, žádná zmínka o AI/ML omezeních (na rozdíl od Stravy, kde je nepřímo zmíněno v tiskových zprávách), a žádné explicitní datové retenční lhůty ani povinnost mazat data po ukončení (na rozdíl od Stravy §4.4) — **nepodařilo se ověřit z oficiálního zdroje**, doporučeno ověřit přímo s intervals.icu před produkčním nasazením zpracovávajícím zdravotní data (HRV/spánek = citlivá kategorie dat dle GDPR).
+
+### Použitelnost pro osobní/komerční projekt
+**Použitelné zdarma, ale se schvalovací prodlevou pro OAuth aplikaci** (viz oprava v `### Dostupnost` výše — formulář žádosti, ruční review, e-mail s klientem) — přesto stále nejlepší dostupná cesta pro TrainCoach k Garmin/Oura/WHOOP/Polar/Suunto/Coros datům v MVP fázi, protože obchází Garminovo "only for business use" schvalování (sekce 2 výše, kde navíc není jisté, zda vůbec bude schváleno) i nejistý kontaktní model MySASY (sekce 3 výše). Další nutná podmínka: TrainCoach athlete musí mít (nebo si založit) vlastní bezplatný intervals.icu účet a v něm connectnout svá zařízení — to je jednorázový setup krok mimo TrainCoach, analogický tomu, co athlete stejně dělá dnes se Stravou.
+
+### Doporučená implementační strategie
+**Reálný OAuth2 adaptér, na stejném architektonickém vzoru jako Strava** (`IIntegrationProvider`, `TrainCoach.Integrations`) — implementováno, viz `IntervalsIcuIntegrationProvider`: `authorization_code` flow se scopy `ACTIVITY:READ`, `WELLNESS:READ`; uložení `IntegrationCredential` šifrovaně stejně jako u Strava; pull importu wellness dat (spánek/HRV/RHR/readiness/stress) + aktivit + streamů při připojení a periodicky. Webhooky (viz tabulka výše, zejména `WELLNESS_UPDATED` a `ACTIVITY_*`) jsou k dispozici pro budoucí průběžný sync bez pollingu, ale **zatím nejsou implementovány** — je potřeba vyplnit Webhook URLs/typy ve formuláři žádosti a doplnit endpoint na přijetí webhooku (obdoba Strava webhook handleru, který v TrainCoach také zatím chybí). Doplnit Garmin attribution text do UI wellness/aktivit karet, pokud `device_name` obsahuje "garmin" — **zatím neimplementováno**, `IntervalsIcuActivity` DTO pole `device_name` nenačítá. Toto **nahrazuje** dosavadní plán "Garmin = mock provider + souborový import" jako primární cestu k Garmin/wellness datům — mock/souborový import u Garminu a MySASY zůstávají jako fallback pro athlety, kteří si intervals.icu účet založit nechtějí/nemohou.
+
+### Ověřené zdroje
+- https://www.intervals.icu/features/open-api/
+- https://forum.intervals.icu/t/api-access-to-intervals-icu/609
+- https://forum.intervals.icu/t/intervals-icu-api-integration-cookbook/80090
+- https://forum.intervals.icu/t/intervals-icu-api-terms-and-conditions/114087
+- https://www.intervals.icu/features/wellness/
+- https://www.intervals.icu/features/app-integrations/
+- https://www.intervals.icu/features/extend/
+- https://www.intervals.icu/pricing/
+- https://forum.intervals.icu/t/coach-api-access-to-athlete-wellness-data-hrv-sleep-stress-readiness/129472
+- https://forum.intervals.icu/t/access-activities-streams-via-api/101065
+- https://forum.intervals.icu/t/readiness-field-added-to-wellness/4003
+- https://py-intervalsicu.readthedocs.io/
+- Pozn.: `https://intervals.icu/api/v1/docs/swagger-ui-index.html` (oficiální Swagger UI) vrátil v této session HTTP 500 při automatizovaném fetchi — doporučeno ověřit ručně v prohlížeči před finální implementací, protože jde o nejautoritativnější zdroj přesného schématu.
+- Formulář "Požádejte o OAuth přístup" (`intervals.icu/settings/apps` → "Request OAuth access"), ověřeno přímo uživatelem TrainCoach v prohlížeči 2026-09-17 (screenshot) — zdroj pravdy pro schvalovací proces, Redirect/Webhook URL pole a přesný seznam webhook typů se scopy v tabulce výše. Tento zdroj má vyšší váhu než dřívější komunitně dohledané informace z fóra, které toto místy zpřesňuje/opravuje.
+- https://forum.intervals.icu/t/intervals-icu-oauth-support/2759 — oficiální staff vlákno (uživatel "david", provozovatel intervals.icu) k OAuth API: token endpoint, `disconnect-app` revoke endpoint, 6 scope kategorií, 2minutová platnost autorizačního kódu, chování "jeden token na appku na sportovce" — viz `### Autentizace` výše.
+- Živé ověření proti reálné, schválené TrainCoach OAuth aplikaci (2026-09-17): potvrzeny/opraveny přesné OAuth endpointy (`/oauth/authorize` funguje, `/api/v1/oauth/token` je 404, `/oauth/token` je 405 na edge vrstvě, skutečný token endpoint je `/api/oauth/token`) — viz `### Autentizace` výše a poznámka u `IntervalsIcuIntegrationProvider.TokenUrl` v kódu.
+
+**Datum ověření zdrojů v této sekci: sekce založena 2026-09-17, opravena a doplněna o přímé ověření z produkčního UI 2026-09-17 (stejný den).**
+
+---
+
+## 6. TrainingPeaks (Partner API + Garmin Connect AutoSync)
+
+**Datum ověření zdrojů v této sekci: 2026-09-21.** Rešerše provedena v kontextu otázky "jak TrainingPeaks dosahuje obousměrné synchronizace s Garminem (včetně pushování naplánovaných tréninků na hodinky)" a zda je to relevantní vzor/cesta pro PeakForm.
+
+### Kontext: Garmin koupil TrainingPeaks (červenec 2026)
+
+Garmin v červenci 2026 **akvírovalo TrainingPeaks i TrainHeroic** (cca 120 zaměstnanců obou firem, finanční podmínky nezveřejněny). Deklarovaný důvod: Garmin chce ke svým datům ze zařízení přidat vrstvu, která sportovci pomůže rozhodnout "co dál" — TrainingPeaks (vytrvalostní sporty) a TrainHeroic (silový trénink, kde Garmin byl slabší). Podle dostupných zdrojů **nebylo oznámeno sloučení do Garmin Connect ani změna cen** a TrainingPeaks má nadále deklarovaně podporovat i konkurenční zařízení (Apple, Polar, COROS, Wahoo, Suunto, Amazfit) — udržení této multi-platformní kompatibility je ale citováno jako otevřená otázka do budoucna, ne jistota. Pro PeakForm to znamená: TrainingPeaks dnes **není** "jen Garmin appka", ale její budoucí nezávislost na Garminu není zaručená.
+
+### Mechanismus obousměrné synchronizace s Garminem ("Garmin Connect AutoSync")
+
+Toto přesně odpovídá otázce, která vyvolala tuto rešerši:
+
+- **Směr TrainingPeaks → Garmin (push naplánovaného tréninku na hodinky):** Naplánovaný strukturovaný trénink z TrainingPeaks kalendáře se pošle do **Garmin Connect kalendáře** athletea. Při dalším sync hodinek s Garmin Connect (Bluetooth/WiFi/LTE/USB/ANT+) se trénink stáhne přímo do zařízení a zobrazí se jako krokovaný trénink (warm-up/intervaly/cool-down/cíle). Úpravy plánu v TrainingPeaks se promítnou "instantně" do Garmin Connect kalendáře.
+- **Směr Garmin → TrainingPeaks (dokončená aktivita zpět):** Po dokončení tréninku (v dosahu telefonu s Bluetooth) se aktivita nahraje do Garmin Connect a odtud "instantně" do TrainingPeaks k analýze.
+- **Technický základ na straně Garminu:** Toto **není** totéž jako Garmin Health API (které PeakForm už zkoumal pro wellness data) — jde o samostatné **Garmin Training API**, součást Garmin Connect Developer Programu, určené výslovně k "publikaci tréninků a tréninkových plánů do Garmin Connect kalendáře". Program zahrnuje 5 API: Health, Activity, Women's Health, **Training**, Courses — dle dostupné dokumentace jde o jeden zastřešující Connect Developer Program (stejná "only for business use" bariéra popsaná v sekci 2 se dle všech dostupných indicií vztahuje na program jako celek, ne jen na Health API zvlášť — nebylo ale explicitně potvrzeno, že schválení pro jedno API automaticky znamená schválení pro Training API zvlášť).
+- **Setup na straně athletea:** jednorázová autorizace v TrainingPeaks účtu (OAuth-like autorizační tok proti Garmin Connect), poté plně automatický obousměrný běh bez manuálních kroků.
+
+### TrainingPeaks Partner API (nezávisle na Garmin AutoSync)
+
+- **Model přístupu:** stejně restriktivní jako Garmin — **"access to the API is not available for personal use"**, jen pro schválené komerční vývojáře fitness aplikací/zařízení, žádost přes formulář (`api.trainingpeaks.com/request-access`), posouzení TrainingPeaks týmem. Historicky (od cca 2005) měl TrainingPeaks otevřenější/neregistrované API; přechod na řízený partnerský model proběhl v rámci dvouletého přepracování API (oznámeno 2017, dle dostupného zdroje aktualizováno naposledy 2026-09-12).
+- **Autentizace:** OAuth 2.0, Bearer token, REST/JSON, endpoint `api.trainingpeaks.com` (+ sandbox `api.sandbox.trainingpeaks.com`).
+- **Datový model (`Workouts Object`, `Workout Structure Object`):** koncepčně velmi podobný vlastnímu modelu PeakForm (`PlannedWorkout`/`WorkoutSegment`) — strukturovaný trénink je JSON s polem `Structure`, obsahujícím pole kroků typu `Step` nebo `Repetition`, každý s `Length` (jednotka Meter/Second + hodnota), volitelným `IntensityClass` (WarmUp/CoolDown/Active/Rest), `IntensityTarget` (jednotka např. `PercentOfFtp`, `PercentOfMaxHr`, `PercentOfThresholdHr`, `PercentOfThresholdSpeed`, `Rpe`, s `Value`/`MinValue`/`MaxValue`), `CadenceTarget`. `Repetition` obsahuje vnořené pole `Steps` + počet opakování. Toto je užitečná reference, pokud by PeakForm chtěl v budoucnu navrhnout vlastní export/import formát strukturovaných tréninků kompatibilní s tímto standardem.
+- **Existující partneři** (dle veřejně dostupných zdrojů): Garmin, Polar, MyFitnessPal, HRV4Training, FitnessSyncer, Wahoo, Zwift a další — TrainingPeaks funguje obdobně jako Intervals.icu, tj. jako centrální bod, který jednotliví partneři čtou/zapisují.
+- **Další integrace TrainingPeaks** (nezávisle na Garminu, dle veřejné integrace stránky `trainingpeaks.com/upload`): Wahoo (ELEMNT/BOLT auto-upload), Zwift (obousměrně — dokončené tréninky nahoru, plánované indoor tréninky dolů do Zwift), TrainerRoad (import plánovaných indoor tréninků), Polar (Polar Flow autosync), Suunto (Suunto App), Strava, WHOOP, Oura, COROS, Apple Watch, FORM Goggles, iGPSport, Hammerhead — přes 100 zařízení/aplikací celkem dle vlastního tvrzení TrainingPeaks.
+
+### Srovnání s cestou, kterou PeakForm už má k dispozici (intervals.icu)
+
+**Důležité zjištění přímo relevantní pro PeakForm:** intervals.icu (na které je PeakForm už OAuth-napojený) má **prakticky identickou** schopnost push naplánovaných tréninků na Garmin hodinky, jakou má TrainingPeaks — a to jako **samostatnou, na PeakForm nezávislou autorizaci**, kterou si athlete udělá přímo ve svém intervals.icu účtu (zaškrtnutí "Upload planned workouts" → OAuth autorizace intervals.icu vůči Garmin Connect, mimo PeakForm). Jakmile je toto jednou nastavené:
+- Trénink naplánovaný v intervals.icu kalendáři se automaticky (typicky ráno v den/den před tréninkem) pošle do Garmin Connect kalendáře a odtud na hodinky, včetně plné intervalové struktury a cílů. Podporovaná zařízení: Forerunner 255/265/955/965, Fenix 6/7/8, Epix 2, Venu 3, Edge 530/540/830/840/1040 (starší modely typu Forerunner 235/Vivoactive 3 strukturované tréninky nepřijímají).
+- Směr je **jednosměrný** (jen upload do Garminu) s oknem cca 7 dní dopředu — **stažení Garmin-vytvořených plánů zpět není možné** ("Garmin doesn't allow to download their workouts" — potvrzeno na oficiálním fóru intervals.icu jako obecné omezení Garmin platformy, ne chyba intervals.icu).
+- **Toto přesně odpovídá endpointu, který PeakForm už má zdokumentovaný, ale nikdy nevolá**: `POST/PUT/DELETE /api/v1/athlete/{id}/events` s OAuth scope `CALENDAR` (viz sekce 5 výše, "Doporučené další kroky" v `docs/integrations/activity-matching.md` a §11 v `docs/integrations/canonical-data-and-deduplication-plan.md`). Nepodařilo se najít oficiální dokumentaci přesného JSON tvaru pro strukturovaný trénink v `events` payloadu (Swagger byl při dřívější rešerši nedostupný) — bylo by nutné ověřit against reálný účet/komunitní zdroje (`py-intervalsicu` knihovna) před implementací.
+
+### Použitelnost pro PeakForm
+
+**TrainingPeaks samotné (jako datový zdroj nebo cíl) není pro PeakForm realisticky dostupné** — stejně restriktivní "jen pro schválené komerční partnery" model jako Garmin, žádná self-serve cesta, a nyní navíc vlastněné přímým konkurentem v Garmin ekosystému (menší motivace TrainingPeaksu schvalovat konkurenční tréninkovou platformu).
+
+**Praktický důsledek:** Pokud PeakForm chce nabídnout "vytvoř trénink v PeakForm → objeví se na Garmin hodinkách" (funkce, kterou má TrainingPeaks a která vyvolala tuto rešerši), **nejkratší reálná cesta nevede přes TrainingPeaks ani přímo přes Garmin Training API** (obojí vyžaduje formální byznysové schválení, viz sekce 2), **ale přes již existující intervals.icu OAuth napojení** — rozšířením scope o `CALENDAR:WRITE` a implementací volání na `/api/v1/athlete/{id}/events`, které intervals.icu adaptér dnes vůbec nevolá. Toto by mělo být ověřeno technickým experimentem (vytvořit testovací event přes API, zkontrolovat, zda a v jaké podobě se propíše na připojený Garmin účet) dřív, než se do toho investuje produkční implementace.
+
+### Experiment: potvrzeno živě (2026-09-21)
+
+Hypotéza výše byla ověřena proti reálnému, produkčnímu Intervals.icu účtu (ne mock/demo):
+
+1. `IntervalsIcuIntegrationProvider.Scopes` rozšířen o `CALENDAR:WRITE` (`ACTIVITY:READ,WELLNESS:READ,CALENDAR:WRITE`).
+2. Athlete provedl reconnect (nová OAuth autorizace) — nutné, protože Intervals.icu nahrazuje celou sadu scope při každé nové autorizaci, starý token novou nezíská automaticky.
+3. **Nalezen a opraven reálný bug** objevený právě tímto reconnectem: `IntegrationConnectionService.UpsertConnectionAsync` selhávalo na `DbUpdateConcurrencyException`, pokud athlete reconnectuje po předchozím odpojení (Disconnect smaže `IntegrationCredential`, ale nový `IntegrationCredential` vytvořený jen přes navigační vlastnost na už trackovaném/needded `IntegrationConnection` byl EF Core mylně vyhodnocen jako existující řádek — `Entity.Id` je generováno na klientovi (`Guid.NewGuid()` v property inicializeru), takže neprázdný klíč bez explicitního `Add()` vedl k `UPDATE` místo `INSERT`). Opraveno explicitním `db.IntegrationCredentials.Add(...)` v `IntegrationConnectionService.cs`. Bez této opravy by **žádný athlete nemohl znovu připojit Intervals.icu po odpojení** — nezávislé, produkčně relevantní zjištění nad rámec původní otázky.
+4. Testovací POST na `POST https://intervals.icu/api/v1/athlete/0/events` s payloadem `{category: "WORKOUT", start_date_local, type: "Run", name, description: "- 10m Z1\n- 5m Z2\n- 5m Z1", moving_time}` vrátil `200 OK` a vytvořil událost (potvrzeno: Intervals.icu textový popis samo rozparsovalo do strukturovaných kroků s cílovými zónami v `workout_doc.steps` — formát z komunitní dokumentace v sekci výše je funkční).
+5. **Athlete potvrdil vizuálně**: testovací trénink naplánovaný na den+2 se objevil v **Garmin Connect kalendáři** (cloudová strana, ověřeno nezávisle na fyzickém přesunu hodinek). Propagace z Intervals.icu do Garmin Connect je tedy živě potvrzená, ne jen teoretická.
+6. Testovací událost po ověření smazána (`PUT`/`DELETE` na stejném endpointu), dočasné diagnostické CLI příkazy použité pro test odstraněny z kódu. Scope `CALENDAR:WRITE` ponechán na žádost athletea pro budoucí implementaci.
+7. **Vedlejší zjištění**: Intervals.icu po reconnectu vrátilo `GrantedScope = "ACTIVITY:WRITE,WELLNESS:WRITE,CALENDAR:WRITE"` — širší, než appka v `scope` parametru žádala (`ACTIVITY:READ,WELLNESS:READ,CALENDAR:WRITE`). Vysvětleno athletem: na OAuth consent obrazovce Intervals.icu si sám zaškrtl i WRITE varianty pro Activity/Wellness (Intervals.icu nabízí scope jako uživatelem volitelné zaškrtávátka, ne jako appkou pevně vynucený seznam). Aplikační kód dnes žádný write endpoint pro Activity/Wellness nevolá, takže z toho neplyne bezprostřední riziko, ale token má reálně širší oprávnění, než appka potřebuje — k zvážení při budoucím affects review.
+8. **Neověřeno v tomto experimentu**: skutečné doručení na fyzická hodinky (jen Garmin Connect cloud kalendář, ne watch-level sync) — události byla naplánovaná na den+2, mimo dříve zdokumentované "dnes/zítra" push okno, a byla smazána dřív, než mohlo dojít k reálnému device syncu. Přesný časový mechanismus (batch push každé ráno vs. okamžitý push při vytvoření) zůstává neověřený.
+
+### Ověřené zdroje
+
+- https://gadgetsandwearables.com/2026/07/22/garmin-acquires-trainingpeaks-trainheroic/ (akvizice, 2026-07-22)
+- https://www.trainingpeaks.com/coach-blog/garmin-connect-autosync-integration/
+- https://www.trainingpeaks.com/partners/garmin/
+- https://help.trainingpeaks.com/hc/en-us/articles/204070864-Garmin-Connect-AutoSync-FAQ-and-tips-activities-workouts-and-daily-health-metrics
+- https://www.trainingpeaks.com/blog/an-update-on-trainingpeaks-partner-api/ (publikováno 2017-02-08, aktualizováno 2026-09-12)
+- https://github.com/TrainingPeaks/PartnersAPI/wiki (a podstránky `Workout-Structure-Object`, `Workouts-Object`)
+- https://www.trainingpeaks.com/upload/ (seznam integrací)
+- https://developer.garmin.com/gc-developer-program/training-api/
+- https://developer.garmin.com/gc-developer-program/overview/
+- https://forum.intervals.icu/t/upload-planned-workouts-to-garmin-connect/1521
+- https://forum.intervals.icu/t/solved-issue-garmin-planned-workouts-not-syncing-to-calendar-ans-garmin-doesnt-allow/117827
+- https://stas.run/en/guides/intervals-icu-garmin-sync
+
+**Omezení této rešerše:** Nepodařilo se ověřit, zda Garmin Training API (na rozdíl od Health API) má jiný/mírnější schvalovací proces — oficiální stránka na to přímo neodpovídá. Přesný JSON formát intervals.icu `events` endpointu pro strukturovaný trénink nebyl ověřen proti Swaggeru ani proti reálné odpovědi (mimo rozsah této rešerše). Interní implementace intervals.icu → Garmin (zda používá zrovna Garmin Training API, nebo jiný mechanismus) nebyla staff komentářem na fóru potvrzena.
+
+---
+
+## 7. Souhrnná tabulka
 
 | Poskytovatel | Dostupnost reálné integrace nyní | Schvalovací proces | Doporučený MVP fallback |
 |---|---|---|---|
 | **Strava** | **Ano** — plně samoobslužné, zdarma | Ne, jen standardní registrace aplikace | Není potřeba fallback — reálný OAuth2 adaptér je přímo v MVP |
-| **Garmin** (Connect Developer Program / Health API) | **Ne** — oficiálně "only for business use", formální schválení, nejisté pro nezávislý projekt | Ano, formální žádost + review Garminem, možné licenční poplatky pro komerční metriky | Kontrakt `IIntegrationProvider` + mock/demo provider + souborový import z uživatelského exportu |
+| **Garmin** (Connect Developer Program / Health API + Training API) | **Ne** — oficiálně "only for business use", formální schválení, nejisté pro nezávislý projekt | Ano, formální žádost + review Garminem, možné licenční poplatky pro komerční metriky | Kontrakt `IIntegrationProvider` + mock/demo provider + souborový import z uživatelského exportu; **od 2026-09-17 preferovaná nepřímá cesta = intervals.icu adaptér (sekce 5)**, který Garmin data agreguje bez nutnosti Garmin schválení — **totéž platí pro push naplánovaných tréninků na hodinky (sekce 6): intervals.icu `/events` endpoint místo Garmin Training API** |
 | **MySASY** | **Omezeně** — myAPI existuje a má veřejnou Swagger dokumentaci, ale reálný přístup je řízen přes kontakt s MySASY (`api@mysasy.com`), ne okamžitý self-serve | Ano, kontaktní/partnerský model (nižší bariéra než Garmin, ale ne plně automatické) | Kontrakt `IIntegrationProvider` + mock/demo provider + generický CSV import (konkrétní MySASY export formát nepodařilo se ověřit z oficiálního zdroje) |
 | **Google Sheets** | **Ano** (OAuth API), ale **MVP zvolil jednodušší cestu** | Ne pro API samotné (jen Google Cloud projekt); ano (verifikace) jen pro širší produkční publikování OAuth aplikace mimo testovací uživatele | CSV export/import bez OAuth — zvolená MVP cesta; živé OAuth API napojení zdokumentováno jako budoucí možnost |
+| **intervals.icu** | **Ano** — plně samoobslužné, zdarma, agreguje Garmin/Polar/Suunto/Coros/Huawei/Amazfit/Oura/WHOOP/Strava, **umí i push plánovaných tréninků zpět na Garmin hodinky** | Ne, jen standardní self-serve registrace OAuth aplikace | Není potřeba fallback — reálný OAuth2 adaptér doporučen jako primární cesta k wellness+Garmin datům i k budoucímu pushování tréninků na zařízení |
+| **TrainingPeaks** | **Ne** — jen pro schválené komerční partnery, žádná self-serve cesta, nyní vlastněné Garminem (od 2026-07) | Ano, formální žádost, není pro osobní použití | Není relevantní jako datový zdroj/cíl pro PeakForm; hodnotné jen jako **architektonická reference** (formát `Workout Structure Object`) a jako důkaz, že push-to-device přes intervals.icu je reálně fungující, ověřený vzor |
