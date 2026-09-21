@@ -12,6 +12,7 @@ import { Badge, type BadgeTone, Button, CardHeader, EmptyState, FormField, Modal
 import { useGetApiAthletesAthleteUserIdHrv } from '../api/generated/hrv-measurements/hrv-measurements';
 import { useGetApiAthletesAthleteUserIdRecovery } from '../api/generated/recovery-metrics/recovery-metrics';
 import { useGetApiAthletesAthleteUserIdSleep } from '../api/generated/sleep-records/sleep-records';
+import { useGetApiAthletesAthleteUserIdWeight } from '../api/generated/weight-measurements/weight-measurements';
 import {
   useGetApiAthletesAthleteUserIdPersonalRecords,
   getGetApiAthletesAthleteUserIdPersonalRecordsQueryKey,
@@ -87,6 +88,7 @@ function TrendsSection({ athleteUserId }: { athleteUserId: string }) {
   const hrvQuery = useGetApiAthletesAthleteUserIdHrv(athleteUserId, { from, to });
   const recoveryQuery = useGetApiAthletesAthleteUserIdRecovery(athleteUserId, { from, to });
   const sleepQuery = useGetApiAthletesAthleteUserIdSleep(athleteUserId, { from, to });
+  const weightQuery = useGetApiAthletesAthleteUserIdWeight(athleteUserId, { from, to });
 
   const hrvData = useMemo(
     () =>
@@ -115,10 +117,46 @@ function TrendsSection({ athleteUserId }: { athleteUserId: string }) {
     [sleepQuery.data],
   );
 
+  const weightData = useMemo(
+    () =>
+      [...(weightQuery.data ?? [])]
+        .filter((d) => d.date && d.weightKg != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.weightKg! * 10) / 10 })),
+    [weightQuery.data],
+  );
+
+  const stepsData = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.steps != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: d.steps! })),
+    [recoveryQuery.data],
+  );
+
+  const vo2MaxData = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.vo2Max != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.vo2Max! * 10) / 10 })),
+    [recoveryQuery.data],
+  );
+
+  const spo2Data = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.spO2Percent != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.spO2Percent! * 10) / 10 })),
+    [recoveryQuery.data],
+  );
+
   return (
     <Panel>
       <CardHeader kicker={t('wellness.title')} />
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
         <div>
           <Text className="ds-eyebrow" mb={6}>
             {t('wellness.hrv')}
@@ -136,6 +174,30 @@ function TrendsSection({ athleteUserId }: { athleteUserId: string }) {
             {t('wellness.sleepDuration')}
           </Text>
           {sleepQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={sleepData} tone="info" unit=" h" />}
+        </div>
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.weight')}
+          </Text>
+          {weightQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={weightData} tone="info" unit=" kg" />}
+        </div>
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.steps')}
+          </Text>
+          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={stepsData} tone="warning" unit=" kroků" />}
+        </div>
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.vo2max')}
+          </Text>
+          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={vo2MaxData} tone="accent" unit=" ml/kg/min" />}
+        </div>
+        <div>
+          <Text className="ds-eyebrow" mb={6}>
+            {t('wellness.spo2')}
+          </Text>
+          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={spo2Data} tone="info" unit="%" />}
         </div>
       </SimpleGrid>
     </Panel>

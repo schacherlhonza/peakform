@@ -4,6 +4,7 @@
  * TrainCoach API
  * OpenAPI spec version: v1
  */
+import type { ActivityMetricDto } from './activityMetricDto';
 import type { DataSource } from './dataSource';
 import type { SportType } from './sportType';
 
@@ -32,4 +33,6 @@ export interface CompletedActivityDto {
   /** @nullable */
   calories?: number | null;
   source?: DataSource;
+  /** @nullable */
+  additionalMetrics?: ActivityMetricDto[] | null;
 }

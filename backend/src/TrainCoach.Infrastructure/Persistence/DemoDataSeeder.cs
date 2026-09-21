@@ -271,6 +271,7 @@ public static class DemoDataSeeder
 
     private static void AddCompletedActivity(TrainCoachDbContext db, UserProfile athlete, PlannedWorkout workout, DateOnly date, decimal distanceMeters, int durationSeconds, int avgHr, Random random, DateTime now)
     {
+        var sourceRecord = new ActivitySourceRecord { Source = DataSource.Manual, FetchedAtUtc = now };
         db.CompletedActivities.Add(new CompletedActivity
         {
             AthleteUserId = athlete.Id,
@@ -284,7 +285,8 @@ public static class DemoDataSeeder
             AverageHeartRateBpm = avgHr + random.Next(-4, 5),
             MaxHeartRateBpm = avgHr + 25 + random.Next(0, 10),
             CreatedAtUtc = now,
-            Provenance = new DataProvenance { Source = DataSource.Manual, FetchedAtUtc = now },
+            PrimarySourceRecordId = sourceRecord.Id,
+            SourceRecords = { sourceRecord },
         });
     }
 

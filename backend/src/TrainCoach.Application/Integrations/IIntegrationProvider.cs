@@ -21,7 +21,18 @@ public record ExternalActivity(
     int? MaxHeartRateBpm,
     int? AveragePaceSecondsPerKm,
     int? AveragePowerWatts,
-    int? Calories);
+    int? Calories,
+    IReadOnlyList<ExternalActivityMetric>? AdditionalMetrics = null,
+    string? RawPayloadJson = null,
+    /// <summary>The recording device this provider reports, e.g. "Garmin Forerunner 965" — a
+    /// signal for IActivityMatchingService's device-match scoring. Only intervals.icu populates
+    /// this today.</summary>
+    string? DeviceName = null,
+    string? FitFileUuid = null);
+
+/// <summary>One extra numeric metric for an activity that doesn't have its own fixed column on
+/// <c>CompletedActivity</c> — written to the generic <c>ActivityMetric</c> table by <c>SyncOrchestrator</c>.</summary>
+public record ExternalActivityMetric(ActivityMetricType Type, decimal Value, string Unit);
 
 /// <summary>
 /// The port every provider adapter implements — Strava for real, Garmin/MySASY as demo

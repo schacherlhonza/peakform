@@ -77,12 +77,20 @@ public class ImportService(IApplicationDbContext db, IDateTimeProvider clock) : 
             }
 
             var externalId = $"{file.FileType}:{file.ContentHash}:{row.RowNumber}";
-            var exists = await db.DataProvenances.AnyAsync(p => p.Source == DataSource.FileImport && p.ExternalId == externalId, cancellationToken);
+            var exists = await db.ActivitySourceRecords.AnyAsync(p => p.Source == DataSource.FileImport && p.ExternalId == externalId, cancellationToken);
             if (exists)
             {
                 skippedDuplicate++;
                 continue;
             }
+
+            var sourceRecord = new ActivitySourceRecord
+            {
+                Source = DataSource.FileImport,
+                ExternalId = externalId,
+                ImportedFileId = file.Id,
+                FetchedAtUtc = clock.UtcNow,
+            };
 
             var activity = new CompletedActivity
             {
@@ -96,13 +104,8 @@ public class ImportService(IApplicationDbContext db, IDateTimeProvider clock) : 
                 AverageHeartRateBpm = row.AverageHeartRate,
                 CreatedAtUtc = clock.UtcNow,
                 CreatedByUserId = callerUserId,
-                Provenance = new DataProvenance
-                {
-                    Source = DataSource.FileImport,
-                    ExternalId = externalId,
-                    ImportedFileId = file.Id,
-                    FetchedAtUtc = clock.UtcNow,
-                },
+                PrimarySourceRecordId = sourceRecord.Id,
+                SourceRecords = { sourceRecord },
             };
             db.CompletedActivities.Add(activity);
             imported++;

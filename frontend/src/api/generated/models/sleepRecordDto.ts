@@ -19,4 +19,8 @@ export interface SleepRecordDto {
   source?: DataSource;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  sleepScore?: number | null;
+  /** @nullable */
+  avgSleepingHeartRateBpm?: number | null;
 }

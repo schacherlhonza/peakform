@@ -21,7 +21,9 @@ import AbbreviationsPage from './settings/AbbreviationsPage';
 import PermissionsPage from './settings/PermissionsPage';
 import PrivacyPage from './settings/PrivacyPage';
 import IntegrationsPage from './integrations/IntegrationsPage';
+import DuplicateReviewPage from './integrations/DuplicateReviewPage';
 import StravaCallbackPage from './integrations/StravaCallbackPage';
+import IntervalsIcuCallbackPage from './integrations/IntervalsIcuCallbackPage';
 import ImportPage from './import/ImportPage';
 import TemplatesPage from './features/templates/TemplatesPage';
 import NotificationsPage from './features/notifications/NotificationsPage';
@@ -113,10 +115,26 @@ function App() {
           }
         />
         <Route
+          path="/integrations/duplicates"
+          element={
+            <ProtectedRoute roles={[AppRole.Athlete]}>
+              <DuplicateReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/integrations/strava/callback"
           element={
             <ProtectedRoute roles={[AppRole.Athlete]}>
               <StravaCallbackPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/integrations/intervals-icu/callback"
+          element={
+            <ProtectedRoute roles={[AppRole.Athlete]}>
+              <IntervalsIcuCallbackPage />
             </ProtectedRoute>
           }
         />

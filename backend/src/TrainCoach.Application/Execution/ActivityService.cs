@@ -17,7 +17,7 @@ public class ActivityService(
     {
         await accessGuard.EnsureAthleteAccessAsync(athleteUserId, PermissionScope.ViewCompletedActivities, cancellationToken);
 
-        var query = db.CompletedActivities.Include(a => a.Provenance).Where(a => a.AthleteUserId == athleteUserId);
+        var query = db.CompletedActivities.Include(a => a.SourceRecords).Include(a => a.AdditionalMetrics).Where(a => a.AthleteUserId == athleteUserId);
         if (from is not null)
         {
             query = query.Where(a => a.StartedAtUtc >= from.Value.ToDateTime(TimeOnly.MinValue));
@@ -41,19 +41,22 @@ public class ActivityService(
     {
         var activity = await LoadOwnedActivityAsync(activityId, cancellationToken);
 
-        if (activity.Provenance is not { Source: DataSource.Strava, ExternalId: { } externalId })
+        var provenance = activity.SourceRecords.FirstOrDefault(sr => sr.Id == activity.PrimarySourceRecordId)
+            ?? activity.SourceRecords.FirstOrDefault();
+        if (provenance is not { ExternalId: { } externalId }
+            || MapToProviderType(provenance.Source) is not { } providerType)
         {
             return null;
         }
 
         var streamProvider = providers.OfType<IActivityStreamProvider>()
-            .FirstOrDefault(p => ((IIntegrationProvider)p).ProviderType == IntegrationProviderType.Strava);
+            .FirstOrDefault(p => ((IIntegrationProvider)p).ProviderType == providerType);
         if (streamProvider is null)
         {
             return null;
         }
 
-        var accessToken = await tokenResolver.ResolveFreshAccessTokenAsync(activity.AthleteUserId, IntegrationProviderType.Strava, cancellationToken);
+        var accessToken = await tokenResolver.ResolveFreshAccessTokenAsync(activity.AthleteUserId, providerType, cancellationToken);
         if (accessToken is null)
         {
             return null;
@@ -62,6 +65,16 @@ public class ActivityService(
         var streams = await streamProvider.FetchActivityStreamsAsync(accessToken, externalId, cancellationToken);
         return streams is null ? null : ToStreamsDto(activityId, streams);
     }
+
+    /// <summary>Only sources with a real, still-connectable <see cref="IIntegrationProvider"/> can
+    /// serve streams on demand (unlike the one-way import in <see cref="SyncOrchestrator"/>, this
+    /// needs a live access token) — reverse of <c>SyncOrchestrator.MapToDataSource</c>.</summary>
+    private static IntegrationProviderType? MapToProviderType(DataSource source) => source switch
+    {
+        DataSource.Strava => IntegrationProviderType.Strava,
+        DataSource.IntervalsIcu => IntegrationProviderType.IntervalsIcu,
+        _ => null,
+    };
 
     public async Task<CompletedActivityDto> CreateManualAsync(Guid callerUserId, CreateManualActivityRequest request, CancellationToken cancellationToken = default)
     {
@@ -72,6 +85,12 @@ public class ActivityService(
         {
             throw new ForbiddenAccessException("Aktivitu lze zapsat pouze pro sebe.");
         }
+
+        var sourceRecord = new ActivitySourceRecord
+        {
+            Source = DataSource.Manual,
+            FetchedAtUtc = clock.UtcNow,
+        };
 
         var activity = new CompletedActivity
         {
@@ -90,11 +109,8 @@ public class ActivityService(
             Calories = request.Calories,
             CreatedAtUtc = clock.UtcNow,
             CreatedByUserId = callerUserId,
-            Provenance = new DataProvenance
-            {
-                Source = DataSource.Manual,
-                FetchedAtUtc = clock.UtcNow,
-            },
+            PrimarySourceRecordId = sourceRecord.Id,
+            SourceRecords = { sourceRecord },
         };
 
         db.CompletedActivities.Add(activity);
@@ -152,7 +168,7 @@ public class ActivityService(
 
     private async Task<CompletedActivity> LoadOwnedActivityAsync(Guid activityId, CancellationToken cancellationToken)
     {
-        var activity = await db.CompletedActivities.Include(a => a.Provenance)
+        var activity = await db.CompletedActivities.Include(a => a.SourceRecords).Include(a => a.AdditionalMetrics)
             .FirstOrDefaultAsync(a => a.Id == activityId, cancellationToken)
             ?? throw new NotFoundException(nameof(CompletedActivity), activityId);
 
@@ -173,10 +189,16 @@ public class ActivityService(
 
     private static int? RoundToInt(double? value) => value.HasValue ? (int?)Math.Round(value.Value) : null;
 
-    private static CompletedActivityDto ToDto(CompletedActivity a) => new(
-        a.Id, a.AthleteUserId, a.PlannedWorkoutId, a.Sport, a.Title, a.StartedAtUtc, a.DurationSeconds,
-        a.DistanceMeters, a.ElevationGainMeters, a.AverageHeartRateBpm, a.MaxHeartRateBpm,
-        a.AveragePaceSecondsPerKm, a.AveragePowerWatts, a.Calories, a.Provenance?.Source ?? DataSource.Manual);
+    internal static CompletedActivityDto ToDto(CompletedActivity a)
+    {
+        var primarySource = a.SourceRecords.FirstOrDefault(sr => sr.Id == a.PrimarySourceRecordId)
+            ?? a.SourceRecords.FirstOrDefault();
+        return new(
+            a.Id, a.AthleteUserId, a.PlannedWorkoutId, a.Sport, a.Title, a.StartedAtUtc, a.DurationSeconds,
+            a.DistanceMeters, a.ElevationGainMeters, a.AverageHeartRateBpm, a.MaxHeartRateBpm,
+            a.AveragePaceSecondsPerKm, a.AveragePowerWatts, a.Calories, primarySource?.Source ?? DataSource.Manual,
+            a.AdditionalMetrics.Count > 0 ? a.AdditionalMetrics.Select(m => new ActivityMetricDto(m.MetricType, m.Value, m.Unit)).ToList() : null);
+    }
 
     private static TrainingFeedbackDto ToFeedbackDto(TrainingFeedback f) => new(
         f.Id, f.AthleteUserId, f.PlannedWorkoutId, f.CompletedActivityId, f.Date, f.Rpe, f.LegsFeeling, f.OverallRating, f.PainNote, f.FreeText);

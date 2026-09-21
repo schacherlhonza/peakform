@@ -53,7 +53,7 @@ export default function StravaCallbackPage() {
   return (
     <Stack align="center" justify="center" gap="md" py={80}>
       <Loader />
-      <Text className="ds-body">{t('integrations.connecting')}</Text>
+      <Text className="ds-body">{t('integrations.connecting', { provider: t('integrations.provider.Strava') })}</Text>
     </Stack>
   );
 }

@@ -54,5 +54,6 @@ public class RecoveryMetricService(IApplicationDbContext db, IRelationshipAccess
     }
 
     private static RecoveryMetricDto ToDto(RecoveryMetric r) => new(
-        r.Id, r.AthleteUserId, r.Date, r.RestingHeartRateBpm, r.ReadinessScore, r.StressScore, r.Source);
+        r.Id, r.AthleteUserId, r.Date, r.RestingHeartRateBpm, r.ReadinessScore, r.StressScore, r.Source,
+        r.MoodScore, r.SorenessScore, r.FatigueScore, r.MotivationScore, r.Steps, r.SpO2Percent, r.Vo2Max, r.HasInjurySignal);
 }

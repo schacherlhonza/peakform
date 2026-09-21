@@ -1,4 +1,4 @@
-import { Text } from '@mantine/core';
+import { Group, Text } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 
 interface SparklinePoint {
@@ -40,6 +40,23 @@ export function Sparkline({ data, tone = 'accent', height = 80, unit }: Sparklin
       <Text size="sm" c="dimmed">
         {t('wellness.noData')}
       </Text>
+    );
+  }
+
+  // A one-point "trend" has no line to draw — the degenerate math (zero range, zero step)
+  // used to render as a single dot stranded in an otherwise empty chart, which read as broken
+  // rather than "not enough data yet". Show the value plainly instead.
+  if (points.length === 1) {
+    return (
+      <Group gap="xs" align="baseline">
+        <Text size="lg" fw={700} c={color}>
+          {points[0].value}
+          {unit}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {t('wellness.singleMeasurement')}
+        </Text>
+      </Group>
     );
   }
 

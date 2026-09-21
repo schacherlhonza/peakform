@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TrainCoach.Application.Account;
 using TrainCoach.Application.Common;
@@ -15,7 +16,7 @@ namespace TrainCoach.Application;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<IAuditLogService, AuditLogService>();
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachAthleteRelationshipService, CoachAthleteRelationshipService>();
         services.AddScoped<ITrainingPlanService, TrainingPlanService>();
         services.AddScoped<IActivityService, ActivityService>();
+        services.AddScoped<IDuplicateReviewService, DuplicateReviewService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ICheckInService, CheckInService>();
 
@@ -41,7 +43,7 @@ public static class DependencyInjection
         services.AddWellnessExtras();
         services.AddNutrition();
         services.AddPlatform();
-        services.AddIntegrationsApplication();
+        services.AddIntegrationsApplication(configuration);
 
         return services;
     }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TrainCoach.Application.Common;
 using TrainCoach.Domain.Enums;
 using TrainCoach.Domain.Integrations;
@@ -15,7 +16,9 @@ public class IntegrationConnectionService(
     IEnumerable<IIntegrationProvider> providers,
     ITokenEncryptor tokenEncryptor,
     IBackgroundJobQueue jobQueue,
-    IDateTimeProvider clock) : IIntegrationConnectionService
+    IConnectorPolicyService policyService,
+    IDateTimeProvider clock,
+    ILogger<IntegrationConnectionService> logger) : IIntegrationConnectionService
 {
     public async Task<IReadOnlyList<IntegrationConnectionDto>> GetForAthleteAsync(Guid callerUserId, Guid athleteUserId, CancellationToken cancellationToken = default)
     {
@@ -77,12 +80,31 @@ public class IntegrationConnectionService(
 
         if (connection.Credential is not null)
         {
+            if (providers.FirstOrDefault(p => p.ProviderType == provider) is IRevocableIntegrationProvider revocable)
+            {
+                // Best-effort: a failed remote revoke (token already invalid, network hiccup)
+                // must never block the athlete from disconnecting locally.
+                try
+                {
+                    var accessToken = tokenEncryptor.Unprotect(connection.Credential.EncryptedAccessToken);
+                    await revocable.RevokeAsync(accessToken, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Nepodařilo se odvolat token u poskytovatele {Provider} při odpojování — pokračuji lokálním odpojením.", provider);
+                }
+            }
+
             db.IntegrationCredentials.Remove(connection.Credential);
         }
         connection.Status = IntegrationConnectionStatus.NotConnected;
         connection.DisconnectedAtUtc = clock.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        // Reseed non-overridden policy defaults now that this provider is no longer connected —
+        // e.g. disconnecting intervals.icu should flip Strava's Activities default back to Primary.
+        await policyService.EnsureDefaultsAsync(callerUserId, cancellationToken);
     }
 
     public async Task TriggerSyncAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default)
@@ -138,7 +160,16 @@ public class IntegrationConnectionService(
 
         if (connection.Credential is null)
         {
+            // Entity.Id is client-generated (Guid.NewGuid() in a property initializer, not
+            // database-generated) — when `connection` is an EXISTING tracked entity (not freshly
+            // Added), EF's graph-fixup for a new dependent reached only via a navigation property
+            // sees a non-default key and infers "Modified" (assumes the row already exists) rather
+            // than "Added", producing an UPDATE that matches 0 rows instead of an INSERT. Explicit
+            // Add() sidesteps that heuristic. Reproduced live 2026-09-21: reconnecting intervals.icu
+            // after a disconnect (credential row genuinely deleted, connection row reused) failed
+            // with DbUpdateConcurrencyException without this — see docs/integrations-research.md §6.
             connection.Credential = new IntegrationCredential();
+            db.IntegrationCredentials.Add(connection.Credential);
         }
         connection.Credential.EncryptedAccessToken = tokenEncryptor.Protect(token.AccessToken);
         connection.Credential.EncryptedRefreshToken = token.RefreshToken is null ? null : tokenEncryptor.Protect(token.RefreshToken);
@@ -146,6 +177,11 @@ public class IntegrationConnectionService(
         connection.Credential.GrantedScope = token.GrantedScope;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        // Retroactively reseed non-overridden policy defaults for every provider this athlete has
+        // — e.g. connecting intervals.icu after Strava flips Strava's Activities default to
+        // FallbackOnly automatically, without touching any athlete override.
+        await policyService.EnsureDefaultsAsync(athleteUserId, cancellationToken);
 
         await jobQueue.QueueSyncRunAsync(connection.Id, SyncTrigger.OnConnect, cancellationToken);
 

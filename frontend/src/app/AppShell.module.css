@@ -5,17 +5,10 @@
 }
 
 .logo {
-  width: 37px;
-  height: 37px;
-  border-radius: 10px;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 13px;
+  height: 52px;
+  width: auto;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .navbar {

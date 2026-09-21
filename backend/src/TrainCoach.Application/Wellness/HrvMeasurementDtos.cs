@@ -9,7 +9,8 @@ public record HrvMeasurementDto(
     decimal RmssdMs,
     DataSource Source,
     DateTime? MeasuredAtUtc,
-    string? Notes);
+    string? Notes,
+    decimal? SdnnMs = null);
 
 public record UpsertHrvMeasurementRequest(
     Guid AthleteUserId,

@@ -16,6 +16,9 @@ public static class WellnessExtrasDependencyInjection
         services.AddScoped<IRecoveryMetricService, RecoveryMetricService>();
         services.AddScoped<IHrvMeasurementService, HrvMeasurementService>();
         services.AddScoped<IPersonalRecordService, PersonalRecordService>();
+        services.AddScoped<IWeightMeasurementService, WeightMeasurementService>();
+        services.AddScoped<ITrainingLoadService, TrainingLoadService>();
+        services.AddScoped<IDailyMetricSelectionService, DailyMetricSelectionService>();
 
         return services;
     }

@@ -26,3 +26,6 @@ Thumbs.db
 
 # --- Logs ---
 *.log
+
+# --- Local DB backups (may contain real personal data) ---
+*.dump

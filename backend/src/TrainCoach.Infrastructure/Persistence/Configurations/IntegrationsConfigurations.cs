@@ -35,3 +35,11 @@ public class ImportedFileConfiguration : IEntityTypeConfiguration<ImportedFile>
         builder.HasIndex(x => new { x.AthleteUserId, x.ContentHash });
     }
 }
+
+public class ConnectorDomainPolicyConfiguration : IEntityTypeConfiguration<ConnectorDomainPolicy>
+{
+    public void Configure(EntityTypeBuilder<ConnectorDomainPolicy> builder)
+    {
+        builder.HasIndex(x => new { x.AthleteUserId, x.Provider, x.Domain }).IsUnique();
+    }
+}

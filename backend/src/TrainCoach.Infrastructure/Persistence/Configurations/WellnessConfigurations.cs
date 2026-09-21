@@ -60,3 +60,36 @@ public class PersonalRecordConfiguration : IEntityTypeConfiguration<PersonalReco
         builder.HasIndex(x => new { x.AthleteUserId, x.Sport });
     }
 }
+
+public class WeightMeasurementConfiguration : IEntityTypeConfiguration<WeightMeasurement>
+{
+    public void Configure(EntityTypeBuilder<WeightMeasurement> builder)
+    {
+        builder.HasIndex(x => new { x.AthleteUserId, x.Date, x.Source }).IsUnique();
+    }
+}
+
+public class TrainingLoadSnapshotConfiguration : IEntityTypeConfiguration<TrainingLoadSnapshot>
+{
+    public void Configure(EntityTypeBuilder<TrainingLoadSnapshot> builder)
+    {
+        builder.HasIndex(x => new { x.AthleteUserId, x.Date, x.Source }).IsUnique();
+    }
+}
+
+public class DailyMetricSelectionConfiguration : IEntityTypeConfiguration<DailyMetricSelection>
+{
+    public void Configure(EntityTypeBuilder<DailyMetricSelection> builder)
+    {
+        builder.Property(x => x.PrecedenceRuleApplied).HasMaxLength(200).IsRequired();
+        builder.HasIndex(x => new { x.AthleteUserId, x.Date, x.MetricKind }).IsUnique();
+    }
+}
+
+public class AthleteMetricSourcePrecedenceConfiguration : IEntityTypeConfiguration<AthleteMetricSourcePrecedence>
+{
+    public void Configure(EntityTypeBuilder<AthleteMetricSourcePrecedence> builder)
+    {
+        builder.HasIndex(x => new { x.AthleteUserId, x.MetricKind, x.Source }).IsUnique();
+    }
+}

@@ -60,5 +60,6 @@ public class SleepRecordService(IApplicationDbContext db, IRelationshipAccessGua
     }
 
     private static SleepRecordDto ToDto(SleepRecord r) => new(
-        r.Id, r.AthleteUserId, r.Date, r.DurationMinutes, r.DeepSleepMinutes, r.RemSleepMinutes, r.Source, r.Notes);
+        r.Id, r.AthleteUserId, r.Date, r.DurationMinutes, r.DeepSleepMinutes, r.RemSleepMinutes, r.Source, r.Notes,
+        r.SleepScore, r.AvgSleepingHeartRateBpm);
 }

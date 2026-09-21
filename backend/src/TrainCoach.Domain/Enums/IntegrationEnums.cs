@@ -5,6 +5,47 @@ public enum IntegrationProviderType
     Strava = 1,
     GarminDemoProvider = 2,
     MySasyDemoProvider = 3,
+
+    /// <summary>
+    /// Real OAuth2 adapter for intervals.icu, which itself aggregates Garmin, Polar, Suunto,
+    /// Coros, Huawei, Amazfit, Oura, WHOOP and Strava — see docs/integrations-research.md §5.
+    /// Preferred over <see cref="GarminDemoProvider"/> for real (non-demo) Garmin/wellness data,
+    /// since Garmin's own Connect Developer Program is business-only and not obtainable here.
+    /// </summary>
+    IntervalsIcu = 4,
+
+    /// <summary>Architecture-ready only — throws until real OAuth credentials are configured. See
+    /// docs/integrations/oura-whoop-activation.md.</summary>
+    Oura = 5,
+
+    /// <summary>Architecture-ready only — throws until real OAuth credentials are configured. See
+    /// docs/integrations/oura-whoop-activation.md.</summary>
+    Whoop = 6,
+}
+
+/// <summary>A category of data a connector can supply, independently configurable per provider —
+/// see <see cref="TrainCoach.Domain.Integrations.ConnectorDomainPolicy"/>.</summary>
+public enum DataDomain
+{
+    Activities = 1,
+    PlannedWorkouts = 2,
+    Sleep = 3,
+    Hrv = 4,
+    RestingHeartRate = 5,
+    DailyWellness = 6,
+    BodyComposition = 7,
+    VendorScores = 8,
+}
+
+/// <summary>How much authority a provider has for one <see cref="DataDomain"/>, for one athlete.
+/// Never a single global priority across all metrics — see docs/integrations/canonical-data-and-deduplication-plan.md.</summary>
+public enum ConnectorMode
+{
+    Primary = 1,
+    Secondary = 2,
+    EnrichmentOnly = 3,
+    FallbackOnly = 4,
+    Disabled = 5,
 }
 
 public enum IntegrationConnectionStatus
@@ -23,6 +64,10 @@ public enum SyncRunStatus
     Failed = 4,
 }
 
+/// <summary>
+/// <see cref="Scheduled"/> is reserved for a future periodic/cron sync loop — nothing constructs
+/// it today (see docs/integrations/activity-matching.md, "Recommended Next Steps").
+/// </summary>
 public enum SyncTrigger
 {
     Manual = 1,

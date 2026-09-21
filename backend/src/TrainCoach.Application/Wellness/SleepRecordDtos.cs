@@ -10,7 +10,9 @@ public record SleepRecordDto(
     int? DeepSleepMinutes,
     int? RemSleepMinutes,
     DataSource Source,
-    string? Notes);
+    string? Notes,
+    int? SleepScore = null,
+    int? AvgSleepingHeartRateBpm = null);
 
 public record UpsertSleepRecordRequest(
     Guid AthleteUserId,

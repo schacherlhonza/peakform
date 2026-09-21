@@ -6,6 +6,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { Panel, CardHeader, Badge, Button } from '../../design-system/components';
 import { useAthleteDashboardData } from './useAthleteDashboardData';
 import { ReadinessCard } from './ReadinessCard';
+import { TrainingLoadCard } from './TrainingLoadCard';
 import { TodayWorkoutCard } from './TodayWorkoutCard';
 import { FuelHydrationCard } from './FuelHydrationCard';
 import { WeekTimelineSection } from './WeekTimelineSection';
@@ -42,6 +43,7 @@ export function AthleteDashboardPage() {
 
       <WeekTimelineSection data={data.weekTimeline} />
       <RecoveryInsightsSection data={data.insight} />
+      <TrainingLoadCard data={data.trainingLoad} />
 
       <div className={classes.secondaryGrid}>
         <Panel compact>

@@ -41,12 +41,7 @@ export function AppShell() {
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap={10} wrap="nowrap">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="var(--color-text)" aria-label={t('common.close')} />
-            <div className={classes.logo} aria-hidden>
-              HP
-            </div>
-            <Text fw={800} fz={16} c="var(--color-text)">
-              {t('app.name')}
-            </Text>
+            <img src="/logo.png" alt={t('app.name')} className={classes.logo} />
           </Group>
           <Group gap={6} wrap="nowrap">
             <IconButton icon={<IconBell size={18} stroke={1.8} />} label={t('nav.notifications')} onClick={() => go('/notifications')} />

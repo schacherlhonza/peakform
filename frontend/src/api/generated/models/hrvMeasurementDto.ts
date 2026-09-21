@@ -16,4 +16,6 @@ export interface HrvMeasurementDto {
   measuredAtUtc?: string | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  sdnnMs?: number | null;
 }

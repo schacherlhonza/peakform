@@ -81,6 +81,12 @@
     "readinessStale": "Naposledy {{date}}",
     "readinessScoreLabel": "Skóre připravenosti {{score}} ze 100",
     "readinessExplain": "Skóre je orientační odhad na základě klidové tepové frekvence, HRV a spánku — není to diagnóza.",
+    "trainingLoadRising": "Zátěž roste rychleji než obvykle",
+    "trainingLoadFalling": "Zátěž klesá",
+    "trainingLoadStable": "Zátěž je stabilní",
+    "trainingLoadUnknown": "Zátěž zaznamenána",
+    "trainingLoadEmptyTitle": "Zatím žádná data o tréninkové zátěži",
+    "trainingLoadEmptyDescription": "Tréninková zátěž (CTL/ATL) přichází ze synchronizace s intervals.icu — jakmile proběhne, uvidíte ji tu.",
     "todayWorkoutRest": "Dnes máš v plánu odpočinek.",
     "todayWorkoutEmptyTitle": "Bez naplánovaného tréninku",
     "todayWorkoutEmptyDescription": "Trenér zatím na dnešek nenaplánoval žádný trénink.",
@@ -145,6 +151,9 @@
     "elevation": "Převýšení",
     "avgPower": "Průměrný výkon",
     "calories": "Kalorie",
+    "elapsedTime": "Celkový čas",
+    "trainingLoad": "Tréninková zátěž",
+    "intensity": "Intenzita",
     "streamsUnavailable": "Podrobné grafy nejsou k dispozici",
     "streamsUnavailableHint": "Detailní grafy (tepovka, tempo, převýšení, kadence, výkon v čase) jsou dostupné jen pro tréninky synchronizované ze Stravy, u kterých Strava tato senzorová data uchovává. Souhrnné hodnoty nahoře jsou vždy k dispozici.",
     "source": {
@@ -331,6 +340,13 @@
     "hrv": "Variabilita srdečního tepu (HRV)",
     "restingHr": "Klidová tepová frekvence",
     "sleepDuration": "Doba spánku",
+    "weight": "Váha",
+    "steps": "Kroky",
+    "vo2max": "VO2max",
+    "spo2": "SpO2 (saturace kyslíkem)",
+    "trainingLoad": "Tréninková zátěž",
+    "trainingLoadExplain": "CTL (kondice), ATL (únava) a ramp rate (rychlost nárůstu zátěže) jsou orientační odhad na základě tréninkové zátěže — není to instrukce ani diagnóza.",
+    "rampRate": "Ramp rate",
     "personalRecords": "Osobní rekordy",
     "addRecord": "Přidat rekord",
     "noPersonalRecords": "Zatím žádné osobní rekordy.",
@@ -348,6 +364,7 @@
     "startedOn": "Datum začátku",
     "noData": "Zatím žádná data.",
     "latestValue": "Aktuálně: {{value}}{{unit}}",
+    "singleMeasurement": "Zatím jen jedno měření — trend se zobrazí, jakmile přibudou další dny.",
     "flagCreated": "Záznam byl vytvořen.",
     "flagResolved": "Záznam byl označen jako vyřešený."
   },
@@ -402,19 +419,65 @@
     "provider": {
       "Strava": "Strava",
       "GarminDemoProvider": "Garmin (demo)",
-      "MySasyDemoProvider": "MySASY (demo)"
+      "MySasyDemoProvider": "MySASY (demo)",
+      "IntervalsIcu": "intervals.icu",
+      "Oura": "Oura",
+      "Whoop": "WHOOP"
     },
     "connected": "Připojeno",
     "notConnected": "Nepřipojeno",
     "lastSynced": "Poslední synchronizace",
     "neverSynced": "Zatím nikdy",
     "connectDemo": "Připojit (demo)",
-    "connectStrava": "Připojit Strava účet",
+    "connectAccount": "Připojit účet {{provider}}",
     "syncNow": "Synchronizovat nyní",
     "disconnect": "Odpojit",
     "syncHistory": "Historie synchronizací",
     "syncStarted": "Synchronizace byla spuštěna.",
-    "connecting": "Dokončuji propojení se Stravou…"
+    "connecting": "Dokončuji propojení s {{provider}}…",
+    "advancedSettings": "Pokročilá nastavení",
+    "connectorMode": {
+      "Primary": "Primární",
+      "Secondary": "Druhotný",
+      "EnrichmentOnly": "Pouze doplnění",
+      "FallbackOnly": "Záložní",
+      "Disabled": "Vypnuto"
+    },
+    "dataDomain": {
+      "Activities": "Aktivity",
+      "PlannedWorkouts": "Plánované tréninky",
+      "Sleep": "Spánek",
+      "Hrv": "HRV",
+      "RestingHeartRate": "Klidová srdeční frekvence",
+      "DailyWellness": "Denní regenerace",
+      "BodyComposition": "Složení těla",
+      "VendorScores": "Skóre poskytovatele"
+    },
+    "policyUpdateError": "Nastavení role zdroje se nepodařilo uložit.",
+    "reviewDuplicatesBanner": "Ke kontrole: {{count}} možných duplicit",
+    "reviewDuplicatesLink": "Zkontrolovat duplicity"
+  },
+  "duplicateReview": {
+    "title": "Možné duplicitní aktivity",
+    "back": "Zpět na integrace",
+    "empty": "Žádné aktivity k posouzení.",
+    "confidence": "Shoda {{score}} %",
+    "sameActivity": "Jde o stejnou aktivitu",
+    "differentActivity": "Jde o různé aktivity",
+    "keep": "Ponechat tuto",
+    "merged": "Aktivity byly sloučeny.",
+    "mergeError": "Sloučení se nepodařilo.",
+    "dismissed": "Aktivity byly ponechány jako oddělené.",
+    "dismissError": "Uložení se nepodařilo.",
+    "history": "Historie sloučení",
+    "revert": "Vrátit zpět",
+    "reverted": "Sloučení bylo vráceno.",
+    "revertError": "Vrácení se nepodařilo.",
+    "outcome": {
+      "Merged": "Sloučeno",
+      "KeptSeparate": "Ponecháno oddělené",
+      "Reverted": "Vráceno"
+    }
   },
   "permissions": {
     "scope": {

@@ -41,7 +41,10 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     // Execution & feedback
     public DbSet<CompletedActivity> CompletedActivities => Set<CompletedActivity>();
     public DbSet<ActivityMetric> ActivityMetrics => Set<ActivityMetric>();
-    public DbSet<DataProvenance> DataProvenances => Set<DataProvenance>();
+    public DbSet<ActivitySourceRecord> ActivitySourceRecords => Set<ActivitySourceRecord>();
+    public DbSet<MergeDecision> MergeDecisions => Set<MergeDecision>();
+    public DbSet<DuplicateCandidate> DuplicateCandidates => Set<DuplicateCandidate>();
+    public DbSet<DuplicateDryRunReport> DuplicateDryRunReports => Set<DuplicateDryRunReport>();
     public DbSet<TrainingFeedback> TrainingFeedbacks => Set<TrainingFeedback>();
     public DbSet<Comment> Comments => Set<Comment>();
 
@@ -53,6 +56,10 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     public DbSet<HrvMeasurement> HrvMeasurements => Set<HrvMeasurement>();
     public DbSet<PerformanceBaseline> PerformanceBaselines => Set<PerformanceBaseline>();
     public DbSet<PersonalRecord> PersonalRecords => Set<PersonalRecord>();
+    public DbSet<WeightMeasurement> WeightMeasurements => Set<WeightMeasurement>();
+    public DbSet<TrainingLoadSnapshot> TrainingLoadSnapshots => Set<TrainingLoadSnapshot>();
+    public DbSet<DailyMetricSelection> DailyMetricSelections => Set<DailyMetricSelection>();
+    public DbSet<AthleteMetricSourcePrecedence> AthleteMetricSourcePrecedences => Set<AthleteMetricSourcePrecedence>();
 
     // Nutrition
     public DbSet<FoodEntry> FoodEntries => Set<FoodEntry>();
@@ -67,6 +74,7 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     public DbSet<IntegrationCredential> IntegrationCredentials => Set<IntegrationCredential>();
     public DbSet<SynchronizationRun> SynchronizationRuns => Set<SynchronizationRun>();
     public DbSet<ImportedFile> ImportedFiles => Set<ImportedFile>();
+    public DbSet<ConnectorDomainPolicy> ConnectorDomainPolicies => Set<ConnectorDomainPolicy>();
 
     // Platform
     public DbSet<Notification> Notifications => Set<Notification>();

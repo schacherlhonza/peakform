@@ -17,4 +17,20 @@ export interface RecoveryMetricDto {
   /** @nullable */
   stressScore?: number | null;
   source?: DataSource;
+  /** @nullable */
+  moodScore?: number | null;
+  /** @nullable */
+  sorenessScore?: number | null;
+  /** @nullable */
+  fatigueScore?: number | null;
+  /** @nullable */
+  motivationScore?: number | null;
+  /** @nullable */
+  steps?: number | null;
+  /** @nullable */
+  spO2Percent?: number | null;
+  /** @nullable */
+  vo2Max?: number | null;
+  /** @nullable */
+  hasInjurySignal?: boolean | null;
 }

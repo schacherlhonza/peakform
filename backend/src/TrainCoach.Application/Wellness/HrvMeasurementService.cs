@@ -54,5 +54,5 @@ public class HrvMeasurementService(IApplicationDbContext db, IRelationshipAccess
     }
 
     private static HrvMeasurementDto ToDto(HrvMeasurement r) => new(
-        r.Id, r.AthleteUserId, r.Date, r.RmssdMs, r.Source, r.MeasuredAtUtc, r.Notes);
+        r.Id, r.AthleteUserId, r.Date, r.RmssdMs, r.Source, r.MeasuredAtUtc, r.Notes, r.SdnnMs);
 }

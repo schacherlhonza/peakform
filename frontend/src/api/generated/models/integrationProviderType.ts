@@ -12,4 +12,7 @@ export const IntegrationProviderType = {
   Strava: 'Strava',
   GarminDemoProvider: 'GarminDemoProvider',
   MySasyDemoProvider: 'MySasyDemoProvider',
+  IntervalsIcu: 'IntervalsIcu',
+  Oura: 'Oura',
+  Whoop: 'Whoop',
 } as const;

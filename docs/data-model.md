@@ -193,7 +193,7 @@ erDiagram
 
 Identita/přístup: `UserProfile`, `AthleteProfile`, `CoachProfile`, `RelationshipPermission`, `RefreshToken`, `AuditLog`.
 Plánování: `Season`, `Goal`, `Race`, `HeartRateZone`, `CustomAbbreviation`.
-Realizace: `ActivityMetric`, `TrainingFeedback`, `DataProvenance`.
+Realizace: `ActivityMetric`, `TrainingFeedback`, `ActivitySourceRecord` (dříve `DataProvenance` — přejmenováno a rozšířeno z 1:1 na many:1 vůči `CompletedActivity`, viz §5.1 a docs/integrations/canonical-data-and-deduplication-plan.md), `MergeDecision`, `DuplicateCandidate`.
 Wellness: `PainOrHealthFlag`, `SleepRecord`, `RecoveryMetric`, `HrvMeasurement`, `PerformanceBaseline`, `PersonalRecord`.
 Výživa: `FoodEntry`, `HydrationEntry`.
 Integrace/platforma: `IntegrationConnection`, `IntegrationCredential`, `SynchronizationRun`, `ImportedFile`, `Notification`.
@@ -202,22 +202,15 @@ Integrace/platforma: `IntegrationConnection`, `IntegrationCredential`, `Synchron
 
 ### 5.1 Deduplikace aktivit
 
-Aktivita se považuje za duplicitní, pokud:
+**Aktualizováno** — plně implementováno, viz docs/integrations/canonical-data-and-deduplication-plan.md a docs/integrations/activity-matching.md pro detailní algoritmus. Souhrn:
 
-1. existuje jiná `CompletedActivity` téhož sportovce se **stejným zdrojem (`Source`) a stejným `ExternalId`** (např. dvě synchronizace ze Strava se stejným ID aktivity), nebo
-2. neexistuje `ExternalId` (např. ruční zápis vs. import) a aktivita **fuzzy odpovídá** podle času začátku a vzdálenosti (v rámci konfigurovatelné tolerance, např. ±10 minut a ±5 % vzdálenosti).
+Úroveň 1 (vždy nejdřív, nikdy nenahrazena fuzzy logikou): existuje-li jiný `ActivitySourceRecord` téhož sportovce se **stejným zdrojem (`Source`) a stejným `ExternalId`**, jde o idempotentní upsert — nic nového nevzniká (DB unique index).
 
-Při detekované duplicitě se nová hodnota buď zahodí, nebo sloučí do existujícího záznamu podle pravidel priority zdroje (viz níže) — nikdy nevznikají dva nezávislé záznamy pro stejný běh.
+Úroveň 2–5 (jen když úroveň 1 nenajde shodu): deterministický fingerprint (sport, čas začátku/trvání/vzdálenost zaokrouhlené, zařízení) jako kandidátní index, následovaný confidence scoringem (0–100). Skóre ≥85 → automatické sloučení (nový `ActivitySourceRecord` se připojí k existující `CompletedActivity`, nevzniká druhý záznam); 60–84 → `DuplicateCandidate` k ručnímu posouzení; <60 → samostatná aktivita. Every merge/rejection is auditováno v `MergeDecision` a je reverzibilní.
 
 ### 5.2 Priorita zdroje (source precedence)
 
-Pokud stejná metrika (např. tep, vzdálenost) přijde z více zdrojů pro tutéž aktivitu, uplatní se konfigurovatelné pořadí priority. Výchozí pořadí (nejnižší → nejvyšší priorita):
-
-```
-manual < import < live-API
-```
-
-Tj. hodnota z živého API propojení (např. Strava) má ve výchozím nastavení přednost před importovaným souborem, který má přednost před ručně zadanou hodnotou. Pořadí je konfigurovatelné na úrovni systému/uživatele, protože v některých případech je ruční korekce sportovce záměrně autoritativnější (např. oprava chybně zaznamenané vzdálenosti). Zdroj každé hodnoty je vždy dohledatelný přes `DataProvenance`.
+**Aktualizováno** — pro aktivity nahrazeno `ConnectorDomainPolicy` (Primary/Secondary/EnrichmentOnly/FallbackOnly/Disabled, samostatně per provider a datová doména, ne jedna globální priorita — viz docs/integrations/canonical-data-and-deduplication-plan.md). Pro wellness metriky (HRV, klidová srdeční frekvence, spánek, váha, CTL/ATL) nahrazeno `AthleteMetricSourcePrecedence` s výchozím pořadím v `DailyMetricSelectionService` — hodnoty z různých zdrojů se **nikdy neprůměrují**, ukládají se všechny (`HrvMeasurement`/`RecoveryMetric`/`SleepRecord`/`WeightMeasurement`/`TrainingLoadSnapshot`, jeden řádek per zdroj per den) a `DailyMetricSelection` je jen read-time výběr toho, který se zobrazí. Zdroj každé hodnoty je vždy dohledatelný přes `ActivitySourceRecord`/`Source` pole.
 
 ### 5.3 Párování plánovaného a skutečného tréninku
 

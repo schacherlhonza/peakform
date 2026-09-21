@@ -17,5 +17,10 @@ public class SynchronizationRun : Entity
     public int ItemsCreated { get; set; }
     public int ItemsUpdated { get; set; }
     public int ItemsSkippedDuplicate { get; set; }
+
+    /// <summary>Incremented when the matcher found a candidate in the 60-84 confidence band and
+    /// queued a <see cref="TrainCoach.Domain.Execution.DuplicateCandidate"/> for review, rather
+    /// than auto-merging or creating a fully separate activity.</summary>
+    public int ItemsFlaggedForReview { get; set; }
     public string? ErrorMessage { get; set; }
 }

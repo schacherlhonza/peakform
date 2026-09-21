@@ -34,6 +34,17 @@ services:
       Integrations__Strava__ClientId: ${STRAVA_CLIENT_ID:-}
       Integrations__Strava__ClientSecret: ${STRAVA_CLIENT_SECRET:-}
       Integrations__Strava__RedirectUri: ${STRAVA_REDIRECT_URI:-http://localhost:5173/integrations/strava/callback}
+      Integrations__IntervalsIcu__ClientId: ${INTERVALS_ICU_CLIENT_ID:-}
+      Integrations__IntervalsIcu__ClientSecret: ${INTERVALS_ICU_CLIENT_SECRET:-}
+      Integrations__IntervalsIcu__RedirectUri: ${INTERVALS_ICU_REDIRECT_URI:-http://localhost:5173/integrations/intervals-icu/callback}
+      Integrations__Oura__ClientId: ${OURA_CLIENT_ID:-}
+      Integrations__Oura__ClientSecret: ${OURA_CLIENT_SECRET:-}
+      Integrations__Oura__RedirectUri: ${OURA_REDIRECT_URI:-http://localhost:5173/integrations/oura/callback}
+      Integrations__Whoop__ClientId: ${WHOOP_CLIENT_ID:-}
+      Integrations__Whoop__ClientSecret: ${WHOOP_CLIENT_SECRET:-}
+      Integrations__Whoop__RedirectUri: ${WHOOP_REDIRECT_URI:-http://localhost:5173/integrations/whoop/callback}
+      Integrations__ActivityMatching__AutoMergeThreshold: ${ACTIVITY_MATCHING_AUTO_MERGE_THRESHOLD:-85}
+      Integrations__ActivityMatching__ManualReviewThreshold: ${ACTIVITY_MATCHING_MANUAL_REVIEW_THRESHOLD:-60}
     ports:
       - "5158:8080"
     volumes:

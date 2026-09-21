@@ -11,6 +11,13 @@ public class SleepRecord : AuditableEntity
     public int? DurationMinutes { get; set; }
     public int? DeepSleepMinutes { get; set; }
     public int? RemSleepMinutes { get; set; }
+
+    /// <summary>Provider-computed 0-100 sleep quality score (e.g. intervals.icu's <c>sleepScore</c>) — objective/algorithmic, not the subjective morning check-in rating.</summary>
+    public int? SleepScore { get; set; }
+    public int? AvgSleepingHeartRateBpm { get; set; }
     public DataSource Source { get; set; } = DataSource.Manual;
     public string? Notes { get; set; }
+
+    /// <summary>See <see cref="HrvMeasurement.Context"/> — same descriptive-only role.</summary>
+    public MeasurementContext Context { get; set; } = MeasurementContext.Unspecified;
 }

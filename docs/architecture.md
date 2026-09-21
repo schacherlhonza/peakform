@@ -102,7 +102,8 @@ sequenceDiagram
 
 - `TrainCoach.Integrations` obsahuje adaptéry za společným kontraktem `IIntegrationProvider` (např. `GetActivitiesAsync`, `ConnectAsync`, `RefreshTokenAsync`).
 - Strava: reálný OAuth2 adaptér.
-- Garmin, MySASY: kontrakt + mock/demo poskytovatel + souborový import jako fallback (viz `mvp-scope.md`, `security.md`).
+- intervals.icu: reálný OAuth2 adaptér — intervals.icu sám agreguje Garmin/Polar/Suunto/Coros/Huawei/Amazfit/Oura/WHOOP/Strava, takže je to preferovaná cesta k reálným Garmin/wellness datům (spánek, HRV, klidová TF, readiness, stress) bez Garminova vlastního byznysového schvalovacího procesu. Na rozdíl od Strava nevydává refresh token (viz komentář u `IntervalsIcuIntegrationProvider.RefreshTokenAsync`) — po vypršení/odvolání přístupu se účet musí znovu připojit přes OAuth. Viz `docs/integrations-research.md` §5.
+- Garmin, MySASY: kontrakt + mock/demo poskytovatel + souborový import jako fallback (viz `mvp-scope.md`, `security.md`) — pro athlety, kteří si intervals.icu účet založit nechtějí/nemohou, nebo pro MySASY specifické SA-HRV metriky, které intervals.icu nepokrývá.
 - Google Sheets: souborový import (ne živé API), viz `product-requirements.md` a `mvp-scope.md`.
 - Application vrstva zná integrace pouze přes `IIntegrationProvider`, nikdy přes konkrétní SDK — díky tomu lze přidat/nahradit poskytovatele bez zásahu do use-case logiky.
 
@@ -152,5 +153,5 @@ Každý feature-folder obsahuje vlastní komponenty, hooky vázané na danou fea
 ## 10. Lokální běh
 
 - **Docker Compose** se třemi službami: backend, frontend, postgres.
-- `.env.example` obsahuje potřebné proměnné bez reálných tajemství (např. `STRAVA_CLIENT_ID=`, `STRAVA_CLIENT_SECRET=` prázdné, `JWT_SIGNING_KEY=` placeholder).
-- Vývojář, který chce reálné propojení se Stravou, doplní vlastní Strava API klíče do `.env`.
+- `.env.example` obsahuje potřebné proměnné bez reálných tajemství (např. `STRAVA_CLIENT_ID=`, `STRAVA_CLIENT_SECRET=`, `INTERVALS_ICU_CLIENT_ID=`, `INTERVALS_ICU_CLIENT_SECRET=` prázdné, `JWT_SIGNING_KEY=` placeholder).
+- Vývojář, který chce reálné propojení se Stravou nebo s intervals.icu, doplní vlastní API klíče dané služby do `.env`.

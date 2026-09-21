@@ -10,9 +10,12 @@ public class CompletedActivityConfiguration : IEntityTypeConfiguration<Completed
     {
         builder.HasIndex(x => new { x.AthleteUserId, x.StartedAtUtc });
         builder.HasIndex(x => x.PlannedWorkoutId);
+        builder.HasIndex(x => x.NormalizedFingerprint);
+        // Plain (non-FK) index — see the property's doc comment for why this isn't a real FK.
+        builder.HasIndex(x => x.PrimarySourceRecordId);
 
-        builder.HasOne(x => x.Provenance).WithOne(x => x.CompletedActivity)
-            .HasForeignKey<DataProvenance>(x => x.CompletedActivityId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(x => x.SourceRecords).WithOne(x => x.CompletedActivity)
+            .HasForeignKey(x => x.CompletedActivityId).OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.AdditionalMetrics).WithOne(x => x.CompletedActivity)
             .HasForeignKey(x => x.CompletedActivityId).OnDelete(DeleteBehavior.Cascade);
@@ -34,14 +37,42 @@ public class ActivityMetricConfiguration : IEntityTypeConfiguration<ActivityMetr
     }
 }
 
-public class DataProvenanceConfiguration : IEntityTypeConfiguration<DataProvenance>
+public class ActivitySourceRecordConfiguration : IEntityTypeConfiguration<ActivitySourceRecord>
 {
-    public void Configure(EntityTypeBuilder<DataProvenance> builder)
+    public void Configure(EntityTypeBuilder<ActivitySourceRecord> builder)
     {
         builder.Property(x => x.ExternalId).HasMaxLength(200);
-        // Dedup key: same source + same external id must not be imported/synced twice.
+        // Level-1 dedup key: same source + same external id must not be imported/synced twice.
+        // This is the one check that must never be replaced by fuzzy/fingerprint matching.
         builder.HasIndex(x => new { x.Source, x.ExternalId }).IsUnique().HasFilter("\"ExternalId\" IS NOT NULL");
+        builder.HasIndex(x => x.NormalizedFingerprint);
         builder.HasQueryFilter(x => !x.CompletedActivity.IsDeleted);
+    }
+}
+
+public class MergeDecisionConfiguration : IEntityTypeConfiguration<MergeDecision>
+{
+    public void Configure(EntityTypeBuilder<MergeDecision> builder)
+    {
+        builder.HasIndex(x => x.SurvivingActivityId);
+        builder.HasIndex(x => x.AthleteUserId);
+        builder.HasIndex(x => x.Outcome);
+    }
+}
+
+public class DuplicateCandidateConfiguration : IEntityTypeConfiguration<DuplicateCandidate>
+{
+    public void Configure(EntityTypeBuilder<DuplicateCandidate> builder)
+    {
+        builder.HasIndex(x => new { x.AthleteUserId, x.Status });
+    }
+}
+
+public class DuplicateDryRunReportConfiguration : IEntityTypeConfiguration<DuplicateDryRunReport>
+{
+    public void Configure(EntityTypeBuilder<DuplicateDryRunReport> builder)
+    {
+        builder.HasIndex(x => x.GeneratedAtUtc);
     }
 }
 

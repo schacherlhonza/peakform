@@ -38,7 +38,10 @@ public interface IApplicationDbContext
 
     DbSet<CompletedActivity> CompletedActivities { get; }
     DbSet<ActivityMetric> ActivityMetrics { get; }
-    DbSet<DataProvenance> DataProvenances { get; }
+    DbSet<ActivitySourceRecord> ActivitySourceRecords { get; }
+    DbSet<MergeDecision> MergeDecisions { get; }
+    DbSet<DuplicateCandidate> DuplicateCandidates { get; }
+    DbSet<DuplicateDryRunReport> DuplicateDryRunReports { get; }
     DbSet<TrainingFeedback> TrainingFeedbacks { get; }
     DbSet<Comment> Comments { get; }
 
@@ -49,6 +52,10 @@ public interface IApplicationDbContext
     DbSet<HrvMeasurement> HrvMeasurements { get; }
     DbSet<PerformanceBaseline> PerformanceBaselines { get; }
     DbSet<PersonalRecord> PersonalRecords { get; }
+    DbSet<WeightMeasurement> WeightMeasurements { get; }
+    DbSet<TrainingLoadSnapshot> TrainingLoadSnapshots { get; }
+    DbSet<DailyMetricSelection> DailyMetricSelections { get; }
+    DbSet<AthleteMetricSourcePrecedence> AthleteMetricSourcePrecedences { get; }
 
     DbSet<FoodEntry> FoodEntries { get; }
     DbSet<HydrationEntry> HydrationEntries { get; }
@@ -60,6 +67,7 @@ public interface IApplicationDbContext
     DbSet<IntegrationCredential> IntegrationCredentials { get; }
     DbSet<SynchronizationRun> SynchronizationRuns { get; }
     DbSet<ImportedFile> ImportedFiles { get; }
+    DbSet<ConnectorDomainPolicy> ConnectorDomainPolicies { get; }
 
     DbSet<Notification> Notifications { get; }
 

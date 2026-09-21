@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Group, Select, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { IconAlertTriangle } from '@tabler/icons-react';
 import { Panel, CardHeader, Badge, Button, Skeleton, EmptyState, showToast } from '../design-system/components';
 import type { BadgeTone } from '../design-system/components';
+import { useAuth } from '../auth/AuthContext';
 import {
   useGetApiIntegrations,
   useGetApiIntegrationsProviderSyncHistory,
@@ -16,14 +18,83 @@ import {
   getPostApiIntegrationsProviderSyncMutationOptions,
 } from '../api/generated/integration-connections/integration-connections';
 import {
+  useGetApiAthletesAthleteUserIdConnectorPolicies,
+  getGetApiAthletesAthleteUserIdConnectorPoliciesQueryKey,
+  getPutApiAthletesAthleteUserIdConnectorPoliciesMutationOptions,
+} from '../api/generated/connector-policy/connector-policy';
+import { useGetApiAthletesAthleteUserIdDuplicateCandidates } from '../api/generated/duplicate-review/duplicate-review';
+import {
   IntegrationConnectionStatus,
   IntegrationProviderType,
   SyncRunStatus,
+  DataDomain,
+  ConnectorMode,
   type IntegrationConnectionDto,
   type SynchronizationRunDto,
 } from '../api/generated/models';
 
+const DATA_DOMAINS: DataDomain[] = [
+  DataDomain.Activities,
+  DataDomain.PlannedWorkouts,
+  DataDomain.Sleep,
+  DataDomain.Hrv,
+  DataDomain.RestingHeartRate,
+  DataDomain.DailyWellness,
+  DataDomain.BodyComposition,
+  DataDomain.VendorScores,
+];
+
+const CONNECTOR_MODE_OPTIONS = Object.values(ConnectorMode);
+
+/** Per-provider, per-domain connector role (Primary/Secondary/EnrichmentOnly/FallbackOnly/Disabled)
+ * — collapsed by default since most athletes never need to touch the defaults (docs/integrations/canonical-data-and-deduplication-plan.md). */
+function ConnectorPolicySection({ athleteUserId, provider }: { athleteUserId: string; provider: IntegrationProviderType }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState(false);
+
+  const policiesQuery = useGetApiAthletesAthleteUserIdConnectorPolicies(athleteUserId, { query: { enabled: expanded } });
+  const setPolicyMutation = useMutation(getPutApiAthletesAthleteUserIdConnectorPoliciesMutationOptions());
+
+  const modeFor = (domain: DataDomain) => policiesQuery.data?.find((p) => p.provider === provider && p.domain === domain)?.mode;
+
+  const handleChange = async (domain: DataDomain, mode: string | null) => {
+    if (!mode) return;
+    try {
+      await setPolicyMutation.mutateAsync({ athleteUserId, data: { provider, domain, mode: mode as ConnectorMode } });
+      await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdConnectorPoliciesQueryKey(athleteUserId) });
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('integrations.policyUpdateError') });
+    }
+  };
+
+  return (
+    <Stack gap={4} mt="sm">
+      <Button size="xs" variant="subtle" onClick={() => setExpanded((v) => !v)}>
+        {t('integrations.advancedSettings')}
+      </Button>
+      {expanded && (
+        <Stack gap={6} mt={4}>
+          {DATA_DOMAINS.map((domain) => (
+            <Select
+              key={domain}
+              size="xs"
+              label={t(`integrations.dataDomain.${domain}`)}
+              data={CONNECTOR_MODE_OPTIONS.map((mode) => ({ value: mode, label: t(`integrations.connectorMode.${mode}`) }))}
+              value={modeFor(domain) ?? null}
+              onChange={(value) => void handleChange(domain, value)}
+              disabled={policiesQuery.isLoading}
+              allowDeselect={false}
+            />
+          ))}
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
 interface ProviderCardProps {
+  athleteUserId: string;
   provider: IntegrationProviderType;
   isDemo: boolean;
   connection?: IntegrationConnectionDto;
@@ -66,6 +137,7 @@ function ProviderCardSkeleton({ provider }: { provider: IntegrationProviderType 
 }
 
 function ProviderCard({
+  athleteUserId,
   provider,
   isDemo,
   connection,
@@ -86,7 +158,7 @@ function ProviderCard({
   const [authorizing, setAuthorizing] = useState(false);
   const connected = connection?.status === IntegrationConnectionStatus.Connected;
 
-  const handleConnectStrava = async () => {
+  const handleConnectOAuth = async () => {
     setAuthorizing(true);
     try {
       const result = await getApiIntegrationsProviderAuthorizeUrl(provider);
@@ -145,8 +217,8 @@ function ProviderCard({
           </Button>
         )}
         {!connected && !isDemo && (
-          <Button size="xs" onClick={() => void handleConnectStrava()} loading={authorizing}>
-            {t('integrations.connectStrava')}
+          <Button size="xs" onClick={() => void handleConnectOAuth()} loading={authorizing}>
+            {t('integrations.connectAccount', { provider: t(`integrations.provider.${provider}`) })}
           </Button>
         )}
         {connected && (
@@ -186,6 +258,8 @@ function ProviderCard({
           )}
         </Stack>
       )}
+
+      {connected && <ConnectorPolicySection athleteUserId={athleteUserId} provider={provider} />}
     </Panel>
   );
 }
@@ -193,6 +267,11 @@ function ProviderCard({
 export default function IntegrationsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const athleteUserId = user!.userId;
+
+  const pendingDuplicatesQuery = useGetApiAthletesAthleteUserIdDuplicateCandidates(athleteUserId);
+  const pendingCount = pendingDuplicatesQuery.data?.length ?? 0;
 
   const connectionsQuery = useGetApiIntegrations();
   const connections = connectionsQuery.data ?? [];
@@ -201,6 +280,7 @@ export default function IntegrationsPage() {
   const stravaConnected = findConnection(IntegrationProviderType.Strava)?.status === IntegrationConnectionStatus.Connected;
   const garminConnected = findConnection(IntegrationProviderType.GarminDemoProvider)?.status === IntegrationConnectionStatus.Connected;
   const mySasyConnected = findConnection(IntegrationProviderType.MySasyDemoProvider)?.status === IntegrationConnectionStatus.Connected;
+  const intervalsIcuConnected = findConnection(IntegrationProviderType.IntervalsIcu)?.status === IntegrationConnectionStatus.Connected;
 
   const stravaHistory = useGetApiIntegrationsProviderSyncHistory(IntegrationProviderType.Strava, {
     query: { enabled: stravaConnected },
@@ -210,6 +290,9 @@ export default function IntegrationsPage() {
   });
   const mySasyHistory = useGetApiIntegrationsProviderSyncHistory(IntegrationProviderType.MySasyDemoProvider, {
     query: { enabled: mySasyConnected },
+  });
+  const intervalsIcuHistory = useGetApiIntegrationsProviderSyncHistory(IntegrationProviderType.IntervalsIcu, {
+    query: { enabled: intervalsIcuConnected },
   });
 
   const connectDemoMutation = useMutation(getPostApiIntegrationsProviderConnectDemoMutationOptions());
@@ -253,8 +336,19 @@ export default function IntegrationsPage() {
       <Title className="ds-page-title" order={2}>
         {t('nav.integrations')}
       </Title>
-      <SimpleGrid cols={{ base: 1, sm: 3 }}>
+      {pendingCount > 0 && (
+        <Panel>
+          <Group justify="space-between">
+            <Text className="ds-body">{t('integrations.reviewDuplicatesBanner', { count: pendingCount })}</Text>
+            <Button component={Link} to="/integrations/duplicates" size="xs" variant="light">
+              {t('integrations.reviewDuplicatesLink')}
+            </Button>
+          </Group>
+        </Panel>
+      )}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
         <ProviderCard
+          athleteUserId={athleteUserId}
           provider={IntegrationProviderType.Strava}
           isDemo={false}
           connection={findConnection(IntegrationProviderType.Strava)}
@@ -272,7 +366,30 @@ export default function IntegrationsPage() {
           syncPending={syncMutation.isPending && syncMutation.variables?.provider === IntegrationProviderType.Strava}
         />
         <ProviderCard
-          provider={IntegrationProviderType.GarminDemoProvider}
+
+          athleteUserId={athleteUserId}          provider={IntegrationProviderType.IntervalsIcu}
+          isDemo={false}
+          connection={findConnection(IntegrationProviderType.IntervalsIcu)}
+          connectionsLoading={connectionsQuery.isLoading}
+          connectionsError={connectionsQuery.isError}
+          onRetryConnections={() => void connectionsQuery.refetch()}
+          history={intervalsIcuHistory.data}
+          historyLoading={intervalsIcuConnected && intervalsIcuHistory.isLoading}
+          historyError={intervalsIcuConnected && intervalsIcuHistory.isError}
+          onConnectDemo={() => void handleConnectDemo(IntegrationProviderType.IntervalsIcu)}
+          onDisconnect={() => void handleDisconnect(IntegrationProviderType.IntervalsIcu)}
+          onSync={() => void handleSync(IntegrationProviderType.IntervalsIcu)}
+          connectPending={
+            connectDemoMutation.isPending && connectDemoMutation.variables?.provider === IntegrationProviderType.IntervalsIcu
+          }
+          disconnectPending={
+            disconnectMutation.isPending && disconnectMutation.variables?.provider === IntegrationProviderType.IntervalsIcu
+          }
+          syncPending={syncMutation.isPending && syncMutation.variables?.provider === IntegrationProviderType.IntervalsIcu}
+        />
+        <ProviderCard
+
+          athleteUserId={athleteUserId}          provider={IntegrationProviderType.GarminDemoProvider}
           isDemo
           connection={findConnection(IntegrationProviderType.GarminDemoProvider)}
           connectionsLoading={connectionsQuery.isLoading}
@@ -293,7 +410,8 @@ export default function IntegrationsPage() {
           syncPending={syncMutation.isPending && syncMutation.variables?.provider === IntegrationProviderType.GarminDemoProvider}
         />
         <ProviderCard
-          provider={IntegrationProviderType.MySasyDemoProvider}
+
+          athleteUserId={athleteUserId}          provider={IntegrationProviderType.MySasyDemoProvider}
           isDemo
           connection={findConnection(IntegrationProviderType.MySasyDemoProvider)}
           connectionsLoading={connectionsQuery.isLoading}

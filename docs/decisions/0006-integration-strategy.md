@@ -2,7 +2,7 @@
 
 ## Stav
 
-Přijato.
+Přijato. **Poznámka (aktualizace):** toto rozhodnutí předchází napojení na intervals.icu, které funguje jinak, než tento ADR předpokládal — je to třetí reálný OAuth2 adaptér (ne mock/import fallback), který navíc agreguje Garmin/Polar/Suunto/Coros/Oura/WHOOP/Strava data. Viz docs/integrations-research.md §5 a docs/integrations/canonical-data-and-deduplication-plan.md pro aktuální architekturu (ConnectorMode per-domain, ne jedna globální role poskytovatele) — tento dokument zůstává platný pro Garmin/MySASY/Google Sheets, ale neaktualizuje se retroaktivně o intervals.icu.
 
 ## Kontext
 

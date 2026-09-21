@@ -186,6 +186,67 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.ToTable("ActivityMetrics");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Execution.ActivitySourceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompletedActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DeviceName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("FetchedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FitFileUuid")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ImportedFileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedFingerprint")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RawPayloadJson")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("RawPayloadRetained")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("RawStartLatitude")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<decimal?>("RawStartLongitude")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("SynchronizationRunId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletedActivityId");
+
+                    b.HasIndex("NormalizedFingerprint");
+
+                    b.HasIndex("Source", "ExternalId")
+                        .IsUnique()
+                        .HasFilter("\"ExternalId\" IS NOT NULL");
+
+                    b.ToTable("ActivitySourceRecords");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Execution.Comment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -281,10 +342,19 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("MatchStatus")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("MaxHeartRateBpm")
                         .HasColumnType("integer");
 
+                    b.Property<string>("NormalizedFingerprint")
+                        .HasColumnType("text");
+
                     b.Property<Guid?>("PlannedWorkoutId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PrimarySourceRecordId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Sport")
@@ -304,54 +374,165 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NormalizedFingerprint");
+
                     b.HasIndex("PlannedWorkoutId");
+
+                    b.HasIndex("PrimarySourceRecordId");
 
                     b.HasIndex("AthleteUserId", "StartedAtUtc");
 
                     b.ToTable("CompletedActivities");
                 });
 
-            modelBuilder.Entity("TrainCoach.Domain.Execution.DataProvenance", b =>
+            modelBuilder.Entity("TrainCoach.Domain.Execution.DuplicateCandidate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CompletedActivityId")
+                    b.Property<Guid>("ActivityAId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("ExternalId")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("FetchedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ImportedFileId")
+                    b.Property<Guid>("ActivityBId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("RawPayloadJson")
-                        .HasColumnType("text");
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
 
-                    b.Property<bool>("RawPayloadRetained")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Source")
+                    b.Property<int>("ConfidenceScore")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("SynchronizationRunId")
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ResolvedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScoringBreakdownJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompletedActivityId")
-                        .IsUnique();
+                    b.HasIndex("AthleteUserId", "Status");
 
-                    b.HasIndex("Source", "ExternalId")
-                        .IsUnique()
-                        .HasFilter("\"ExternalId\" IS NOT NULL");
+                    b.ToTable("DuplicateCandidates");
+                });
 
-                    b.ToTable("DataProvenances");
+            modelBuilder.Entity("TrainCoach.Domain.Execution.DuplicateDryRunReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CandidatesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ExactTierCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("GeneratedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HighConfidenceTierCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalActivitiesScanned")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UncertainTierCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GeneratedAtUtc");
+
+                    b.ToTable("DuplicateDryRunReports");
+                });
+
+            modelBuilder.Entity("TrainCoach.Domain.Execution.MergeDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AbsorbedActivityIdBeforeMerge")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AbsorbedSourceRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ConfidenceScore")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RevertedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RevertedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScoringBreakdownJson")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("SurvivingActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteUserId");
+
+                    b.HasIndex("Outcome");
+
+                    b.HasIndex("SurvivingActivityId");
+
+                    b.ToTable("MergeDecisions");
                 });
 
             modelBuilder.Entity("TrainCoach.Domain.Execution.TrainingFeedback", b =>
@@ -739,6 +920,47 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Integrations.ConnectorDomainPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Domain")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsAthleteOverride")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteUserId", "Provider", "Domain")
+                        .IsUnique();
+
+                    b.ToTable("ConnectorDomainPolicies");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Integrations.ImportedFile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -907,6 +1129,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("ItemsFetched")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsFlaggedForReview")
                         .HasColumnType("integer");
 
                     b.Property<int>("ItemsSkippedDuplicate")
@@ -1687,6 +1912,32 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.ToTable("GeneratedReportInsights");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Wellness.AthleteMetricSourcePrecedence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("MetricKind")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteUserId", "MetricKind", "Source")
+                        .IsUnique();
+
+                    b.ToTable("AthleteMetricSourcePrecedences");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Wellness.DailyCheckIn", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1762,6 +2013,47 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.ToTable("DailyCheckIns");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Wellness.DailyMetricSelection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ComputedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("MetricKind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PrecedenceRuleApplied")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("SelectedRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SelectedSource")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("SelectedValue")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteUserId", "Date", "MetricKind")
+                        .IsUnique();
+
+                    b.ToTable("DailyMetricSelections");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Wellness.HrvMeasurement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1770,6 +2062,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("AthleteUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Context")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -1787,6 +2082,10 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("RmssdMs")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<decimal?>("SdnnMs")
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
 
@@ -1961,13 +2260,35 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<int?>("FatigueScore")
+                        .HasColumnType("integer");
+
+                    b.Property<bool?>("HasInjurySignal")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("MoodScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MotivationScore")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("ReadinessScore")
                         .HasColumnType("integer");
 
                     b.Property<int?>("RestingHeartRateBpm")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SorenessScore")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("SpO2Percent")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<int?>("Steps")
                         .HasColumnType("integer");
 
                     b.Property<int?>("StressScore")
@@ -1978,6 +2299,10 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("UpdatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Vo2Max")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
 
                     b.HasKey("Id");
 
@@ -1995,6 +2320,12 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("AthleteUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("AvgSleepingHeartRateBpm")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Context")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -2017,6 +2348,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<int?>("RemSleepMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SleepScore")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Source")
                         .HasColumnType("integer");
 
@@ -2032,6 +2366,92 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("SleepRecords");
+                });
+
+            modelBuilder.Entity("TrainCoach.Domain.Wellness.TrainingLoadSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Atl")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Ctl")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("RampRate")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteUserId", "Date", "Source")
+                        .IsUnique();
+
+                    b.ToTable("TrainingLoadSnapshots");
+                });
+
+            modelBuilder.Entity("TrainCoach.Domain.Wellness.WeightMeasurement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("WeightKg")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AthleteUserId", "Date", "Source")
+                        .IsUnique();
+
+                    b.ToTable("WeightMeasurements");
                 });
 
             modelBuilder.Entity("TrainCoach.Infrastructure.Identity.ApplicationUser", b =>
@@ -2161,11 +2581,11 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Navigation("CompletedActivity");
                 });
 
-            modelBuilder.Entity("TrainCoach.Domain.Execution.DataProvenance", b =>
+            modelBuilder.Entity("TrainCoach.Domain.Execution.ActivitySourceRecord", b =>
                 {
                     b.HasOne("TrainCoach.Domain.Execution.CompletedActivity", "CompletedActivity")
-                        .WithOne("Provenance")
-                        .HasForeignKey("TrainCoach.Domain.Execution.DataProvenance", "CompletedActivityId")
+                        .WithMany("SourceRecords")
+                        .HasForeignKey("CompletedActivityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2314,7 +2734,7 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("AdditionalMetrics");
 
-                    b.Navigation("Provenance");
+                    b.Navigation("SourceRecords");
                 });
 
             modelBuilder.Entity("TrainCoach.Domain.Identity.CoachAthleteRelationship", b =>

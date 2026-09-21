@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios';
 import { Stack, Text, Title } from '@mantine/core';
 import { IconRun } from '@tabler/icons-react';
 import { useGetApiActivitiesActivityId, useGetApiActivitiesActivityIdStreams } from '../api/generated/activities/activities';
+import { ActivityMetricType } from '../api/generated/models';
 import { Panel, Badge, MetricStrip, EmptyState, Skeleton, type Metric } from '../design-system/components';
 import { StreamChart } from './StreamChart';
 import { formatClock, formatDistanceKm, formatPace } from './activityFormat';
@@ -40,6 +41,11 @@ export function ActivityDetailPage() {
   const streamsUnavailable = isAxiosError(streamsQuery.error) && streamsQuery.error.response?.status === 404;
   const streams = streamsQuery.data;
 
+  const findMetric = (type: ActivityMetricType) => activity.additionalMetrics?.find((m) => m.type === type);
+  const elapsedTime = findMetric(ActivityMetricType.ElapsedTimeSeconds);
+  const trainingLoad = findMetric(ActivityMetricType.TrainingLoad);
+  const intensity = findMetric(ActivityMetricType.Intensity);
+
   const metrics: Metric[] = [
     { label: t('activity.distance'), value: activity.distanceMeters != null ? formatDistanceKm(activity.distanceMeters) : '—' },
     { label: t('activity.duration'), value: formatClock(activity.durationSeconds ?? 0) },
@@ -49,6 +55,9 @@ export function ActivityDetailPage() {
     { label: t('activity.elevation'), value: activity.elevationGainMeters != null ? `${Math.round(activity.elevationGainMeters)} m` : '—' },
     { label: t('activity.avgPower'), value: activity.averagePowerWatts != null ? `${activity.averagePowerWatts} W` : '—' },
     { label: t('activity.calories'), value: activity.calories != null ? `${activity.calories} kcal` : '—' },
+    ...(elapsedTime ? [{ label: t('activity.elapsedTime'), value: formatClock(elapsedTime.value ?? 0) }] : []),
+    ...(trainingLoad ? [{ label: t('activity.trainingLoad'), value: `${Math.round(trainingLoad.value ?? 0)}` }] : []),
+    ...(intensity ? [{ label: t('activity.intensity'), value: `${Math.round(intensity.value ?? 0)}%` }] : []),
   ];
 
   return (

@@ -6,7 +6,7 @@ namespace TrainCoach.Application.Account;
 /// Full machine-readable export of everything the app holds about one user (GDPR data
 /// portability, security.md §11). Deliberately excludes: raw <c>IntegrationCredential</c> tokens
 /// (secrets, never exported even encrypted), internal sync/import bookkeeping
-/// (<c>SynchronizationRun</c>, <c>ImportedFile</c>, <c>DataProvenance</c>) which describes how data
+/// (<c>SynchronizationRun</c>, <c>ImportedFile</c>, <c>ActivitySourceRecord</c>) which describes how data
 /// arrived rather than being personal data itself, and per-sample <c>ActivityMetric</c> time series
 /// (exported as a count, not every raw point, to keep the export a reasonable size) — see
 /// docs/mvp-scope.md for this documented as an intentional scope decision.

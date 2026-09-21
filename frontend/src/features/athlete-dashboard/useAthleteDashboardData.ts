@@ -4,6 +4,7 @@ import { useGetApiAthletesAthleteUserIdReportsDateType } from '../../api/generat
 import { useGetApiAthletesAthleteUserIdRecovery } from '../../api/generated/recovery-metrics/recovery-metrics';
 import { useGetApiAthletesAthleteUserIdHrv } from '../../api/generated/hrv-measurements/hrv-measurements';
 import { useGetApiAthletesAthleteUserIdSleep } from '../../api/generated/sleep-records/sleep-records';
+import { useGetApiAthletesAthleteUserIdTrainingLoad } from '../../api/generated/training-load/training-load';
 import { useGetApiAthletesAthleteUserIdPlans, useGetApiPlansId } from '../../api/generated/training-plans/training-plans';
 import { useGetApiAthletesAthleteUserIdActivities } from '../../api/generated/activities/activities';
 import { useGetApiAthletesAthleteUserIdFood } from '../../api/generated/food-entries/food-entries';
@@ -42,6 +43,7 @@ export function useAthleteDashboardData(athleteUserId: string) {
   const recoveryQuery = useGetApiAthletesAthleteUserIdRecovery(athleteUserId, { from: lookbackStart, to: today });
   const hrvQuery = useGetApiAthletesAthleteUserIdHrv(athleteUserId, { from: lookbackStart, to: today });
   const sleepQuery = useGetApiAthletesAthleteUserIdSleep(athleteUserId, { from: lookbackStart, to: today });
+  const trainingLoadQuery = useGetApiAthletesAthleteUserIdTrainingLoad(athleteUserId, { from: lookbackStart, to: today });
   const integrationsQuery = useGetApiIntegrations();
 
   const plansQuery = useGetApiAthletesAthleteUserIdPlans(athleteUserId);
@@ -71,6 +73,7 @@ export function useAthleteDashboardData(athleteUserId: string) {
   const latestRecovery = latestByDate(recoveryQuery.data);
   const latestHrv = latestByDate(hrvQuery.data);
   const latestSleep = latestByDate(sleepQuery.data);
+  const latestTrainingLoad = latestByDate(trainingLoadQuery.data);
 
   const syncedIntegration = (integrationsQuery.data ?? []).find((c) => c.lastSyncedAtUtc);
   const lastSyncedAtUtc = syncedIntegration?.lastSyncedAtUtc ?? null;
@@ -100,6 +103,16 @@ export function useAthleteDashboardData(athleteUserId: string) {
         void hrvQuery.refetch();
         void sleepQuery.refetch();
       },
+    },
+    trainingLoad: {
+      ctl: latestTrainingLoad?.ctl ?? null,
+      atl: latestTrainingLoad?.atl ?? null,
+      rampRate: latestTrainingLoad?.rampRate ?? null,
+      date: latestTrainingLoad?.date ?? null,
+      isToday: latestTrainingLoad?.date === today,
+      isLoading: trainingLoadQuery.isLoading,
+      isError: trainingLoadQuery.isError,
+      refetch: () => void trainingLoadQuery.refetch(),
     },
     todayWorkout: {
       workout: todayWorkout ?? null,

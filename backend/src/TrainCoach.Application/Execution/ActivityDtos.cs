@@ -17,7 +17,11 @@ public record CompletedActivityDto(
     int? AveragePaceSecondsPerKm,
     int? AveragePowerWatts,
     int? Calories,
-    DataSource Source);
+    DataSource Source,
+    IReadOnlyList<ActivityMetricDto>? AdditionalMetrics = null);
+
+/// <summary>A metric that doesn't have its own fixed column on <see cref="CompletedActivityDto"/> (e.g. training load, elapsed time) — see <see cref="TrainCoach.Domain.Execution.ActivityMetric"/>.</summary>
+public record ActivityMetricDto(ActivityMetricType Type, decimal Value, string Unit);
 
 /// <summary>
 /// One activity's second-by-second detail streams (heart rate, cadence, power, elevation, pace,
