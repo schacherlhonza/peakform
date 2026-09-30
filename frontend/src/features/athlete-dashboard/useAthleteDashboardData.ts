@@ -1,9 +1,7 @@
 import { useMemo } from 'react';
 import { useGetApiAthletesAthleteUserIdRaces } from '../../api/generated/races/races';
 import { useGetApiAthletesAthleteUserIdReportsDateType } from '../../api/generated/reports/reports';
-import { useGetApiAthletesAthleteUserIdRecovery } from '../../api/generated/recovery-metrics/recovery-metrics';
-import { useGetApiAthletesAthleteUserIdHrv } from '../../api/generated/hrv-measurements/hrv-measurements';
-import { useGetApiAthletesAthleteUserIdSleep } from '../../api/generated/sleep-records/sleep-records';
+import { useGetApiAthletesAthleteUserIdReadiness } from '../../api/generated/readiness/readiness';
 import { useGetApiAthletesAthleteUserIdTrainingLoad } from '../../api/generated/training-load/training-load';
 import { useGetApiAthletesAthleteUserIdPlans, useGetApiPlansId } from '../../api/generated/training-plans/training-plans';
 import { useGetApiAthletesAthleteUserIdActivities } from '../../api/generated/activities/activities';
@@ -40,9 +38,8 @@ export function useAthleteDashboardData(athleteUserId: string) {
   const morningReportQuery = useGetApiAthletesAthleteUserIdReportsDateType(athleteUserId, today, ReportType.Morning);
   const eveningReportQuery = useGetApiAthletesAthleteUserIdReportsDateType(athleteUserId, today, ReportType.Evening);
 
-  const recoveryQuery = useGetApiAthletesAthleteUserIdRecovery(athleteUserId, { from: lookbackStart, to: today });
-  const hrvQuery = useGetApiAthletesAthleteUserIdHrv(athleteUserId, { from: lookbackStart, to: today });
-  const sleepQuery = useGetApiAthletesAthleteUserIdSleep(athleteUserId, { from: lookbackStart, to: today });
+  // Source selection, baselines and the score itself are resolved server-side (ReadinessService).
+  const readinessQuery = useGetApiAthletesAthleteUserIdReadiness(athleteUserId, { date: today });
   const trainingLoadQuery = useGetApiAthletesAthleteUserIdTrainingLoad(athleteUserId, { from: lookbackStart, to: today });
   const integrationsQuery = useGetApiIntegrations();
 
@@ -70,9 +67,6 @@ export function useAthleteDashboardData(athleteUserId: string) {
   }, [racesQuery.data]);
   const daysToRace = nextRace?.startsAtUtc ? Math.max(0, Math.ceil((new Date(nextRace.startsAtUtc).getTime() - Date.now()) / 86_400_000)) : null;
 
-  const latestRecovery = latestByDate(recoveryQuery.data);
-  const latestHrv = latestByDate(hrvQuery.data);
-  const latestSleep = latestByDate(sleepQuery.data);
   const latestTrainingLoad = latestByDate(trainingLoadQuery.data);
 
   const syncedIntegration = (integrationsQuery.data ?? []).find((c) => c.lastSyncedAtUtc);
@@ -87,22 +81,13 @@ export function useAthleteDashboardData(athleteUserId: string) {
   const latestInsightReport = eveningReportQuery.data?.insights?.length ? eveningReportQuery.data : morningReportQuery.data;
 
   return {
-    isLoading: recoveryQuery.isLoading || hrvQuery.isLoading || sleepQuery.isLoading,
+    isLoading: readinessQuery.isLoading,
     readiness: {
-      score: latestRecovery?.readinessScore ?? null,
-      date: latestRecovery?.date ?? null,
-      isToday: latestRecovery?.date === today,
-      restingHeartRateBpm: latestRecovery?.restingHeartRateBpm ?? null,
-      hrvRmssdMs: latestHrv?.rmssdMs ?? null,
-      sleepDurationMinutes: latestSleep?.durationMinutes ?? null,
+      readiness: readinessQuery.data ?? null,
       lastSyncedAtUtc,
-      isLoading: recoveryQuery.isLoading || hrvQuery.isLoading || sleepQuery.isLoading,
-      isError: recoveryQuery.isError,
-      refetch: () => {
-        void recoveryQuery.refetch();
-        void hrvQuery.refetch();
-        void sleepQuery.refetch();
-      },
+      isLoading: readinessQuery.isLoading,
+      isError: readinessQuery.isError,
+      refetch: () => void readinessQuery.refetch(),
     },
     trainingLoad: {
       ctl: latestTrainingLoad?.ctl ?? null,

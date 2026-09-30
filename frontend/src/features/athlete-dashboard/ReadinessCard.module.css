@@ -2,13 +2,29 @@
   grid-row: span 2;
   display: flex;
   flex-direction: column;
+  height: 100%;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  margin: var(--space-2) 0 var(--space-5);
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .ring {
-  width: 166px;
-  height: 166px;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
   border-radius: 50%;
-  margin: var(--space-4) auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,8 +32,8 @@
 }
 
 .ringInner {
-  width: 132px;
-  height: 132px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: var(--color-surface-2);
   display: flex;
@@ -26,14 +42,53 @@
   justify-content: center;
 }
 
+.factors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.factor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.factorHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.factorScore {
+  font-variant-numeric: tabular-nums;
+}
+
+.factorBar {
+  background: var(--color-surface-inset);
+}
+
 @media (max-width: 520px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .heroText {
+    align-items: center;
+  }
+
   .ring {
-    width: 140px;
-    height: 140px;
+    width: 130px;
+    height: 130px;
   }
 
   .ringInner {
-    width: 110px;
-    height: 110px;
+    width: 104px;
+    height: 104px;
   }
 }

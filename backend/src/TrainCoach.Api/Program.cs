@@ -215,8 +215,15 @@ try
             foreach (var el in wdoc.RootElement.EnumerateArray())
             {
                 string? Get(string name) => el.TryGetProperty(name, out var v) && v.ValueKind != System.Text.Json.JsonValueKind.Null ? v.ToString() : null;
-                Console.WriteLine($"[Diag-Wellness] date={Get("id")} hrv={Get("hrv")} restingHR={Get("restingHR")} sleepSecs={Get("sleepSecs")} sleepScore={Get("sleepScore")} readiness={Get("readiness")} weight={Get("weight")} spO2={Get("spO2")} steps={Get("steps")} vo2max={Get("vo2max")}");
+                Console.WriteLine($"[Diag-Wellness] date={Get("id")} hrv={Get("hrv")} restingHR={Get("restingHR")} sleepSecs={Get("sleepSecs")} sleepScore={Get("sleepScore")} readiness={Get("readiness")} weight={Get("weight")} spO2={Get("spO2")} respiration={Get("respiration")} avgSleepingHR={Get("avgSleepingHR")} steps={Get("steps")} vo2max={Get("vo2max")}");
             }
+
+            // Which fields this account's connected device actually fills — the DTO only maps a
+            // subset, so this is how to spot a newly available metric worth importing.
+            var filled = wdoc.RootElement.EnumerateArray()
+                .SelectMany(el => el.EnumerateObject().Where(p => p.Value.ValueKind != System.Text.Json.JsonValueKind.Null).Select(p => p.Name))
+                .GroupBy(n => n).OrderBy(g => g.Key).Select(g => $"{g.Key}={g.Count()}");
+            Console.WriteLine("[Diag-Wellness] non-null field counts: " + string.Join(", ", filled));
         }
         else
         {

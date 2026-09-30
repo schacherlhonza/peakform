@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +30,60 @@ function ActivitySummary({ activity }: { activity: CompletedActivityDto }) {
         {activity.distanceMeters ? ` · ${(activity.distanceMeters / 1000).toFixed(1)} km` : ''}
       </Text>
       <Text className="ds-metadata">{t(`integrations.provider.${activity.source}`, { defaultValue: activity.source })}</Text>
+    </Stack>
+  );
+}
+
+// Weights mirror backend/src/TrainCoach.Application/Integrations/Matching/ActivityMatchingService.cs
+// (Score method) — kept in sync manually since the breakdown JSON itself only carries raw points,
+// not the denominators.
+const SCORE_WEIGHTS = { sport: 40, time: 30, duration: 15, distance: 15 } as const;
+
+function ScoreBreakdown({ scoringBreakdownJson }: { scoringBreakdownJson?: string | null }) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  let breakdown: Record<string, number> | null = null;
+  try {
+    breakdown = scoringBreakdownJson ? JSON.parse(scoringBreakdownJson) : null;
+  } catch {
+    breakdown = null;
+  }
+
+  if (!breakdown) return null;
+
+  if (breakdown.disqualifiedBySport) {
+    return <Text className="ds-metadata">{t('duplicateReview.breakdown.disqualifiedBySport')}</Text>;
+  }
+
+  return (
+    <Stack gap={4}>
+      <Button size="xs" variant="subtle" onClick={() => setExpanded((v) => !v)}>
+        {t('duplicateReview.scoreBreakdown')}
+      </Button>
+      {expanded && (
+        <Stack gap={2} mt={4}>
+          <Text className="ds-metadata">
+            {t('duplicateReview.breakdown.sport')}: {Math.round(breakdown.sport ?? 0)}/{SCORE_WEIGHTS.sport}
+          </Text>
+          <Text className="ds-metadata">
+            {t('duplicateReview.breakdown.time')}: {Math.round(breakdown.time ?? 0)}/{SCORE_WEIGHTS.time}
+          </Text>
+          <Text className="ds-metadata">
+            {t('duplicateReview.breakdown.duration')}: {Math.round(breakdown.duration ?? 0)}/{SCORE_WEIGHTS.duration}
+          </Text>
+          <Text className="ds-metadata">
+            {breakdown.hasDistanceBoth
+              ? `${t('duplicateReview.breakdown.distance')}: ${Math.round(breakdown.distance ?? 0)}/${SCORE_WEIGHTS.distance}`
+              : t('duplicateReview.breakdown.distanceExcluded')}
+          </Text>
+          {!!breakdown.deviceBonus && (
+            <Text className="ds-metadata">
+              {t('duplicateReview.breakdown.deviceBonus')}: +{Math.round(breakdown.deviceBonus)}
+            </Text>
+          )}
+        </Stack>
+      )}
     </Stack>
   );
 }
@@ -66,7 +121,8 @@ function CandidateCard({ candidate, athleteUserId }: { candidate: DuplicateCandi
   return (
     <Panel>
       <CardHeader kicker={t('duplicateReview.confidence', { score: candidate.confidenceScore })} />
-      <SimpleGrid cols={{ base: 1, sm: 2 }} mb="md">
+      <ScoreBreakdown scoringBreakdownJson={candidate.scoringBreakdownJson} />
+      <SimpleGrid cols={{ base: 1, sm: 2 }} mb="md" mt="sm">
         <Stack gap="xs">
           <ActivitySummary activity={candidate.activityA!} />
           <Button size="xs" variant="light" loading={busy} onClick={() => void handleMerge(candidate.activityA!.id!)}>
@@ -125,12 +181,20 @@ function MergeHistorySection({ athleteUserId }: { athleteUserId: string }) {
       <Text className="ds-eyebrow">{t('duplicateReview.history')}</Text>
       {decisions.map((d) => (
         <Group key={d.id} justify="space-between" gap="xs" className="ds-list-row">
-          <Text className="ds-metadata">{d.decidedAtUtc ? new Date(d.decidedAtUtc).toLocaleString('cs-CZ') : '—'}</Text>
+          <Stack gap={0}>
+            <Text className="ds-metadata">{d.decidedAtUtc ? new Date(d.decidedAtUtc).toLocaleString('cs-CZ') : '—'}</Text>
+            <Text className="ds-metadata">{t(`duplicateReview.kind.${d.kind}`)}</Text>
+          </Stack>
           <Badge tone={outcomeTone(d.outcome)}>{t(`duplicateReview.outcome.${d.outcome}`)}</Badge>
-          {d.outcome === MergeDecisionOutcome.Merged && (
+          {d.outcome === MergeDecisionOutcome.Merged && !d.revertedAtUtc && (
             <Button size="xs" variant="subtle" loading={revertMutation.isPending} onClick={() => void handleRevert(d.id!)}>
               {t('duplicateReview.revert')}
             </Button>
+          )}
+          {d.revertedAtUtc && (
+            <Text className="ds-metadata">
+              {t('duplicateReview.revertedOn')}: {new Date(d.revertedAtUtc).toLocaleString('cs-CZ')}
+            </Text>
           )}
         </Group>
       ))}

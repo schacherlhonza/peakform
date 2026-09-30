@@ -118,6 +118,10 @@ public class DailyMetricSelectionService(IApplicationDbContext db, IDateTimeProv
             return overrideRank.Rank;
         }
 
-        return DefaultSourceRank.GetValueOrDefault(source, int.MaxValue);
+        return DefaultRankFor(source);
     }
+
+    /// <summary>Fallback precedence for readers (e.g. <see cref="ReadinessService"/>) resolving a
+    /// day that has per-source rows but no stored selection yet — e.g. manually entered data.</summary>
+    internal static int DefaultRankFor(DataSource source) => DefaultSourceRank.GetValueOrDefault(source, int.MaxValue);
 }

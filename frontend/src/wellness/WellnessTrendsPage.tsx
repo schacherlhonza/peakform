@@ -153,54 +153,189 @@ function TrendsSection({ athleteUserId }: { athleteUserId: string }) {
     [recoveryQuery.data],
   );
 
+  const sdnnData = useMemo(
+    () =>
+      [...(hrvQuery.data ?? [])]
+        .filter((d) => d.date && d.sdnnMs != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.sdnnMs!) })),
+    [hrvQuery.data],
+  );
+
+  const sleepScoreData = useMemo(
+    () =>
+      [...(sleepQuery.data ?? [])]
+        .filter((d) => d.date && d.sleepScore != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.sleepScore!) })),
+    [sleepQuery.data],
+  );
+
+  const avgSleepingHrData = useMemo(
+    () =>
+      [...(sleepQuery.data ?? [])]
+        .filter((d) => d.date && d.avgSleepingHeartRateBpm != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.avgSleepingHeartRateBpm!) })),
+    [sleepQuery.data],
+  );
+
+  const moodData = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.moodScore != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.moodScore!) })),
+    [recoveryQuery.data],
+  );
+
+  const sorenessData = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.sorenessScore != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.sorenessScore!) })),
+    [recoveryQuery.data],
+  );
+
+  const fatigueData = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.fatigueScore != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.fatigueScore!) })),
+    [recoveryQuery.data],
+  );
+
+  const motivationData = useMemo(
+    () =>
+      [...(recoveryQuery.data ?? [])]
+        .filter((d) => d.date && d.motivationScore != null)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''))
+        .map((d) => ({ date: d.date!, value: Math.round(d.motivationScore!) })),
+    [recoveryQuery.data],
+  );
+
+  const hasSubjectiveData = moodData.length > 0 || sorenessData.length > 0 || fatigueData.length > 0 || motivationData.length > 0;
+
+  // hasInjurySignal is a read-only automatic signal from the wellness sync, not the athlete's own
+  // manually-created PainOrHealthFlag entity — surfaced as a contextual warning on the freshest
+  // recovery record, not folded into the CRUD flag list below.
+  const latestInjurySignal = useMemo(() => {
+    const sorted = [...(recoveryQuery.data ?? [])].filter((d) => d.date).sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+    return sorted[0]?.hasInjurySignal ? sorted[0] : null;
+  }, [recoveryQuery.data]);
+
   return (
-    <Panel>
-      <CardHeader kicker={t('wellness.title')} />
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.hrv')}
+    <Stack gap="lg">
+      <Panel>
+        <CardHeader
+          kicker={t('wellness.title')}
+          right={
+            latestInjurySignal ? (
+              <Badge tone="warning">{t('wellness.injurySignalWarning', { date: latestInjurySignal.date })}</Badge>
+            ) : undefined
+          }
+        />
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.hrv')}
+            </Text>
+            {hrvQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={hrvData} tone="accent" unit=" ms" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.hrvSdnn')}
+            </Text>
+            {hrvQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={sdnnData} tone="accent" unit=" ms" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.restingHr')}
+            </Text>
+            {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={rhrData} tone="accent" unit=" tep/min" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.sleepDuration')}
+            </Text>
+            {sleepQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={sleepData} tone="info" unit=" h" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.sleepScore')}
+            </Text>
+            {sleepQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={sleepScoreData} tone="info" unit=" b" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.avgSleepingHr')}
+            </Text>
+            {sleepQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={avgSleepingHrData} tone="info" unit=" tep/min" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.weight')}
+            </Text>
+            {weightQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={weightData} tone="info" unit=" kg" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.steps')}
+            </Text>
+            {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={stepsData} tone="warning" unit=" kroků" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.vo2max')}
+            </Text>
+            {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={vo2MaxData} tone="accent" unit=" ml/kg/min" />}
+          </div>
+          <div>
+            <Text className="ds-eyebrow" mb={6}>
+              {t('wellness.spo2')}
+            </Text>
+            {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={spo2Data} tone="info" unit="%" />}
+          </div>
+        </SimpleGrid>
+      </Panel>
+
+      {hasSubjectiveData && (
+        <Panel>
+          <CardHeader kicker={t('wellness.subjectiveState')} />
+          <Text className="ds-metadata" mb="sm">
+            {t('wellness.subjectiveExplain')}
           </Text>
-          {hrvQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={hrvData} tone="accent" unit=" ms" />}
-        </div>
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.restingHr')}
-          </Text>
-          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={rhrData} tone="accent" unit=" tep/min" />}
-        </div>
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.sleepDuration')}
-          </Text>
-          {sleepQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={sleepData} tone="info" unit=" h" />}
-        </div>
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.weight')}
-          </Text>
-          {weightQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={weightData} tone="info" unit=" kg" />}
-        </div>
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.steps')}
-          </Text>
-          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={stepsData} tone="warning" unit=" kroků" />}
-        </div>
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.vo2max')}
-          </Text>
-          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={vo2MaxData} tone="accent" unit=" ml/kg/min" />}
-        </div>
-        <div>
-          <Text className="ds-eyebrow" mb={6}>
-            {t('wellness.spo2')}
-          </Text>
-          {recoveryQuery.isLoading ? <Skeleton height={80} /> : <Sparkline data={spo2Data} tone="info" unit="%" />}
-        </div>
-      </SimpleGrid>
-    </Panel>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="lg">
+            <div>
+              <Text className="ds-eyebrow" mb={6}>
+                {t('wellness.mood')}
+              </Text>
+              <Sparkline data={moodData} tone="accent" />
+            </div>
+            <div>
+              <Text className="ds-eyebrow" mb={6}>
+                {t('wellness.soreness')}
+              </Text>
+              <Sparkline data={sorenessData} tone="warning" />
+            </div>
+            <div>
+              <Text className="ds-eyebrow" mb={6}>
+                {t('wellness.fatigue')}
+              </Text>
+              <Sparkline data={fatigueData} tone="warning" />
+            </div>
+            <div>
+              <Text className="ds-eyebrow" mb={6}>
+                {t('wellness.motivation')}
+              </Text>
+              <Sparkline data={motivationData} tone="accent" />
+            </div>
+          </SimpleGrid>
+        </Panel>
+      )}
+    </Stack>
   );
 }
 
@@ -329,10 +464,38 @@ function PersonalRecordsSection({ athleteUserId }: { athleteUserId: string }) {
   );
 }
 
+function ResolvedHealthFlagsHistory({ athleteUserId, enabled }: { athleteUserId: string; enabled: boolean }) {
+  const { t } = useTranslation();
+  const historyQuery = useGetApiAthletesAthleteUserIdHealthFlags(athleteUserId, { activeOnly: false }, { query: { enabled } });
+  const resolved = (historyQuery.data ?? []).filter((f) => f.status === HealthFlagStatus.Resolved && f.resolvedOnDate);
+
+  if (historyQuery.isLoading) return <Skeleton height={60} />;
+  if (resolved.length === 0) return <Text className="ds-metadata">{t('wellness.noResolvedFlags')}</Text>;
+
+  return (
+    <Stack gap={0}>
+      {resolved.map((flag) => (
+        <div key={flag.id} className="ds-list-row">
+          <Group justify="space-between" wrap="wrap">
+            <Text className="ds-body">
+              {t(`healthFlagType.${flag.type}`)}
+              {flag.bodyPart ? ` · ${flag.bodyPart}` : ''}
+            </Text>
+            <Text className="ds-metadata">
+              {t('wellness.resolvedOn')}: {flag.resolvedOnDate}
+            </Text>
+          </Group>
+        </div>
+      ))}
+    </Stack>
+  );
+}
+
 function HealthFlagsSection({ athleteUserId }: { athleteUserId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure();
+  const [showHistory, { toggle: toggleHistory }] = useDisclosure();
 
   const flagsQuery = useGetApiAthletesAthleteUserIdHealthFlags(athleteUserId, { activeOnly: true });
   const flags = flagsQuery.data ?? [];
@@ -434,6 +597,13 @@ function HealthFlagsSection({ athleteUserId }: { athleteUserId: string }) {
           ))}
         </Stack>
       )}
+
+      <Stack gap={4} mt="sm">
+        <Button size="xs" variant="subtle" onClick={toggleHistory}>
+          {t('wellness.healthFlagsHistory')}
+        </Button>
+        {showHistory && <ResolvedHealthFlagsHistory athleteUserId={athleteUserId} enabled={showHistory} />}
+      </Stack>
 
       <Modal opened={opened} onClose={close} title={t('wellness.reportFlag')}>
         <form onSubmit={onSubmit}>

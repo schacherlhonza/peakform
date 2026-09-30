@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Group, Stack, Text, Title } from '@mantine/core';
+import { Group, Stack, Text } from '@mantine/core';
 import { IconFlag, IconMoonStars, IconSun } from '@tabler/icons-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Panel, CardHeader, Badge, Button } from '../../design-system/components';
@@ -29,10 +29,6 @@ export function AthleteDashboardPage() {
 
   return (
     <Stack gap={17}>
-      <Title className="ds-page-title" order={2}>
-        {t('dashboard.athleteTitle', { name: '' }).replace(/,\s*$/, '')}
-      </Title>
-
       <div className={classes.overview}>
         <div className={classes.readinessSlot}>
           <ReadinessCard data={data.readiness} />

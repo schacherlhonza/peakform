@@ -2,7 +2,7 @@ import { Stack, Text } from '@mantine/core';
 import { IconBulb } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { Panel, CardHeader, Badge, EmptyState } from '../design-system/components';
-import type { GeneratedReportDto } from '../api/generated/models';
+import { ReportDeliveryStatus, type GeneratedReportDto } from '../api/generated/models';
 import { severityTone } from '../features/athlete-dashboard/RecoveryInsightsSection';
 
 export function ReportCard({ title, report }: { title: string; report: GeneratedReportDto | undefined | null }) {
@@ -24,6 +24,14 @@ export function ReportCard({ title, report }: { title: string; report: Generated
               </Text>
             </div>
           ))}
+          {report.deliveryStatus === ReportDeliveryStatus.Failed && (
+            <Badge tone="warning">{t('report.deliveryFailed', { channel: t(`report.channel.${report.deliveryChannel}`) })}</Badge>
+          )}
+          {report.generatedAtUtc && (
+            <Text className="ds-metadata">
+              {t('report.generatedAt', { time: new Date(report.generatedAtUtc).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' }) })}
+            </Text>
+          )}
           <Text className="ds-metadata">{t('report.disclaimer')}</Text>
         </Stack>
       )}

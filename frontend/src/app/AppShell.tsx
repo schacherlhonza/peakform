@@ -7,6 +7,7 @@ import { IconBell, IconChevronDown, IconLogout, IconSettings } from '@tabler/ico
 import { useAuth } from '../auth/AuthContext';
 import { AppRole } from '../api/generated/models';
 import { IconButton } from '../design-system/components';
+import { SyncCenter } from '../integrations/sync/SyncCenter';
 import { getPrimaryNavLinks, isNavLinkActive } from './RoleNavigation';
 import classes from './AppShell.module.css';
 
@@ -44,6 +45,7 @@ export function AppShell() {
             <img src="/logo.png" alt={t('app.name')} className={classes.logo} />
           </Group>
           <Group gap={6} wrap="nowrap">
+            {user?.role === AppRole.Athlete && <SyncCenter userId={user.userId} />}
             <IconButton icon={<IconBell size={18} stroke={1.8} />} label={t('nav.notifications')} onClick={() => go('/notifications')} />
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>

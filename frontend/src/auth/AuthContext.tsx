@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useQueryClient } from '@tanstack/react-query';
 import { jwtDecode } from './jwtDecode';
 import { getAccessToken, setTokens, clearTokens } from './tokenStore';
+import { clearAutoSyncFlag } from '../integrations/sync/useSyncCenter';
 import type { AppRole } from '../api/generated/models';
 
 interface CurrentUser {
@@ -52,11 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Query keys aren't scoped by user, so a stale cache from a previous session
         // would otherwise be served as fresh (within staleTime) to the newly logged-in user.
         queryClient.clear();
+        clearAutoSyncFlag();
         setTokens(accessToken, refreshToken);
         setUser(readUserFromToken());
       },
       logout: () => {
         queryClient.clear();
+        clearAutoSyncFlag();
         clearTokens();
         setUser(null);
       },
