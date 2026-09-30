@@ -35,4 +35,6 @@ export interface CompletedActivityDto {
   source?: DataSource;
   /** @nullable */
   additionalMetrics?: ActivityMetricDto[] | null;
+  /** @nullable */
+  deviceName?: string | null;
 }

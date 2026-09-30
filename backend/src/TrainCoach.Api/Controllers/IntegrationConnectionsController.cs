@@ -51,6 +51,30 @@ public class IntegrationConnectionsController(IIntegrationConnectionService serv
         return Accepted();
     }
 
+    public record HistoryBackfillRequest(DateOnly FromDate);
+
+    /// <summary>One-off pull of older history (activities, wellness, then detail streams) — intervals.icu only.</summary>
+    [HttpPost("{provider}/history")]
+    public async Task<IActionResult> TriggerHistoryBackfill(IntegrationProviderType provider, HistoryBackfillRequest request, CancellationToken cancellationToken)
+    {
+        await service.TriggerHistoryBackfillAsync(currentUser.UserId, provider, request.FromDate, cancellationToken);
+        return Accepted();
+    }
+
+    /// <summary>Queues a sync of every active connection. <c>automatic=true</c> is the post-login
+    /// sync — it skips connections synced within the last 15 minutes.</summary>
+    [HttpPost("sync-all")]
+    public async Task<ActionResult<IReadOnlyList<ProviderSyncStatusDto>>> TriggerSyncAll([FromQuery] bool automatic, CancellationToken cancellationToken)
+    {
+        return Accepted(await service.TriggerSyncAllAsync(currentUser.UserId, automatic, cancellationToken));
+    }
+
+    [HttpGet("sync-status")]
+    public async Task<ActionResult<IReadOnlyList<ProviderSyncStatusDto>>> GetSyncStatus(CancellationToken cancellationToken)
+    {
+        return Ok(await service.GetSyncStatusAsync(currentUser.UserId, cancellationToken));
+    }
+
     [HttpGet("{provider}/sync-history")]
     public async Task<ActionResult<IReadOnlyList<SynchronizationRunDto>>> GetSyncHistory(IntegrationProviderType provider, CancellationToken cancellationToken)
     {

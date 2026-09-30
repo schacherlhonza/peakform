@@ -55,7 +55,8 @@
     "abbreviations": "Zkratky",
     "templates": "Šablony",
     "notifications": "Upozornění",
-    "privacy": "Data a účet"
+    "privacy": "Data a účet",
+    "activities": "Aktivity"
   },
   "dashboard": {
     "athleteTitle": "Ahoj, {{name}}",
@@ -80,7 +81,77 @@
     "readinessFresh": "Dnešní data",
     "readinessStale": "Naposledy {{date}}",
     "readinessScoreLabel": "Skóre připravenosti {{score}} ze 100",
-    "readinessExplain": "Skóre je orientační odhad na základě klidové tepové frekvence, HRV a spánku — není to diagnóza.",
+    "readinessExplain": "Orientační odhad, ne diagnóza. Každý signál se porovnává s tvým průměrem za posledních 7 dní.",
+    "readinessNoScore": "Skóre zatím nelze spočítat",
+    "readinessNotEnoughData": "Chybí dost signálů nebo historie pro srovnání (potřebujeme aspoň 2 signály a 3 dny dat).",
+    "readinessSourceVendor": "Skóre připravenosti od poskytovatele dat.",
+    "readinessSourceComputed": "Odhad PeakForm z těchto signálů: {{count}}.",
+    "readinessPainFlag": "Ranní check-in: bolest nebo nemoc",
+    "readinessOtherFactorsTitle": "Další faktory připravenosti",
+    "readinessFactor": {
+      "Hrv": "HRV",
+      "RestingHeartRate": "Klidová tepová frekvence",
+      "Sleep": "Spánek",
+      "TrainingLoad": "Tréninková zátěž",
+      "Subjective": "Subjektivní pocit"
+    },
+    "readinessDetail": {
+      "form": "Forma {{form}} (CTL {{ctl}} / ATL {{atl}})",
+      "checkIn": "Z ranního check-inu"
+    },
+    "health": {
+      "title": "Stav zdraví",
+      "allInRange": "Všechny metriky jsou v rozsahu",
+      "outOfRangeHeadline_one": "{{count}} metrika je mimo rozsah",
+      "outOfRangeHeadline_few": "{{count}} metriky jsou mimo rozsah",
+      "outOfRangeHeadline_other": "{{count}} metrik je mimo rozsah",
+      "learningHeadline": "Učím se tvůj běžný rozsah",
+      "subtitle": "Noční metriky ve srovnání s tvým běžným rozsahem za posledních 28 dní.",
+      "range": "Rozsah {{range}}",
+      "learningRange": "Na rozsah je zatím málo historie (potřeba 5 dní)",
+      "noDataHint": "Zdroj dat tuto metriku neposílá",
+      "contribution": "Příspěvek k připravenosti: {{score}}/100",
+      "group": {
+        "outOfRange": "Mimo rozsah",
+        "inRange": "V rozsahu",
+        "noRange": "Bez rozsahu",
+        "noData": "Žádné údaje"
+      },
+      "metric": {
+        "Hrv": "HRV",
+        "RestingHeartRate": "Klidový tep",
+        "SleepDuration": "Délka spánku",
+        "SleepScore": "Skóre spánku",
+        "AvgSleepingHeartRate": "Tep ve spánku",
+        "SpO2": "Pulzní oxymetr (SpO2)"
+      },
+      "explain": {
+        "Hrv": {
+          "BelowRange": "Nižší než obvykle – tělo může být pod stresem, unavené nebo se rozjíždí nemoc.",
+          "AboveRange": "Vyšší než obvykle – většinou známka dobrého zotavení."
+        },
+        "RestingHeartRate": {
+          "BelowRange": "Nižší než obvykle – většinou dobré znamení.",
+          "AboveRange": "Vyšší než obvykle – možná únava, stres, alkohol nebo nastupující nemoc."
+        },
+        "SleepDuration": {
+          "BelowRange": "Spánek byl kratší než obvykle.",
+          "AboveRange": "Spánek byl delší než obvykle."
+        },
+        "SleepScore": {
+          "BelowRange": "Kvalita spánku byla horší než obvykle.",
+          "AboveRange": "Kvalita spánku byla lepší než obvykle."
+        },
+        "AvgSleepingHeartRate": {
+          "BelowRange": "Nižší než obvykle – většinou dobré znamení.",
+          "AboveRange": "Vyšší než obvykle – tělo se v noci hůř zotavovalo."
+        },
+        "SpO2": {
+          "BelowRange": "Nižší saturace než obvykle – může souviset s nemocí nebo nadmořskou výškou.",
+          "AboveRange": "Vyšší než obvykle."
+        }
+      }
+    },
     "trainingLoadRising": "Zátěž roste rychleji než obvykle",
     "trainingLoadFalling": "Zátěž klesá",
     "trainingLoadStable": "Zátěž je stabilní",
@@ -154,14 +225,20 @@
     "elapsedTime": "Celkový čas",
     "trainingLoad": "Tréninková zátěž",
     "intensity": "Intenzita",
+    "weightedAvgPower": "Vážený průměrný výkon",
+    "workEnergy": "Vykonaná práce",
+    "plannedWorkoutLink": "podle plánu",
     "streamsUnavailable": "Podrobné grafy nejsou k dispozici",
-    "streamsUnavailableHint": "Detailní grafy (tepovka, tempo, převýšení, kadence, výkon v čase) jsou dostupné jen pro tréninky synchronizované ze Stravy, u kterých Strava tato senzorová data uchovává. Souhrnné hodnoty nahoře jsou vždy k dispozici.",
+    "streamsUnavailableHint": "Detailní grafy (tepovka, tempo, převýšení, kadence, výkon v čase) a mapa jsou dostupné pro tréninky naimportované z archivu Stravy nebo synchronizované ze Stravy, pokud Strava tato data uchovává. Souhrnné hodnoty nahoře jsou vždy k dispozici.",
     "source": {
       "Manual": "ruční záznam",
       "FileImport": "import ze souboru",
       "Strava": "Strava",
       "GarminDemoProvider": "Garmin (demo)",
-      "MySasyDemoProvider": "MySASY (demo)"
+      "MySasyDemoProvider": "MySASY (demo)",
+      "IntervalsIcu": "intervals.icu",
+      "Oura": "Oura",
+      "Whoop": "WHOOP"
     },
     "metric": {
       "heartRate": "Tepová frekvence",
@@ -173,8 +250,18 @@
       "cadence": "Kadence",
       "cadenceExplanation": "Počet kroků (běh) nebo otáček pedálů (kolo) za minutu. Vyšší kadence při stejné rychlosti obvykle znamená kratší, rychlejší krok/šlápnutí.",
       "power": "Výkon",
-      "powerExplanation": "Okamžitý výkon ve wattech naměřený power metrem (kolo) nebo odhadnutý ze senzorů (běh). Přímější míra zátěže než tepovka, protože reaguje okamžitě a není ovlivněná únavou nebo teplem."
-    }
+      "powerExplanation": "Okamžitý výkon ve wattech naměřený power metrem (kolo) nebo odhadnutý ze senzorů (běh). Přímější míra zátěže než tepovka, protože reaguje okamžitě a není ovlivněná únavou nebo teplem.",
+      "grade": "Sklon trati",
+      "gradeExplanation": "Sklon terénu v procentech (kladný = stoupání, záporný = klesání) podle GPS/barometru. Vysvětluje, proč se tempo nebo tepovka v daném úseku měnily, i když se úsilí nemuselo změnit.",
+      "temperature": "Teplota",
+      "temperatureExplanation": "Teplota naměřená hodinkami nebo cyklopočítačem. Na zápěstí bývá ovlivněná tělesnou teplotou, takže ukazuje spíš trend než přesnou teplotu vzduchu."
+    },
+    "map": {
+      "title": "Trasa",
+      "start": "Start",
+      "finish": "Cíl"
+    },
+    "garminAttribution": "Data zaznamenána zařízením Garmin ({{device}}). Garmin je ochranná známka společnosti Garmin Ltd."
   },
   "weekday": {
     "0": "Pondělí",
@@ -251,7 +338,15 @@
     "selectAthlete": "Vyberte sportovce",
     "selectDate": "Vyberte den",
     "notGenerated": "Report pro tento den nebyl vygenerován.",
-    "disclaimer": "Automaticky generovaný report na základě jednoduchých pravidel — není to lékařské doporučení ani diagnóza."
+    "disclaimer": "Automaticky generovaný report na základě jednoduchých pravidel — není to lékařské doporučení ani diagnóza.",
+    "generatedAt": "Vygenerováno v {{time}}",
+    "deliveryFailed": "Nepodařilo se doručit ({{channel}})",
+    "channel": {
+      "InApp": "v appce",
+      "Email": "e-mail",
+      "Push": "push notifikace",
+      "Telegram": "Telegram"
+    }
   },
   "segmentType": {
     "WarmUp": "Rozklus",
@@ -338,12 +433,22 @@
   "wellness": {
     "title": "Regenerace",
     "hrv": "Variabilita srdečního tepu (HRV)",
+    "hrvSdnn": "HRV SDNN",
     "restingHr": "Klidová tepová frekvence",
     "sleepDuration": "Doba spánku",
+    "sleepScore": "Skóre spánku",
+    "avgSleepingHr": "Tepovka během spánku",
     "weight": "Váha",
     "steps": "Kroky",
     "vo2max": "VO2max",
     "spo2": "SpO2 (saturace kyslíkem)",
+    "injurySignalWarning": "Zdroj dat nahlásil možný signál zranění ({{date}})",
+    "subjectiveState": "Subjektivní stav",
+    "subjectiveExplain": "Nálada, bolestivost, únava a motivace přicházejí ze zdrojových aplikací připojených přes intervals.icu (např. Oura, WHOOP) — u atletů jen s Garminem budou tato pole typicky prázdná.",
+    "mood": "Nálada",
+    "soreness": "Bolestivost svalů",
+    "fatigue": "Únava",
+    "motivation": "Motivace",
     "trainingLoad": "Tréninková zátěž",
     "trainingLoadExplain": "CTL (kondice), ATL (únava) a ramp rate (rychlost nárůstu zátěže) jsou orientační odhad na základě tréninkové zátěže — není to instrukce ani diagnóza.",
     "rampRate": "Ramp rate",
@@ -366,7 +471,10 @@
     "latestValue": "Aktuálně: {{value}}{{unit}}",
     "singleMeasurement": "Zatím jen jedno měření — trend se zobrazí, jakmile přibudou další dny.",
     "flagCreated": "Záznam byl vytvořen.",
-    "flagResolved": "Záznam byl označen jako vyřešený."
+    "flagResolved": "Záznam byl označen jako vyřešený.",
+    "healthFlagsHistory": "Historie vyřešených",
+    "noResolvedFlags": "Zatím žádné vyřešené záznamy.",
+    "resolvedOn": "Vyřešeno"
   },
   "healthFlagType": {
     "Pain": "Bolest",
@@ -455,7 +563,110 @@
     },
     "policyUpdateError": "Nastavení role zdroje se nepodařilo uložit.",
     "reviewDuplicatesBanner": "Ke kontrole: {{count}} možných duplicit",
-    "reviewDuplicatesLink": "Zkontrolovat duplicity"
+    "reviewDuplicatesLink": "Zkontrolovat duplicity",
+    "athleteOverride": "upraveno",
+    "stravaArchive": {
+      "title": "Import historie ze Stravy",
+      "kicker": "Strava – archiv dat",
+      "intro": "Naimportujte celou svou historii aktivit z exportu dat Stravy, včetně grafů a mapy trasy. Tato data nepodléhají omezením Strava API a aktivity, které už v aplikaci máte, se nezduplikují – opakovaný import k nim jen doplní podrobná data.",
+      "startButton": "Importovat historii ze Stravy",
+      "modalTitle": "Importovat všechna data ze Stravy",
+      "step1": "Na Stravě si vyžádejte export svých dat (Nastavení → Můj účet → Stáhnout nebo smazat účet → Vyžádat archiv). Ujistěte se, že jste přihlášeni do správného účtu.",
+      "step1Link": "Otevřít nastavení účtu na Stravě",
+      "step2": "Do několika hodin vám Strava pošle e-mail s tlačítkem „Download Archive“. Klikněte na něj pravým tlačítkem, zkopírujte odkaz a vložte ho níže. Odkaz platí 7 dní.",
+      "sourceLink": "Odkaz z e-mailu",
+      "sourceUpload": "Nahrát ZIP",
+      "linkLabel": "Odkaz na archiv",
+      "linkPlaceholder": "https://email.strava.com/ls/click?upn=…",
+      "linkInvalid": "Vložte odkaz z e-mailu od Stravy (email.strava.com) nebo přímý odkaz na archiv.",
+      "fileLabel": "ZIP archiv exportu",
+      "filePlaceholder": "export_12345678.zip",
+      "fromDate": "Počáteční datum",
+      "toDate": "Datum ukončení",
+      "sports": "Typy aktivit",
+      "sportsPlaceholder": "Všechny aktivity",
+      "linkSecretNote": "Odkaz slouží jen ke stažení archivu a neukládáme ho. Z archivu čteme pouze aktivity – zprávy, sledující ani fotky ne.",
+      "submit": "Spustit",
+      "status": {
+        "Pending": "Čeká ve frontě",
+        "Downloading": "Stahuji archiv",
+        "Analyzing": "Analyzuji aktivity",
+        "PreviewReady": "Náhled připraven",
+        "Importing": "Importuji",
+        "Succeeded": "Dokončeno",
+        "Failed": "Selhalo",
+        "Cancelled": "Zrušeno"
+      },
+      "downloaded": "Staženo {{downloaded}} z {{total}}",
+      "downloadedUnknown": "Staženo {{downloaded}}",
+      "progress": "Zpracováno {{processed}} z {{total}} aktivit",
+      "previewTitle": "Co se stane po potvrzení",
+      "previewTotal": "Aktivit v archivu",
+      "previewInFilter": "Odpovídá filtru",
+      "previewCreate": "Nové aktivity",
+      "previewMerge": "Sloučí se s existující",
+      "previewReview": "Ke kontrole duplicit",
+      "previewAlready": "Už naimportováno",
+      "previewFailed": "Nečitelné řádky",
+      "confirm": "Importovat {{count}} aktivit",
+      "cancel": "Zrušit import",
+      "resultTitle": "Import dokončen",
+      "resultCreated": "Vytvořeno",
+      "resultMerged": "Sloučeno",
+      "resultReview": "Ke kontrole",
+      "resultSkipped": "Přeskočeno (už existuje)",
+      "resultFailed": "Chyby",
+      "reviewLink": "Zkontrolovat duplicity",
+      "newImport": "Nový import",
+      "started": "Import byl spuštěn. Průběh uvidíte tady.",
+      "confirmed": "Import aktivit běží na pozadí.",
+      "previewStreams": "Doplní se grafy a mapa",
+      "resultStreams": "Doplněno grafů a map",
+      "confirmStreamsOnly": "Doplnit podrobná data k {{count}} aktivitám"
+    },
+    "history": {
+      "button": "Stáhnout starší historii",
+      "title": "Stáhnout starší historii z intervals.icu",
+      "description": "Běžná synchronizace stahuje jen nové aktivity (při prvním připojení 30 dní zpět). Tady si můžete jednorázově stáhnout aktivity a wellness data od zvoleného data. Aktivity, které už máte, se nezduplikují.",
+      "fromDate": "Stáhnout od",
+      "hint": "Grafy a mapy se k aktivitám doplňují postupně na pozadí (jeden soubor z hodinek na aktivitu). U tisíců aktivit to může trvat několik synchronizací. Aktivity, které intervals.icu získalo ze Stravy, přes API data nemají – ty naimportujte z archivu Stravy.",
+      "submit": "Stáhnout",
+      "started": "Stahování starší historie bylo spuštěno.",
+      "runLabel": "historie"
+    }
+  },
+  "sync": {
+    "title": "Synchronizace",
+    "button": "Synchronizace dat",
+    "buttonRunning": "Synchronizuji…",
+    "buttonFailed": "Synchronizace selhala",
+    "syncAll": "Synchronizovat vše",
+    "manage": "Spravovat propojení",
+    "startError": "Synchronizaci se nepodařilo spustit.",
+    "emptyTitle": "Žádné propojené služby",
+    "emptyDescription": "Propojte Stravu, intervals.icu nebo jinou službu a data se budou synchronizovat automaticky.",
+    "summary": {
+      "running": "Probíhá synchronizace ({{done}} z {{total}})",
+      "failed": "Některé služby se nepodařilo synchronizovat ({{count}})",
+      "idle": "Vše je synchronizováno"
+    },
+    "state": {
+      "queued": "Ve frontě",
+      "running": "Probíhá",
+      "done": "Hotovo",
+      "partial": "Částečně",
+      "failed": "Chyba",
+      "never": "Zatím ne"
+    },
+    "detail": {
+      "queued": "Čeká na spuštění…",
+      "running": "Stahuji aktivity a wellness data… {{elapsed}}",
+      "created": "Nové: {{count}}",
+      "updated": "Aktualizované: {{count}}",
+      "flagged": "Ke kontrole: {{count}}",
+      "noNewData": "Žádná nová data",
+      "never": "Zatím nesynchronizováno"
+    }
   },
   "duplicateReview": {
     "title": "Možné duplicitní aktivity",
@@ -473,10 +684,30 @@
     "revert": "Vrátit zpět",
     "reverted": "Sloučení bylo vráceno.",
     "revertError": "Vrácení se nepodařilo.",
+    "revertedOn": "Vráceno",
+    "scoreBreakdown": "Detail skóre",
     "outcome": {
       "Merged": "Sloučeno",
       "KeptSeparate": "Ponecháno oddělené",
       "Reverted": "Vráceno"
+    },
+    "kind": {
+      "AutoIdempotent": "Automaticky · stejný zdroj",
+      "AutoExternalIdentity": "Automaticky · shodné ID u jiného zdroje",
+      "AutoFitIdentity": "Automaticky · shoda FIT souboru",
+      "AutoFingerprintExact": "Automaticky · přesná shoda otisku",
+      "AutoHighConfidence": "Automaticky · vysoká shoda",
+      "ManualConfirmed": "Ručně potvrzeno",
+      "ManualRejectedAsDuplicate": "Ručně odmítnuto jako duplicita"
+    },
+    "breakdown": {
+      "sport": "Sport",
+      "time": "Čas",
+      "duration": "Trvání",
+      "distance": "Vzdálenost",
+      "distanceExcluded": "Vzdálenost: nezapočítána (chybí GPS u jedné/obou aktivit)",
+      "deviceBonus": "Bonus za shodné zařízení",
+      "disqualifiedBySport": "Odlišný typ sportu — automaticky vyřazeno ze shody"
     }
   },
   "permissions": {
@@ -542,5 +773,43 @@
       "HealthFlagRaised": "Zdravotní upozornění",
       "AccessRevoked": "Přístup odebrán"
     }
+  },
+  "activities": {
+    "searchPlaceholder": "Hledat v názvu…",
+    "fromDate": "Od",
+    "toDate": "Do",
+    "sports": "Sporty",
+    "allSports": "Všechny sporty",
+    "clearFilters": "Zrušit filtry",
+    "presets": {
+      "all": "Vše",
+      "month": "30 dní",
+      "quarter": "3 měsíce",
+      "year": "Rok"
+    },
+    "summary": {
+      "count": "Aktivit",
+      "distance": "Vzdálenost",
+      "duration": "Čas",
+      "elevation": "Převýšení"
+    },
+    "columns": {
+      "date": "Datum",
+      "sport": "Sport",
+      "title": "Název",
+      "distance": "Vzdálenost",
+      "duration": "Čas",
+      "pace": "Tempo",
+      "heartRate": "Tep",
+      "source": "Zdroj"
+    },
+    "untitled": "Bez názvu",
+    "emptyTitle": "Zatím tu nejsou žádné aktivity",
+    "emptyDescription": "Připojte Stravu nebo intervals.icu, případně naimportujte celou historii z archivu Stravy.",
+    "emptyAction": "Otevřít integrace",
+    "noMatchTitle": "Filtru neodpovídá žádná aktivita",
+    "noMatchDescription": "Zkuste upravit hledání nebo rozsah dat.",
+    "pageInfo": "{{from}}–{{to}} z {{total}}",
+    "backToList": "Všechny aktivity"
   }
 }

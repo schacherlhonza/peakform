@@ -96,6 +96,31 @@ public enum ActivityMetricType
     Intensity = 13,
 }
 
+public enum ActivityStreamOrigin
+{
+    /// <summary>Parsed from the activity file (FIT/GPX/TCX) in the athlete's Strava data export.</summary>
+    StravaArchive = 1,
+
+    /// <summary>Parsed from the original device file downloaded via the intervals.icu API
+    /// (<c>/activity/{id}/file</c>) — Garmin/Polar/... activities, never Strava-origin ones.</summary>
+    IntervalsIcuFile = 2,
+}
+
+/// <summary>Which channels an <see cref="TrainCoach.Domain.Execution.ActivityStream"/> carries.</summary>
+[Flags]
+public enum ActivityStreamChannels
+{
+    None = 0,
+    HeartRate = 1,
+    Power = 2,
+    Cadence = 4,
+    Distance = 8,
+    Altitude = 16,
+    Speed = 32,
+    Position = 64,
+    Temperature = 128,
+}
+
 public enum CommentAuthorRole
 {
     Coach = 1,

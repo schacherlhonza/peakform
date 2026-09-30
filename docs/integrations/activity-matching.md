@@ -16,6 +16,8 @@ Doplněk k `docs/integrations/canonical-data-and-deduplication-plan.md`. Popisuj
 | `DistanceToleranceMaxPercent` | 25 % | |
 | `DeviceMatchBonus` | 10 | bonus, nikdy penalizace při chybějícím/neshodném zařízení |
 | `NoDistanceActivityMaxScore` | 75 | strop skóre, když ani jedna strana nemá vzdálenost (posilování, no-GPS) |
+| `NoDistanceExactStartToleranceMinutes` | 1 | výjimka ze stropu: začátky nejvýš takto daleko od sebe… |
+| `NoDistanceExactDurationTolerancePercent` | 0.02 | …a trvání s rozdílem nejvýš 2 % → strop se neuplatní (auto-merge) |
 
 Jen `AutoMergeThreshold`/`ManualReviewThreshold` jsou v `appsettings.json` — zbytek má defaulty v kódu (viz `ActivityMatchingOptions.cs`), dokumentované zde.
 
@@ -26,7 +28,7 @@ Váhy: sport 40, čas 30, trvání 15, vzdálenost 15 (celkem 100), + volitelný
 1. **Sport mismatch → skóre 0, tvrdý diskvalifikátor.** Žádná jiná shoda to nepřebije (kryje "změna sport type").
 2. **Čas**: lineární decay z plných 30 bodů na `TimeWindowMinutesForFullScore` k 0 na `TimeWindowMinutesMax`.
 3. **Trvání**: rozdíl jako procento delší hodnoty, lineární decay 15→0.
-4. **Vzdálenost**: pokud OBĚ strany mají vzdálenost, lineární decay 15→0 podle procentního rozdílu. Pokud ANI JEDNA strana vzdálenost nemá, vzdálenostní komponenta se **vyloučí** (ne vynuluje) z čitatele i jmenovatele a zbylé skóre se přeškáluje na 100 bodů — ale výsledek je stropován `NoDistanceActivityMaxScore`, aby dvě různé no-GPS aktivity ve stejný den nedosáhly automatického sloučení jen na základě sportu a času.
+4. **Vzdálenost**: pokud OBĚ strany mají vzdálenost, lineární decay 15→0 podle procentního rozdílu. Pokud ANI JEDNA strana vzdálenost nemá, vzdálenostní komponenta se **vyloučí** (ne vynuluje) z čitatele i jmenovatele a zbylé skóre se přeškáluje na 100 bodů — ale výsledek je stropován `NoDistanceActivityMaxScore`, aby dvě různé no-GPS aktivity ve stejný den nedosáhly automatického sloučení jen na základě sportu a času. **Výjimka:** když začátky dělí nejvýš `NoDistanceExactStartToleranceMinutes` a trvání se liší nejvýš o `NoDistanceExactDurationTolerancePercent`, strop se neuplatní — jde o stejný záznam z hodinek hlášený dvěma poskytovateli (reálně: posilování ze Stravy s `distance = 0` a z intervals.icu bez vzdálenosti, se shodným začátkem na sekundu; bez výjimky končily všechny v ruční kontrole). Breakdown to značí `noDistanceExactMatch = 1`.
 5. **Device bonus**: +`DeviceMatchBonus`, pokud obě strany mají neprázdný, case-insensitive shodný název zařízení. Nikdy záporný příspěvek.
 6. Celkové skóre je `Math.Clamp(achieved + deviceBonus, 0, 100)`.
 

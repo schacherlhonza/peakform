@@ -9,6 +9,11 @@ public class SynchronizationRun : Entity
     public IntegrationConnection IntegrationConnection { get; set; } = null!;
 
     public SyncTrigger Trigger { get; set; }
+
+    /// <summary>Set for <see cref="SyncTrigger.HistoryBackfill"/>: fetch from here rather than
+    /// from the connection's last sync. Stored on the run (not passed through the in-memory queue)
+    /// so it's visible in the sync history.</summary>
+    public DateTime? HistoryFromUtc { get; set; }
     public SyncRunStatus Status { get; set; } = SyncRunStatus.Pending;
     public DateTime StartedAtUtc { get; set; }
     public DateTime? FinishedAtUtc { get; set; }

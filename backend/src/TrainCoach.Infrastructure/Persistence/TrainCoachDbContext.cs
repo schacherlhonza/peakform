@@ -42,6 +42,7 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     public DbSet<CompletedActivity> CompletedActivities => Set<CompletedActivity>();
     public DbSet<ActivityMetric> ActivityMetrics => Set<ActivityMetric>();
     public DbSet<ActivitySourceRecord> ActivitySourceRecords => Set<ActivitySourceRecord>();
+    public DbSet<ActivityStream> ActivityStreams => Set<ActivityStream>();
     public DbSet<MergeDecision> MergeDecisions => Set<MergeDecision>();
     public DbSet<DuplicateCandidate> DuplicateCandidates => Set<DuplicateCandidate>();
     public DbSet<DuplicateDryRunReport> DuplicateDryRunReports => Set<DuplicateDryRunReport>();
@@ -74,6 +75,7 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     public DbSet<IntegrationCredential> IntegrationCredentials => Set<IntegrationCredential>();
     public DbSet<SynchronizationRun> SynchronizationRuns => Set<SynchronizationRun>();
     public DbSet<ImportedFile> ImportedFiles => Set<ImportedFile>();
+    public DbSet<StravaArchiveImport> StravaArchiveImports => Set<StravaArchiveImport>();
     public DbSet<ConnectorDomainPolicy> ConnectorDomainPolicies => Set<ConnectorDomainPolicy>();
 
     // Platform

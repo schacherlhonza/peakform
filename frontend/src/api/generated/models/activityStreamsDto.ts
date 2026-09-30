@@ -4,6 +4,7 @@
  * TrainCoach API
  * OpenAPI spec version: v1
  */
+import type { ActivityStreamSource } from './activityStreamSource';
 
 export interface ActivityStreamsDto {
   activityId?: string;
@@ -23,4 +24,12 @@ export interface ActivityStreamsDto {
   paceSecondsPerKm?: number[] | null;
   /** @nullable */
   gradePercent?: number[] | null;
+  /** @nullable */
+  latitude?: number[] | null;
+  /** @nullable */
+  longitude?: number[] | null;
+  /** @nullable */
+  temperatureC?: number[] | null;
+  source?: ActivityStreamSource;
+  isDownsampled?: boolean;
 }

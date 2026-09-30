@@ -17,6 +17,8 @@ public class FakeProviderApiFactory : TrainCoachApiFactory
     public List<ExternalActivity> StravaActivities { get; } = [];
     public List<ExternalActivity> IntervalsIcuActivities { get; } = [];
     public List<ExternalWellnessSample> IntervalsIcuWellness { get; } = [];
+    public Dictionary<string, byte[]> IntervalsIcuFiles { get; } = [];
+    public FakeIntegrationProvider IntervalsIcuProvider { get; private set; } = null!;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -31,7 +33,8 @@ public class FakeProviderApiFactory : TrainCoachApiFactory
             }
 
             services.AddSingleton<IIntegrationProvider>(new FakeIntegrationProvider(IntegrationProviderType.Strava, StravaActivities));
-            services.AddSingleton<IIntegrationProvider>(new FakeIntegrationProvider(IntegrationProviderType.IntervalsIcu, IntervalsIcuActivities, IntervalsIcuWellness));
+            IntervalsIcuProvider = new FakeIntegrationProvider(IntegrationProviderType.IntervalsIcu, IntervalsIcuActivities, IntervalsIcuWellness, IntervalsIcuFiles);
+            services.AddSingleton<IIntegrationProvider>(IntervalsIcuProvider);
         });
     }
 }

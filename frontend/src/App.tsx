@@ -7,6 +7,7 @@ import { DashboardPage } from './dashboard/DashboardPage';
 import { CalendarPage } from './calendar/CalendarPage';
 import { WorkoutDetailPage } from './workouts/WorkoutDetailPage';
 import { ActivityDetailPage } from './activities/ActivityDetailPage';
+import ActivitiesPage from './activities/ActivitiesPage';
 import { MorningCheckInPage } from './checkins/MorningCheckInPage';
 import { EveningCheckInPage } from './checkins/EveningCheckInPage';
 import { ReportsPage } from './reports/ReportsPage';
@@ -52,6 +53,14 @@ function App() {
           }
         />
         <Route path="/workouts/:workoutId" element={<WorkoutDetailPage />} />
+        <Route
+          path="/activities"
+          element={
+            <ProtectedRoute roles={[AppRole.Athlete]}>
+              <ActivitiesPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/activities/:activityId" element={<ActivityDetailPage />} />
         <Route path="/checkins/morning" element={<MorningCheckInPage />} />
         <Route path="/checkins/evening" element={<EveningCheckInPage />} />

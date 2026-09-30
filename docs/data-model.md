@@ -77,6 +77,8 @@ Datový model je rozdělen do šesti oblastí (bounded contexts): **Identita a p
 | `IntegrationCredential` | Přihlašovací údaje/tokeny k integraci — šifrované at rest. |
 | `SynchronizationRun` | Jeden běh synchronizace s externím zdrojem (stav, čas, výsledek). |
 | `ImportedFile` | Nahraný soubor pro import (Google Sheets export apod.) a jeho zpracování. |
+| `ActivityStream` | Uložený, zmenšený průběh aktivity (tep, výkon, kadence, vzdálenost, výška, rychlost, GPS, teplota) k jednomu `ActivitySourceRecord` (1:1). Komprimovaný sloupcový `Payload` + metadata (kanály, výřez mapy). Plní ho import Strava archivu. |
+| `StravaArchiveImport` | Hromadný import historie z exportu dat Stravy (ZIP): stav (stažení → náhled → import), filtry, počty náhledu a výsledku. Odkaz z e-mailu se neukládá. Viz docs/integrations/strava-archive-import.md. |
 | `Notification` | Notifikace uživatele v aplikaci (a případně e-mailem). |
 
 ## 3. Klíčové vztahy a kardinality
@@ -95,6 +97,7 @@ Datový model je rozdělen do šesti oblastí (bounded contexts): **Identita a p
 - `AthleteProfile`/`CoachAthleteRelationship` 1—N `GeneratedReport`.
 - `User` 1—N `IntegrationConnection` 1—1 `IntegrationCredential`, 1—N `SynchronizationRun`.
 - `AthleteProfile` 1—N `ImportedFile`.
+- `AthleteProfile` 1—N `StravaArchiveImport`; `StravaArchiveImport` 1—N `ActivitySourceRecord` (přes `ActivitySourceRecord.StravaArchiveImportId`, bez FK — stejně jako `ImportedFileId`).
 - `User` 1—N `Notification`, 1—N `RefreshToken`, 1—N `AuditLog` (jako subjekt nebo aktér).
 
 ## 4. ERD (core vertikála)
@@ -196,7 +199,7 @@ Plánování: `Season`, `Goal`, `Race`, `HeartRateZone`, `CustomAbbreviation`.
 Realizace: `ActivityMetric`, `TrainingFeedback`, `ActivitySourceRecord` (dříve `DataProvenance` — přejmenováno a rozšířeno z 1:1 na many:1 vůči `CompletedActivity`, viz §5.1 a docs/integrations/canonical-data-and-deduplication-plan.md), `MergeDecision`, `DuplicateCandidate`.
 Wellness: `PainOrHealthFlag`, `SleepRecord`, `RecoveryMetric`, `HrvMeasurement`, `PerformanceBaseline`, `PersonalRecord`.
 Výživa: `FoodEntry`, `HydrationEntry`.
-Integrace/platforma: `IntegrationConnection`, `IntegrationCredential`, `SynchronizationRun`, `ImportedFile`, `Notification`.
+Integrace/platforma: `IntegrationConnection`, `IntegrationCredential`, `SynchronizationRun`, `ImportedFile`, `StravaArchiveImport`, `Notification`.
 
 ## 5. Doménová pravidla
 
@@ -211,6 +214,8 @@ Integrace/platforma: `IntegrationConnection`, `IntegrationCredential`, `Synchron
 ### 5.2 Priorita zdroje (source precedence)
 
 **Aktualizováno** — pro aktivity nahrazeno `ConnectorDomainPolicy` (Primary/Secondary/EnrichmentOnly/FallbackOnly/Disabled, samostatně per provider a datová doména, ne jedna globální priorita — viz docs/integrations/canonical-data-and-deduplication-plan.md). Pro wellness metriky (HRV, klidová srdeční frekvence, spánek, váha, CTL/ATL) nahrazeno `AthleteMetricSourcePrecedence` s výchozím pořadím v `DailyMetricSelectionService` — hodnoty z různých zdrojů se **nikdy neprůměrují**, ukládají se všechny (`HrvMeasurement`/`RecoveryMetric`/`SleepRecord`/`WeightMeasurement`/`TrainingLoadSnapshot`, jeden řádek per zdroj per den) a `DailyMetricSelection` je jen read-time výběr toho, který se zobrazí. Zdroj každé hodnoty je vždy dohledatelný přes `ActivitySourceRecord`/`Source` pole.
+
+Skóre připravenosti na dashboardu se z těchto vybraných hodnot počítá v `ReadinessService` / `ReadinessCalculator` — algoritmus viz docs/wellness/readiness-scoring.md.
 
 ### 5.3 Párování plánovaného a skutečného tréninku
 

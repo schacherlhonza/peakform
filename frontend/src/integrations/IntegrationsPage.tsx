@@ -7,12 +7,15 @@ import { IconAlertTriangle } from '@tabler/icons-react';
 import { Panel, CardHeader, Badge, Button, Skeleton, EmptyState, showToast } from '../design-system/components';
 import type { BadgeTone } from '../design-system/components';
 import { useAuth } from '../auth/AuthContext';
+import StravaArchiveImportPanel from './StravaArchiveImportPanel';
+import { HistoryBackfillButton } from './HistoryBackfillButton';
 import {
   useGetApiIntegrations,
   useGetApiIntegrationsProviderSyncHistory,
   getApiIntegrationsProviderAuthorizeUrl,
   getGetApiIntegrationsQueryKey,
   getGetApiIntegrationsProviderSyncHistoryQueryKey,
+  getGetApiIntegrationsSyncStatusQueryKey,
   getPostApiIntegrationsProviderConnectDemoMutationOptions,
   getDeleteApiIntegrationsProviderMutationOptions,
   getPostApiIntegrationsProviderSyncMutationOptions,
@@ -27,6 +30,7 @@ import {
   IntegrationConnectionStatus,
   IntegrationProviderType,
   SyncRunStatus,
+  SyncTrigger,
   DataDomain,
   ConnectorMode,
   type IntegrationConnectionDto,
@@ -56,7 +60,8 @@ function ConnectorPolicySection({ athleteUserId, provider }: { athleteUserId: st
   const policiesQuery = useGetApiAthletesAthleteUserIdConnectorPolicies(athleteUserId, { query: { enabled: expanded } });
   const setPolicyMutation = useMutation(getPutApiAthletesAthleteUserIdConnectorPoliciesMutationOptions());
 
-  const modeFor = (domain: DataDomain) => policiesQuery.data?.find((p) => p.provider === provider && p.domain === domain)?.mode;
+  const policyFor = (domain: DataDomain) => policiesQuery.data?.find((p) => p.provider === provider && p.domain === domain);
+  const modeFor = (domain: DataDomain) => policyFor(domain)?.mode;
 
   const handleChange = async (domain: DataDomain, mode: string | null) => {
     if (!mode) return;
@@ -76,16 +81,21 @@ function ConnectorPolicySection({ athleteUserId, provider }: { athleteUserId: st
       {expanded && (
         <Stack gap={6} mt={4}>
           {DATA_DOMAINS.map((domain) => (
-            <Select
-              key={domain}
-              size="xs"
-              label={t(`integrations.dataDomain.${domain}`)}
-              data={CONNECTOR_MODE_OPTIONS.map((mode) => ({ value: mode, label: t(`integrations.connectorMode.${mode}`) }))}
-              value={modeFor(domain) ?? null}
-              onChange={(value) => void handleChange(domain, value)}
-              disabled={policiesQuery.isLoading}
-              allowDeselect={false}
-            />
+            <Group key={domain} align="flex-end" gap="xs" wrap="nowrap">
+              <Select
+                size="xs"
+                label={t(`integrations.dataDomain.${domain}`)}
+                data={CONNECTOR_MODE_OPTIONS.map((mode) => ({ value: mode, label: t(`integrations.connectorMode.${mode}`) }))}
+                value={modeFor(domain) ?? null}
+                onChange={(value) => void handleChange(domain, value)}
+                disabled={policiesQuery.isLoading}
+                allowDeselect={false}
+                style={{ flex: 1 }}
+              />
+              {policyFor(domain)?.isAthleteOverride && (
+                <Badge tone="info">{t('integrations.athleteOverride')}</Badge>
+              )}
+            </Group>
           ))}
         </Stack>
       )}
@@ -229,6 +239,7 @@ function ProviderCard({
             <Button size="xs" variant="subtle" color="red" onClick={onDisconnect} loading={disconnectPending}>
               {t('integrations.disconnect')}
             </Button>
+            {provider === IntegrationProviderType.IntervalsIcu && <HistoryBackfillButton provider={provider} />}
           </>
         )}
       </Group>
@@ -249,7 +260,10 @@ function ProviderCard({
             history!.slice(0, 5).map((run) => (
               <Group key={run.id} justify="space-between" gap="xs" className="ds-list-row">
                 <Text className="ds-metadata">{run.startedAtUtc ? new Date(run.startedAtUtc).toLocaleString('cs-CZ') : '—'}</Text>
-                <Badge tone={statusTone(run.status)}>{run.status}</Badge>
+                <Badge tone={statusTone(run.status)}>
+                  {run.status}
+                  {run.trigger === SyncTrigger.HistoryBackfill ? ` · ${t('integrations.history.runLabel')}` : ''}
+                </Badge>
                 <Text className="ds-metadata">+{run.itemsCreated ?? 0}</Text>
               </Group>
             ))
@@ -326,6 +340,8 @@ export default function IntegrationsPage() {
       showToast({ tone: 'positive', message: t('integrations.syncStarted') });
       await invalidateConnections();
       await queryClient.invalidateQueries({ queryKey: getGetApiIntegrationsProviderSyncHistoryQueryKey(provider) });
+      // Wakes the header sync indicator, which only polls while it knows a run is active.
+      await queryClient.invalidateQueries({ queryKey: getGetApiIntegrationsSyncStatusQueryKey() });
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
@@ -432,6 +448,7 @@ export default function IntegrationsPage() {
           syncPending={syncMutation.isPending && syncMutation.variables?.provider === IntegrationProviderType.MySasyDemoProvider}
         />
       </SimpleGrid>
+      <StravaArchiveImportPanel />
     </Stack>
   );
 }

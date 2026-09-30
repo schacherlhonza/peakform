@@ -6,6 +6,7 @@ import {
   IconFlag,
   IconHeartbeat,
   IconLayoutDashboard,
+  IconRun,
   IconSalad,
   IconUsers,
 } from '@tabler/icons-react';
@@ -36,6 +37,7 @@ export function getPrimaryNavLinks(role: AppRole | undefined): NavLinkDef[] {
   return [
     { to: '/dashboard', labelKey: 'nav.dashboard', icon: IconLayoutDashboard },
     { to: '/calendar', labelKey: 'nav.calendar', icon: IconCalendar },
+    { to: '/activities', labelKey: 'nav.activities', icon: IconRun },
     { to: '/wellness', labelKey: 'nav.wellness', icon: IconHeartbeat },
     { to: '/reports', labelKey: 'nav.reports', icon: IconFileText },
     { to: '/races', labelKey: 'nav.races', icon: IconFlag },

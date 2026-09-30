@@ -231,6 +231,12 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<int>("Source")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("StravaArchiveImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("StreamFetchAttemptedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("SynchronizationRunId")
                         .HasColumnType("uuid");
 
@@ -240,11 +246,70 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("NormalizedFingerprint");
 
+                    b.HasIndex("StravaArchiveImportId");
+
                     b.HasIndex("Source", "ExternalId")
                         .IsUnique()
                         .HasFilter("\"ExternalId\" IS NOT NULL");
 
                     b.ToTable("ActivitySourceRecords");
+                });
+
+            modelBuilder.Entity("TrainCoach.Domain.Execution.ActivityStream", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActivitySourceRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Channels")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte>("FormatVersion")
+                        .HasColumnType("smallint");
+
+                    b.Property<double?>("MaxLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("MaxLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("MinLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("MinLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Origin")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OriginalSampleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<byte[]>("Payload")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<int>("SampleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("StartLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("StartLongitude")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActivitySourceRecordId")
+                        .IsUnique();
+
+                    b.ToTable("ActivityStreams");
                 });
 
             modelBuilder.Entity("TrainCoach.Domain.Execution.Comment", b =>
@@ -1110,6 +1175,125 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.ToTable("IntegrationCredentials");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Integrations.StravaArchiveImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AthleteUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("DownloadedBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("FinishedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("FromDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ItemsCreated")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsFailed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsFlaggedForReview")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsMerged")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsProcessed")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsSkippedDuplicate")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ItemsStreamsAdded")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.Property<int?>("PreviewAlreadyImported")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PreviewInFilter")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PreviewReadyAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("PreviewStreamsToAdd")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PreviewTotal")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PreviewWouldCreate")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PreviewWouldMerge")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PreviewWouldReview")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SourceKind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SportsFilter")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("StravaAthleteId")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateOnly?>("ToDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("AthleteUserId", "CreatedAtUtc");
+
+                    b.ToTable("StravaArchiveImports");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Integrations.SynchronizationRun", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1120,6 +1304,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("FinishedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("HistoryFromUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("IntegrationConnectionId")
@@ -2592,6 +2779,17 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Navigation("CompletedActivity");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Execution.ActivityStream", b =>
+                {
+                    b.HasOne("TrainCoach.Domain.Execution.ActivitySourceRecord", "ActivitySourceRecord")
+                        .WithOne("Stream")
+                        .HasForeignKey("TrainCoach.Domain.Execution.ActivityStream", "ActivitySourceRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ActivitySourceRecord");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Identity.AthleteProfile", b =>
                 {
                     b.HasOne("TrainCoach.Domain.Identity.UserProfile", "UserProfile")
@@ -2728,6 +2926,11 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("GeneratedReport");
+                });
+
+            modelBuilder.Entity("TrainCoach.Domain.Execution.ActivitySourceRecord", b =>
+                {
+                    b.Navigation("Stream");
                 });
 
             modelBuilder.Entity("TrainCoach.Domain.Execution.CompletedActivity", b =>

@@ -19,8 +19,8 @@ public class ActivityMatchingService(IApplicationDbContext db, IOptions<Activity
         // Deliberately a no-op reserved extension point, not implemented as a real lookup.
 
         // Level 3 — FIT file identity: stronger than the fingerprint, decides immediately without
-        // going through level-5 scoring. Not populated by either live adapter today; reserved for
-        // future file-import/direct-device sources.
+        // going through level-5 scoring. Populated by the Strava archive import; neither live
+        // adapter reports it today.
         if (!string.IsNullOrWhiteSpace(incoming.FitFileUuid))
         {
             var fitMatchActivityId = await db.ActivitySourceRecords
@@ -48,6 +48,12 @@ public class ActivityMatchingService(IApplicationDbContext db, IOptions<Activity
                 && (a.NormalizedFingerprint == fingerprint
                     || (a.Sport == incoming.Sport && a.StartedAtUtc >= windowStart && a.StartedAtUtc <= windowEnd)))
             .ToListAsync(cancellationToken);
+
+        // A canonical activity already backed by this same source under a different external id
+        // is by definition a different real-world activity (e.g. two strength sessions the same
+        // afternoon, both on Strava) — one provider never reports the same event twice. Level 1
+        // has already ruled out the same external id, so any same-source candidate is excluded.
+        candidates.RemoveAll(c => c.SourceRecords.Any(sr => sr.Source == incomingSource));
 
         if (candidates.Count == 0)
         {
@@ -108,6 +114,7 @@ public class ActivityMatchingService(IApplicationDbContext db, IOptions<Activity
         var durationPoints = Decay(durationDiffPct, (double)options.DurationTolerancePercentForFullScore, (double)options.DurationToleranceMaxPercent, durationWeight);
 
         var hasDistanceBoth = incoming.DistanceMeters is > 0 && candidate.DistanceMeters is > 0;
+        var noDistanceExactMatch = false;
         double distancePoints = 0;
         double achieved;
         if (hasDistanceBoth)
@@ -126,7 +133,12 @@ public class ActivityMatchingService(IApplicationDbContext db, IOptions<Activity
             // below, since sport+time alone must never be enough for a confident auto-merge.
             var raw = sportPoints + timePoints + durationPoints; // out of 85
             achieved = raw * (100.0 / (sportWeight + timeWeight + durationWeight));
-            achieved = Math.Min(achieved, options.NoDistanceActivityMaxScore);
+            noDistanceExactMatch = timeDiffMinutes <= options.NoDistanceExactStartToleranceMinutes
+                && durationDiffPct <= (double)options.NoDistanceExactDurationTolerancePercent;
+            if (!noDistanceExactMatch)
+            {
+                achieved = Math.Min(achieved, options.NoDistanceActivityMaxScore);
+            }
         }
 
         double deviceBonus = 0;
@@ -145,6 +157,7 @@ public class ActivityMatchingService(IApplicationDbContext db, IOptions<Activity
             ["distance"] = distancePoints,
             ["deviceBonus"] = deviceBonus,
             ["hasDistanceBoth"] = hasDistanceBoth ? 1 : 0,
+            ["noDistanceExactMatch"] = noDistanceExactMatch ? 1 : 0,
         };
         return ((int)Math.Round(total), breakdown);
     }

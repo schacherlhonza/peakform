@@ -46,7 +46,20 @@ public class ActivitySourceRecordConfiguration : IEntityTypeConfiguration<Activi
         // This is the one check that must never be replaced by fuzzy/fingerprint matching.
         builder.HasIndex(x => new { x.Source, x.ExternalId }).IsUnique().HasFilter("\"ExternalId\" IS NOT NULL");
         builder.HasIndex(x => x.NormalizedFingerprint);
+        builder.HasIndex(x => x.StravaArchiveImportId);
         builder.HasQueryFilter(x => !x.CompletedActivity.IsDeleted);
+    }
+}
+
+public class ActivityStreamConfiguration : IEntityTypeConfiguration<ActivityStream>
+{
+    public void Configure(EntityTypeBuilder<ActivityStream> builder)
+    {
+        builder.HasOne(x => x.ActivitySourceRecord).WithOne(x => x.Stream)
+            .HasForeignKey<ActivityStream>(x => x.ActivitySourceRecordId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => x.ActivitySourceRecordId).IsUnique();
+        builder.Property(x => x.Payload).IsRequired();
+        builder.HasQueryFilter(x => !x.ActivitySourceRecord.CompletedActivity.IsDeleted);
     }
 }
 

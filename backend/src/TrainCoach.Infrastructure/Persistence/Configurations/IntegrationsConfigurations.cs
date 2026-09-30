@@ -36,6 +36,20 @@ public class ImportedFileConfiguration : IEntityTypeConfiguration<ImportedFile>
     }
 }
 
+public class StravaArchiveImportConfiguration : IEntityTypeConfiguration<StravaArchiveImport>
+{
+    public void Configure(EntityTypeBuilder<StravaArchiveImport> builder)
+    {
+        builder.Property(x => x.OriginalFileName).HasMaxLength(260);
+        builder.Property(x => x.StravaAthleteId).HasMaxLength(40);
+        builder.Property(x => x.StorageKey).HasMaxLength(100);
+        builder.Property(x => x.SportsFilter).HasMaxLength(100);
+        builder.Property(x => x.ErrorMessage).HasMaxLength(2000);
+        builder.HasIndex(x => new { x.AthleteUserId, x.CreatedAtUtc });
+        builder.HasIndex(x => x.Status);
+    }
+}
+
 public class ConnectorDomainPolicyConfiguration : IEntityTypeConfiguration<ConnectorDomainPolicy>
 {
     public void Configure(EntityTypeBuilder<ConnectorDomainPolicy> builder)

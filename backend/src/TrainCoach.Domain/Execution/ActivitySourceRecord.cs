@@ -23,6 +23,11 @@ public class ActivitySourceRecord : Entity
     public Guid? SynchronizationRunId { get; set; }
     public Guid? ImportedFileId { get; set; }
 
+    /// <summary>Set when this record came from a Strava archive import rather than the live API —
+    /// the Source is still <see cref="DataSource.Strava"/> (same ExternalId space, so level-1 dedup
+    /// works both ways), but archive data is the athlete's own export, not API data.</summary>
+    public Guid? StravaArchiveImportId { get; set; }
+
     public bool RawPayloadRetained { get; set; }
     public string? RawPayloadJson { get; set; }
 
@@ -35,8 +40,8 @@ public class ActivitySourceRecord : Entity
     public string? DeviceName { get; set; }
 
     /// <summary>FIT file session identity (uuid/hash of file+session timestamp+device serial) when
-    /// available — level-3 match key, stronger than the fingerprint. Not populated by either live
-    /// adapter today; reserved for future file-import/direct-device sources.</summary>
+    /// available — level-3 match key, stronger than the fingerprint. Populated by the Strava archive
+    /// import (from the FIT file_id message); neither live adapter reports it today.</summary>
     public string? FitFileUuid { get; set; }
 
     public decimal? RawStartLatitude { get; set; }
@@ -46,4 +51,13 @@ public class ActivitySourceRecord : Entity
     /// <see cref="CompletedActivity.NormalizedFingerprint"/> for the canonical-activity-level cache
     /// of the same concept, and IActivityMatchingService for how it's computed/used.</summary>
     public string? NormalizedFingerprint { get; set; }
+
+    /// <summary>Stored detail stream, when this source's data may be retained (Strava archive,
+    /// intervals.icu device file).</summary>
+    public ActivityStream? Stream { get; set; }
+
+    /// <summary>When the stream backfill last tried to download this record's activity file —
+    /// set whether or not it yielded a stream, so files that can't be parsed (or activities
+    /// without one) aren't re-downloaded on every sync.</summary>
+    public DateTime? StreamFetchAttemptedAtUtc { get; set; }
 }

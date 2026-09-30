@@ -47,10 +47,11 @@ Rename + rozšíření z existující tabulky (ne nová paralelní schéma) — 
 
 ### 3.4 Matching cascade (`IActivityMatchingService`)
 
-Level 1 (idempotentní upsert) zůstává v `SyncOrchestrator`, nikdy nahrazená. Matcher se volá jen na miss:
+Level 1 (idempotentní upsert) zůstává před matcherem, nikdy nahrazená — dnes v `ActivityIngestionService` (vyčleněno ze `SyncOrchestrator`, sdílí ho živý sync i import Strava archivu, viz `docs/integrations/strava-archive-import.md`). Matcher se volá jen na miss:
 
 - **Level 2** (shared external identity cross-provider): no-op dnes (žádný poskytovatel nevystavuje cizí ID), reálný extension point pro budoucnost.
-- **Level 3** (FIT file identity): `FitFileUuid` match → okamžité `AutoMerge`, confidence 100. Nepopulováno žádným live adaptérem dnes, testováno syntetickou fixture.
+- **Level 3** (FIT file identity): `FitFileUuid` match → okamžité `AutoMerge`, confidence 100. Plní ho import Strava archivu (`fit:{manufacturer}:{serial}:{time_created}` z FIT `file_id`); žádný live adaptér zatím ne.
+- **Stejný zdroj se neslučuje**: kandidát, který už má `ActivitySourceRecord` se stejným `Source` (a jiným `ExternalId` — shodu vyloučil level 1), je vyřazen ze skórování. Jeden poskytovatel nehlásí tutéž aktivitu dvakrát (např. dvě posilování téhož odpoledne na Stravě).
 - **Level 4** (deterministický fingerprint, jen kandidátní index): `{Sport}|{StartUtc/5min}|{Duration/60s}|{Distance/100m nebo NODIST}|{DeviceName nebo NODEVICE}`.
 - **Level 5** (confidence scoring 0–100, viz `docs/integrations/activity-matching.md` pro přesný algoritmus a defaultní váhy).
 

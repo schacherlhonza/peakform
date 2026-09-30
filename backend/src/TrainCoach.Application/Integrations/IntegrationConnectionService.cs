@@ -118,7 +118,77 @@ public class IntegrationConnectionService(
             throw new BusinessRuleException("Propojení není aktivní.");
         }
 
-        await jobQueue.QueueSyncRunAsync(connection.Id, SyncTrigger.Manual, cancellationToken);
+        await EnqueueSyncAsync(connection, SyncTrigger.Manual, cancellationToken);
+    }
+
+    public async Task TriggerHistoryBackfillAsync(Guid callerUserId, IntegrationProviderType provider, DateOnly fromDate, CancellationToken cancellationToken = default)
+    {
+        if (provider != IntegrationProviderType.IntervalsIcu)
+        {
+            throw new BusinessRuleException(provider == IntegrationProviderType.Strava
+                ? "Starší historii ze Stravy naimportujte z exportu dat (Import historie ze Stravy)."
+                : "Stažení starší historie tento poskytovatel nepodporuje.");
+        }
+
+        var today = DateOnly.FromDateTime(clock.UtcNow);
+        if (fromDate >= today || fromDate < new DateOnly(2000, 1, 1))
+        {
+            throw new BusinessRuleException("Zvolte datum v minulosti (nejdříve rok 2000).");
+        }
+
+        var connection = await db.IntegrationConnections
+            .FirstOrDefaultAsync(c => c.AthleteUserId == callerUserId && c.Provider == provider, cancellationToken)
+            ?? throw new NotFoundException("IntegrationConnection", provider);
+
+        if (connection.Status != IntegrationConnectionStatus.Connected)
+        {
+            throw new BusinessRuleException("Propojení není aktivní.");
+        }
+
+        var queued = await EnqueueSyncAsync(connection, SyncTrigger.HistoryBackfill, cancellationToken,
+            historyFromUtc: fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
+        if (!queued)
+        {
+            throw new BusinessRuleException("Synchronizace právě probíhá. Starší historii si vyžádejte, až doběhne.");
+        }
+    }
+
+    public async Task<IReadOnlyList<ProviderSyncStatusDto>> TriggerSyncAllAsync(Guid callerUserId, bool automatic, CancellationToken cancellationToken = default)
+    {
+        var connections = await GetSyncableConnectionsAsync(callerUserId, cancellationToken);
+        var trigger = automatic ? SyncTrigger.OnLogin : SyncTrigger.Manual;
+
+        foreach (var connection in connections)
+        {
+            if (automatic && connection.LastSyncedAtUtc is { } lastSynced && clock.UtcNow - lastSynced < AutomaticSyncMinInterval)
+            {
+                continue;
+            }
+            await EnqueueSyncAsync(connection, trigger, cancellationToken);
+        }
+
+        return await GetSyncStatusAsync(callerUserId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProviderSyncStatusDto>> GetSyncStatusAsync(Guid callerUserId, CancellationToken cancellationToken = default)
+    {
+        var connections = await GetSyncableConnectionsAsync(callerUserId, cancellationToken);
+
+        var result = new List<ProviderSyncStatusDto>(connections.Count);
+        foreach (var connection in connections)
+        {
+            // One query per connection — an athlete has at most a handful of providers.
+            var latestRun = await db.SynchronizationRuns
+                .Where(r => r.IntegrationConnectionId == connection.Id)
+                .OrderByDescending(r => r.StartedAtUtc)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            result.Add(new ProviderSyncStatusDto(
+                connection.Provider, connection.Status, connection.LastSyncedAtUtc,
+                latestRun is null ? null : ToRunDto(latestRun, connection.Provider)));
+        }
+
+        return result;
     }
 
     public async Task<IReadOnlyList<SynchronizationRunDto>> GetSyncHistoryAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default)
@@ -133,9 +203,70 @@ public class IntegrationConnectionService(
             .Take(20)
             .ToListAsync(cancellationToken);
 
-        return runs.Select(r => new SynchronizationRunDto(
-            r.Id, provider, r.Status, r.StartedAtUtc, r.FinishedAtUtc, r.ItemsFetched, r.ItemsCreated, r.ItemsSkippedDuplicate, r.ErrorMessage)).ToList();
+        return runs.Select(r => ToRunDto(r, provider)).ToList();
     }
+
+    /// <summary>A queued-or-running run older than this is treated as lost — the in-process queue
+    /// isn't durable, so a restart mid-sync would otherwise leave it "running" forever and block
+    /// every later sync of that connection.</summary>
+    private static readonly TimeSpan ActiveRunTimeout = TimeSpan.FromMinutes(10);
+
+    /// <summary>The post-login sync skips connections synced more recently than this, so opening
+    /// several tabs or re-logging in doesn't re-hit provider rate limits.</summary>
+    private static readonly TimeSpan AutomaticSyncMinInterval = TimeSpan.FromMinutes(15);
+
+    /// <summary>Connected plus Error — a failed sync flips the connection to Error, and a later
+    /// successful run flips it back, so "sync all" doubles as the retry.</summary>
+    private Task<List<IntegrationConnection>> GetSyncableConnectionsAsync(Guid athleteUserId, CancellationToken cancellationToken) =>
+        db.IntegrationConnections
+            .Where(c => c.AthleteUserId == athleteUserId
+                && (c.Status == IntegrationConnectionStatus.Connected || c.Status == IntegrationConnectionStatus.Error))
+            .OrderBy(c => c.Provider)
+            .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Records a <see cref="SyncRunStatus.Pending"/> run before queueing, so the UI can show
+    /// "queued" immediately — <see cref="SyncOrchestrator"/> picks that row up instead of creating
+    /// its own. No-op (returns false) when a run for this connection is already queued or running.
+    /// </summary>
+    private async Task<bool> EnqueueSyncAsync(IntegrationConnection connection, SyncTrigger trigger, CancellationToken cancellationToken, DateTime? historyFromUtc = null)
+    {
+        var activeRuns = await db.SynchronizationRuns
+            .Where(r => r.IntegrationConnectionId == connection.Id
+                && (r.Status == SyncRunStatus.Pending || r.Status == SyncRunStatus.Running))
+            .ToListAsync(cancellationToken);
+
+        var staleBefore = clock.UtcNow - ActiveRunTimeout;
+        foreach (var stale in activeRuns.Where(r => r.StartedAtUtc < staleBefore))
+        {
+            stale.Status = SyncRunStatus.Failed;
+            stale.FinishedAtUtc = clock.UtcNow;
+            stale.ErrorMessage = "Synchronizace byla přerušena a nedokončila se.";
+        }
+
+        if (activeRuns.Any(r => r.StartedAtUtc >= staleBefore))
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            return false;
+        }
+
+        db.SynchronizationRuns.Add(new SynchronizationRun
+        {
+            IntegrationConnectionId = connection.Id,
+            Trigger = trigger,
+            HistoryFromUtc = historyFromUtc,
+            Status = SyncRunStatus.Pending,
+            StartedAtUtc = clock.UtcNow,
+        });
+        await db.SaveChangesAsync(cancellationToken);
+
+        await jobQueue.QueueSyncRunAsync(connection.Id, trigger, cancellationToken);
+        return true;
+    }
+
+    private static SynchronizationRunDto ToRunDto(SynchronizationRun r, IntegrationProviderType provider) => new(
+        r.Id, provider, r.Status, r.StartedAtUtc, r.FinishedAtUtc, r.ItemsFetched, r.ItemsCreated, r.ItemsSkippedDuplicate,
+        r.ErrorMessage, r.Trigger, r.ItemsUpdated, r.ItemsFlaggedForReview);
 
     private async Task<IntegrationConnectionDto> UpsertConnectionAsync(Guid athleteUserId, IntegrationProviderType provider, ExternalTokenResult token, CancellationToken cancellationToken)
     {
@@ -183,7 +314,7 @@ public class IntegrationConnectionService(
         // FallbackOnly automatically, without touching any athlete override.
         await policyService.EnsureDefaultsAsync(athleteUserId, cancellationToken);
 
-        await jobQueue.QueueSyncRunAsync(connection.Id, SyncTrigger.OnConnect, cancellationToken);
+        await EnqueueSyncAsync(connection, SyncTrigger.OnConnect, cancellationToken);
 
         return ToDto(connection);
     }

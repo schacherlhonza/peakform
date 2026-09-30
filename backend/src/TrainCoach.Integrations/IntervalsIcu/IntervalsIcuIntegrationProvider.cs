@@ -28,7 +28,7 @@ namespace TrainCoach.Integrations.IntervalsIcu;
 ///   letting it fail the whole sync run.
 /// </summary>
 public class IntervalsIcuIntegrationProvider(IHttpClientFactory httpClientFactory, IOptions<IntervalsIcuOptions> options, ILogger<IntervalsIcuIntegrationProvider> logger)
-    : IIntegrationProvider, IActivityStreamProvider, IWellnessDataProvider, IRevocableIntegrationProvider
+    : IIntegrationProvider, IActivityStreamProvider, IActivityFileProvider, IWellnessDataProvider, IRevocableIntegrationProvider
 {
     private const string AuthorizeUrl = "https://intervals.icu/oauth/authorize";
 
@@ -236,6 +236,52 @@ public class IntervalsIcuIntegrationProvider(IHttpClientFactory httpClientFactor
             AltitudeMeters: byType.GetValueOrDefault("altitude"),
             VelocityMetersPerSecond: byType.GetValueOrDefault("velocity_smooth"),
             GradePercent: byType.GetValueOrDefault("grade_smooth"));
+    }
+
+    /// <summary>Largest original activity file accepted — real FIT files are ~100 kB, multi-day ones a few MB.</summary>
+    private const long MaxActivityFileBytes = 64L * 1024 * 1024;
+
+    /// <summary>
+    /// The original device file (<c>GET /activity/{id}/file</c> — FIT/TCX/GPX, possibly gzipped),
+    /// verified against intervals.icu's OpenAPI spec (2026-09-30). Documented as unsupported for
+    /// Strava-origin activities, which FetchRecentActivitiesAsync already skips.
+    /// </summary>
+    public async Task<byte[]?> DownloadActivityFileAsync(string accessToken, string externalActivityId, CancellationToken cancellationToken = default)
+    {
+        var client = CreateAuthorizedClient(accessToken);
+        using var response = await client.GetAsync(
+            $"{ApiBaseUrl}/activity/{Uri.EscapeDataString(externalActivityId)}/file", HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+        if ((int)response.StatusCode == 429)
+        {
+            throw new ProviderRateLimitedException("intervals.icu: vyčerpán limit požadavků API.");
+        }
+        if (response.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.Forbidden or HttpStatusCode.UnprocessableEntity or HttpStatusCode.NoContent)
+        {
+            return null;
+        }
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new BusinessRuleException($"intervals.icu API vrátilo chybu {(int)response.StatusCode} při stahování souboru aktivity.");
+        }
+        if (response.Content.Headers.ContentLength > MaxActivityFileBytes)
+        {
+            return null;
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while ((read = await stream.ReadAsync(chunk, cancellationToken)) > 0)
+        {
+            if (buffer.Length + read > MaxActivityFileBytes)
+            {
+                return null;
+            }
+            buffer.Write(chunk, 0, read);
+        }
+        return buffer.Length == 0 ? null : buffer.ToArray();
     }
 
     public async Task<IReadOnlyList<ExternalWellnessSample>> FetchWellnessAsync(string accessToken, DateTime sinceUtc, CancellationToken cancellationToken = default)

@@ -25,9 +25,12 @@ import type {
 
 import type {
   AuthorizationUrlDto,
+  HistoryBackfillRequest,
   IntegrationConnectionDto,
   IntegrationProviderType,
   OAuthCallbackRequest,
+  PostApiIntegrationsSyncAllParams,
+  ProviderSyncStatusDto,
   SynchronizationRunDto
 } from '../models';
 
@@ -463,7 +466,215 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getPostApiIntegrationsProviderSyncMutationOptions(options), queryClient);
     }
-    export const getApiIntegrationsProviderSyncHistory = (
+    export const postApiIntegrationsProviderHistory = (
+    provider: IntegrationProviderType,
+    historyBackfillRequest?: HistoryBackfillRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/integrations/${provider}/history`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: historyBackfillRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getPostApiIntegrationsProviderHistoryMutationKey = () => ['postApiIntegrationsProviderHistory'] as const;
+
+export const getPostApiIntegrationsProviderHistoryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsProviderHistory>>, TError,PostApiIntegrationsProviderHistoryMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsProviderHistory>>, TError,PostApiIntegrationsProviderHistoryMutationVariables, TContext> => {
+
+const mutationKey = getPostApiIntegrationsProviderHistoryMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiIntegrationsProviderHistory>>, PostApiIntegrationsProviderHistoryMutationVariables> = (props) => {
+          const {provider,data} = props ?? {};
+
+          return  postApiIntegrationsProviderHistory(provider,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiIntegrationsProviderHistoryMutationResult = NonNullable<Awaited<ReturnType<typeof postApiIntegrationsProviderHistory>>>
+    export type PostApiIntegrationsProviderHistoryMutationBody = HistoryBackfillRequest | undefined
+    export type PostApiIntegrationsProviderHistoryMutationError = ErrorType<unknown>
+    export type PostApiIntegrationsProviderHistoryMutationVariables = {provider: IntegrationProviderType;data?: HistoryBackfillRequest}
+
+    export const usePostApiIntegrationsProviderHistory = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsProviderHistory>>, TError,PostApiIntegrationsProviderHistoryMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiIntegrationsProviderHistory>>,
+        TError,
+        PostApiIntegrationsProviderHistoryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiIntegrationsProviderHistoryMutationOptions(options), queryClient);
+    }
+    export const postApiIntegrationsSyncAll = (
+    params?: PostApiIntegrationsSyncAllParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ProviderSyncStatusDto[]>(
+      {url: `/api/integrations/sync-all`, method: 'POST',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getPostApiIntegrationsSyncAllMutationKey = () => ['postApiIntegrationsSyncAll'] as const;
+
+export const getPostApiIntegrationsSyncAllMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsSyncAll>>, TError,PostApiIntegrationsSyncAllMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsSyncAll>>, TError,PostApiIntegrationsSyncAllMutationVariables, TContext> => {
+
+const mutationKey = getPostApiIntegrationsSyncAllMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiIntegrationsSyncAll>>, PostApiIntegrationsSyncAllMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  postApiIntegrationsSyncAll(params,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiIntegrationsSyncAllMutationResult = NonNullable<Awaited<ReturnType<typeof postApiIntegrationsSyncAll>>>
+
+    export type PostApiIntegrationsSyncAllMutationError = ErrorType<unknown>
+    export type PostApiIntegrationsSyncAllMutationVariables = {params?: PostApiIntegrationsSyncAllParams}
+
+    export const usePostApiIntegrationsSyncAll = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsSyncAll>>, TError,PostApiIntegrationsSyncAllMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiIntegrationsSyncAll>>,
+        TError,
+        PostApiIntegrationsSyncAllMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiIntegrationsSyncAllMutationOptions(options), queryClient);
+    }
+    export const getApiIntegrationsSyncStatus = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ProviderSyncStatusDto[]>(
+      {url: `/api/integrations/sync-status`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiIntegrationsSyncStatusQueryKey = () => {
+    return [
+    `/api/integrations/sync-status`
+    ] as const;
+    }
+
+
+export const getGetApiIntegrationsSyncStatusQueryOptions = <TData = Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiIntegrationsSyncStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>> = ({ signal }) => getApiIntegrationsSyncStatus(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiIntegrationsSyncStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>>
+export type GetApiIntegrationsSyncStatusQueryError = ErrorType<unknown>
+
+
+export function useGetApiIntegrationsSyncStatus<TData = Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiIntegrationsSyncStatus<TData = Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiIntegrationsSyncStatus<TData = Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiIntegrationsSyncStatus<TData = Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsSyncStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiIntegrationsSyncStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getApiIntegrationsProviderSyncHistory = (
     provider: IntegrationProviderType,
  signal?: AbortSignal
 ) => {

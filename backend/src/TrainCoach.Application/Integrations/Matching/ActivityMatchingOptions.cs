@@ -42,4 +42,15 @@ public class ActivityMatchingOptions
     /// training, no-GPS activities) — prevents two different same-day no-distance sessions from
     /// false-positive auto-merging on sport+time alone.</summary>
     public int NoDistanceActivityMaxScore { get; set; } = 75;
+
+    /// <summary>Exception to <see cref="NoDistanceActivityMaxScore"/>: no-distance activities whose
+    /// start times are at most this many minutes apart <i>and</i> whose durations differ by at most
+    /// <see cref="NoDistanceExactDurationTolerancePercent"/> aren't capped (so they auto-merge). Two
+    /// genuinely different sessions practically never share both start and length — this is the
+    /// same watch recording reported by two providers (e.g. a strength session via Strava and
+    /// intervals.icu, which otherwise all landed in manual review).</summary>
+    public int NoDistanceExactStartToleranceMinutes { get; set; } = 1;
+
+    /// <summary>See <see cref="NoDistanceExactStartToleranceMinutes"/>.</summary>
+    public decimal NoDistanceExactDurationTolerancePercent { get; set; } = 0.02m;
 }

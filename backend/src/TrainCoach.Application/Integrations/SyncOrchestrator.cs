@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using TrainCoach.Application.Common;
-using TrainCoach.Application.Integrations.Matching;
 using TrainCoach.Domain.Enums;
 using TrainCoach.Domain.Execution;
 using TrainCoach.Domain.Identity;
@@ -13,9 +12,10 @@ public class SyncOrchestrator(
     IApplicationDbContext db,
     IEnumerable<IIntegrationProvider> providers,
     IAccessTokenResolver tokenResolver,
-    IActivityMatchingService matchingService,
+    IActivityIngestionService ingestionService,
     IConnectorPolicyService policyService,
     TrainCoach.Application.Wellness.IDailyMetricSelectionService dailyMetricSelectionService,
+    IBackgroundJobQueue jobQueue,
     IDateTimeProvider clock) : ISyncOrchestrator
 {
     public async Task RunAsync(Guid integrationConnectionId, SyncTrigger trigger, CancellationToken cancellationToken = default)
@@ -25,14 +25,20 @@ public class SyncOrchestrator(
             .FirstOrDefaultAsync(c => c.Id == integrationConnectionId, cancellationToken)
             ?? throw new NotFoundException("IntegrationConnection", integrationConnectionId);
 
-        var run = new SynchronizationRun
+        // Reuse the Pending row IntegrationConnectionService recorded at enqueue time (so the UI
+        // could show "queued"); direct callers (tests, ops CLI) have none and get a fresh one.
+        var run = await db.SynchronizationRuns
+            .Where(r => r.IntegrationConnectionId == integrationConnectionId && r.Status == SyncRunStatus.Pending)
+            .OrderByDescending(r => r.StartedAtUtc)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (run is null)
         {
-            IntegrationConnectionId = integrationConnectionId,
-            Trigger = trigger,
-            Status = SyncRunStatus.Running,
-            StartedAtUtc = clock.UtcNow,
-        };
-        db.SynchronizationRuns.Add(run);
+            run = new SynchronizationRun { IntegrationConnectionId = integrationConnectionId };
+            db.SynchronizationRuns.Add(run);
+        }
+        run.Trigger = trigger;
+        run.Status = SyncRunStatus.Running;
+        run.StartedAtUtc = clock.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
         try
@@ -48,7 +54,9 @@ public class SyncOrchestrator(
             var accessToken = await tokenResolver.ResolveFreshAccessTokenAsync(connection.AthleteUserId, connection.Provider, cancellationToken)
                 ?? throw new BusinessRuleException("Propojení nemá uložené přihlašovací údaje.");
 
-            var sinceUtc = connection.LastSyncedAtUtc ?? clock.UtcNow.AddDays(-30);
+            // A history backfill asks for an explicit start; the regular sync continues from the
+            // last run (first sync: 30 days back).
+            var sinceUtc = run.HistoryFromUtc ?? connection.LastSyncedAtUtc ?? clock.UtcNow.AddDays(-30);
             var dataSource = MapToDataSource(connection.Provider);
 
             var activityPolicy = await policyService.GetEffectiveModeAsync(connection.AthleteUserId, connection.Provider, DataDomain.Activities, cancellationToken);
@@ -95,7 +103,11 @@ public class SyncOrchestrator(
                 }
             }
 
-            connection.LastSyncedAtUtc = clock.UtcNow;
+            // Never move the incremental cursor backwards because of a history run.
+            if (connection.LastSyncedAtUtc is null || run.HistoryFromUtc is null)
+            {
+                connection.LastSyncedAtUtc = clock.UtcNow;
+            }
             connection.Status = IntegrationConnectionStatus.Connected;
 
             run.Status = SyncRunStatus.Succeeded;
@@ -111,196 +123,28 @@ public class SyncOrchestrator(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        // Detail streams are fetched in a separate background job (one file download per
+        // activity, throttled), so the sync itself stays fast.
+        if (run.Status == SyncRunStatus.Succeeded && providers.FirstOrDefault(p => p.ProviderType == connection.Provider) is IActivityFileProvider)
+        {
+            await jobQueue.QueueActivityStreamBackfillAsync(connection.Id, cancellationToken);
+        }
     }
 
-    /// <summary>
-    /// One incoming activity through the level-1 (exact external id) check, then — on a miss —
-    /// the matcher, then the connector policy for what to do with the outcome. See
-    /// docs/integrations/canonical-data-and-deduplication-plan.md for the full pipeline.
-    /// </summary>
     private async Task ProcessActivityAsync(
         Guid athleteUserId, ExternalActivity external, DataSource dataSource, ConnectorMode policyMode,
         SynchronizationRun run, CancellationToken cancellationToken)
     {
-        // Level 1 — idempotent upsert. The one check that must never be replaced by fuzzy/fingerprint
-        // matching.
-        var alreadyExists = await db.ActivitySourceRecords.AnyAsync(
-            p => p.Source == dataSource && p.ExternalId == external.ExternalId, cancellationToken);
-        if (alreadyExists)
+        var outcome = await ingestionService.IngestAsync(
+            athleteUserId, external, dataSource, policyMode, new ActivitySourceOrigin(SynchronizationRunId: run.Id), cancellationToken);
+        switch (outcome)
         {
-            run.ItemsSkippedDuplicate++;
-            return;
+            case IngestionOutcome.Created: run.ItemsCreated++; break;
+            case IngestionOutcome.Merged: run.ItemsUpdated++; break;
+            case IngestionOutcome.FlaggedForReview: run.ItemsCreated++; run.ItemsFlaggedForReview++; break;
+            case IngestionOutcome.SkippedDuplicate: run.ItemsSkippedDuplicate++; break;
         }
-
-        var newRecord = BuildSourceRecord(external, dataSource, run.Id);
-
-        // Levels 2-5 — only consulted after the level-1 exact-match check misses.
-        var match = await matchingService.FindOrScoreMatchAsync(athleteUserId, external, dataSource, cancellationToken);
-
-        switch (match.Outcome)
-        {
-            case ActivityMatchOutcome.AutoMerge:
-                var existingActivity = await db.CompletedActivities.Include(a => a.SourceRecords)
-                    .FirstAsync(a => a.Id == match.MatchedActivityId, cancellationToken);
-                AttachAsMergedSource(existingActivity, newRecord, external, policyMode, match, run);
-                run.ItemsUpdated++;
-                break;
-
-            case ActivityMatchOutcome.FlagForReview:
-                // Never silently withhold data — still create the activity, just flagged, and
-                // queue it for human review instead of deciding automatically.
-                if (policyMode == ConnectorMode.EnrichmentOnly)
-                {
-                    // An enrichment-only source never creates a new canonical activity on its own;
-                    // a review-band candidate with no committed create is simply dropped (logged
-                    // via the skip counter) rather than left half-attached.
-                    run.ItemsSkippedDuplicate++;
-                    break;
-                }
-
-                var created = CreateNewActivity(athleteUserId, external, newRecord, dataSource, run);
-                created.MatchStatus = ActivityMatchStatus.PendingReview;
-                db.DuplicateCandidates.Add(new DuplicateCandidate
-                {
-                    AthleteUserId = athleteUserId,
-                    ActivityAId = match.MatchedActivityId!.Value,
-                    ActivityBId = created.Id,
-                    ConfidenceScore = match.ConfidenceScore ?? 0,
-                    ScoringBreakdownJson = match.ScoringBreakdownJson ?? "{}",
-                    Status = DuplicateCandidateStatus.Pending,
-                    CreatedAtUtc = clock.UtcNow,
-                });
-                run.ItemsFlaggedForReview++;
-                break;
-
-            case ActivityMatchOutcome.NoCandidate:
-            case ActivityMatchOutcome.TreatAsSeparate:
-                if (policyMode == ConnectorMode.EnrichmentOnly)
-                {
-                    // Enrichment-only sources are defined as "only decorates an activity another
-                    // source already reported" — with no candidate to decorate, drop the item.
-                    run.ItemsSkippedDuplicate++;
-                    break;
-                }
-                CreateNewActivity(athleteUserId, external, newRecord, dataSource, run);
-                break;
-        }
-    }
-
-    private ActivitySourceRecord BuildSourceRecord(ExternalActivity external, DataSource dataSource, Guid runId) => new()
-    {
-        Source = dataSource,
-        ExternalId = external.ExternalId,
-        SynchronizationRunId = runId,
-        FetchedAtUtc = clock.UtcNow,
-        RawPayloadRetained = external.RawPayloadJson is not null,
-        RawPayloadJson = external.RawPayloadJson,
-        DeviceName = external.DeviceName,
-        FitFileUuid = external.FitFileUuid,
-        NormalizedFingerprint = ActivityFingerprint.Compute(external.Sport, external.StartedAtUtc, external.DurationSeconds, external.DistanceMeters, external.DeviceName),
-    };
-
-    private CompletedActivity CreateNewActivity(Guid athleteUserId, ExternalActivity external, ActivitySourceRecord sourceRecord, DataSource dataSource, SynchronizationRun run)
-    {
-        var activity = new CompletedActivity
-        {
-            AthleteUserId = athleteUserId,
-            Sport = external.Sport,
-            Title = external.Title,
-            StartedAtUtc = external.StartedAtUtc,
-            DurationSeconds = external.DurationSeconds,
-            DistanceMeters = external.DistanceMeters,
-            ElevationGainMeters = external.ElevationGainMeters,
-            AverageHeartRateBpm = external.AverageHeartRateBpm,
-            MaxHeartRateBpm = external.MaxHeartRateBpm,
-            AveragePaceSecondsPerKm = external.AveragePaceSecondsPerKm,
-            AveragePowerWatts = external.AveragePowerWatts,
-            Calories = external.Calories,
-            CreatedAtUtc = clock.UtcNow,
-            NormalizedFingerprint = sourceRecord.NormalizedFingerprint,
-            PrimarySourceRecordId = sourceRecord.Id,
-            SourceRecords = { sourceRecord },
-        };
-        db.CompletedActivities.Add(activity);
-
-        if (external.AdditionalMetrics is { Count: > 0 })
-        {
-            foreach (var metric in external.AdditionalMetrics)
-            {
-                db.ActivityMetrics.Add(new ActivityMetric
-                {
-                    CompletedActivity = activity,
-                    MetricType = metric.Type,
-                    Value = metric.Value,
-                    Unit = metric.Unit,
-                    Source = dataSource,
-                    RecordedAtUtc = clock.UtcNow,
-                });
-            }
-        }
-
-        run.ItemsCreated++;
-        return activity;
-    }
-
-    /// <summary>
-    /// Attaches a newly-matched source record to an already-canonical activity instead of
-    /// creating a second one, and decides — from the connector policy in effect — whether this
-    /// source's values should become the activity's primary (displayed) values. A Primary-ranked
-    /// source always takes over; Secondary only takes over if nothing is primary yet;
-    /// EnrichmentOnly/FallbackOnly never promote over an existing primary (this is the concrete
-    /// mechanism behind "Strava must not create a second canonical activity for something
-    /// intervals.icu already reported").
-    /// </summary>
-    private void AttachAsMergedSource(CompletedActivity activity, ActivitySourceRecord newRecord, ExternalActivity external, ConnectorMode policyMode, ActivityMatchResult match, SynchronizationRun run)
-    {
-        // Explicit Add (not just attaching to activity.SourceRecords) — newRecord has a
-        // client-generated, non-default Guid key, so if it were only attached via the navigation
-        // on an already-Unchanged parent, EF's change-tracker heuristic would mark it Modified
-        // (assuming it already exists) instead of Added, generating an UPDATE against a row that
-        // was never inserted.
-        newRecord.CompletedActivityId = activity.Id;
-        db.ActivitySourceRecords.Add(newRecord);
-
-        var shouldPromote = policyMode switch
-        {
-            ConnectorMode.Primary => true,
-            ConnectorMode.Secondary => activity.PrimarySourceRecordId is null,
-            _ => false,
-        };
-
-        if (shouldPromote)
-        {
-            activity.Sport = external.Sport;
-            activity.Title = external.Title;
-            activity.StartedAtUtc = external.StartedAtUtc;
-            activity.DurationSeconds = external.DurationSeconds;
-            activity.DistanceMeters = external.DistanceMeters;
-            activity.ElevationGainMeters = external.ElevationGainMeters;
-            activity.AverageHeartRateBpm = external.AverageHeartRateBpm;
-            activity.MaxHeartRateBpm = external.MaxHeartRateBpm;
-            activity.AveragePaceSecondsPerKm = external.AveragePaceSecondsPerKm;
-            activity.AveragePowerWatts = external.AveragePowerWatts;
-            activity.Calories = external.Calories;
-            activity.PrimarySourceRecordId = newRecord.Id;
-            activity.NormalizedFingerprint = newRecord.NormalizedFingerprint;
-        }
-
-        activity.MatchStatus = ActivityMatchStatus.AutoMerged;
-        activity.UpdatedAtUtc = clock.UtcNow;
-
-        db.MergeDecisions.Add(new MergeDecision
-        {
-            AthleteUserId = activity.AthleteUserId,
-            SurvivingActivityId = activity.Id,
-            AbsorbedSourceRecordId = newRecord.Id,
-            ConfidenceScore = match.ConfidenceScore ?? 100,
-            Kind = match.DecisionKind ?? MergeDecisionKind.AutoFingerprintExact,
-            Outcome = MergeDecisionOutcome.Merged,
-            ScoringBreakdownJson = match.ScoringBreakdownJson,
-            DecidedAtUtc = clock.UtcNow,
-            CreatedAtUtc = clock.UtcNow,
-        });
     }
 
     private async Task UpsertWellnessSampleAsync(Guid athleteUserId, DataSource source, ExternalWellnessSample sample, CancellationToken cancellationToken)

@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using TrainCoach.Application.Common;
 using TrainCoach.Application.Integrations;
+using TrainCoach.Application.Integrations.StravaArchive;
 using TrainCoach.Application.Reporting;
 using TrainCoach.Domain.Enums;
 
@@ -34,6 +35,33 @@ public class ChannelBackgroundJobQueue : IBackgroundJobQueue
         {
             var orchestrator = services.GetRequiredService<ISyncOrchestrator>();
             await orchestrator.RunAsync(integrationConnectionId, trigger, ct);
+        }, cancellationToken);
+    }
+
+    public ValueTask QueueStravaArchiveAnalysisAsync(Guid importId, Uri? url, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<IStravaArchiveImportJob>();
+            await job.AnalyzeAsync(importId, url, ct);
+        }, cancellationToken);
+    }
+
+    public ValueTask QueueActivityStreamBackfillAsync(Guid integrationConnectionId, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<IActivityStreamBackfillJob>();
+            await job.RunAsync(integrationConnectionId, ct);
+        }, cancellationToken);
+    }
+
+    public ValueTask QueueStravaArchiveImportAsync(Guid importId, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<IStravaArchiveImportJob>();
+            await job.ImportAsync(importId, ct);
         }, cancellationToken);
     }
 }

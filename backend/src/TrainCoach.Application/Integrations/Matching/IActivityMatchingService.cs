@@ -28,7 +28,7 @@ public record ActivityMatchResult(
     MergeDecisionKind? DecisionKind);
 
 /// <summary>
-/// The matching cascade beyond level-1 idempotent upsert (which stays in SyncOrchestrator, on the
+/// The matching cascade beyond level-1 idempotent upsert (which stays in ActivityIngestionService, on the
 /// existing (Source, ExternalId) unique index — this service is only ever consulted after that
 /// check misses). See docs/integrations/canonical-data-and-deduplication-plan.md /
 /// docs/integrations/activity-matching.md for the full level 2-5 algorithm.

@@ -3,6 +3,8 @@ namespace TrainCoach.Application.Execution;
 public interface IActivityService
 {
     Task<IReadOnlyList<CompletedActivityDto>> GetForAthleteAsync(Guid athleteUserId, DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
+    /// <summary>Paged, filtered history — the activities page. Newest first.</summary>
+    Task<ActivityListPageDto> SearchForAthleteAsync(Guid athleteUserId, ActivitySearchQuery query, CancellationToken cancellationToken = default);
     Task<CompletedActivityDto> GetByIdAsync(Guid callerUserId, Guid activityId, CancellationToken cancellationToken = default);
     Task<CompletedActivityDto> CreateManualAsync(Guid callerUserId, CreateManualActivityRequest request, CancellationToken cancellationToken = default);
 

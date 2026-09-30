@@ -24,10 +24,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivityListPageDto,
   ActivityStreamsDto,
   CompletedActivityDto,
   CreateManualActivityRequest,
   GetApiAthletesAthleteUserIdActivitiesParams,
+  GetApiAthletesAthleteUserIdActivitiesSearchParams,
   GetApiAthletesAthleteUserIdFeedbackParams,
   TrainingFeedbackDto,
   UpsertTrainingFeedbackRequest
@@ -137,6 +139,100 @@ export function useGetApiAthletesAthleteUserIdActivities<TData = Awaited<ReturnT
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetApiAthletesAthleteUserIdActivitiesQueryOptions(athleteUserId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getApiAthletesAthleteUserIdActivitiesSearch = (
+    athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdActivitiesSearchParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ActivityListPageDto>(
+      {url: `/api/athletes/${athleteUserId}/activities/search`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiAthletesAthleteUserIdActivitiesSearchQueryKey = (athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdActivitiesSearchParams,) => {
+    return [
+    `/api/athletes/${athleteUserId}/activities/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAthletesAthleteUserIdActivitiesSearchQueryOptions = <TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError = ErrorType<unknown>>(athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdActivitiesSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAthletesAthleteUserIdActivitiesSearchQueryKey(athleteUserId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>> = ({ signal }) => getApiAthletesAthleteUserIdActivitiesSearch(athleteUserId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteUserId !== null && athleteUserId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAthletesAthleteUserIdActivitiesSearchQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>>
+export type GetApiAthletesAthleteUserIdActivitiesSearchQueryError = ErrorType<unknown>
+
+
+export function useGetApiAthletesAthleteUserIdActivitiesSearch<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params: undefined |  GetApiAthletesAthleteUserIdActivitiesSearchParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdActivitiesSearch<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdActivitiesSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdActivitiesSearch<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdActivitiesSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAthletesAthleteUserIdActivitiesSearch<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdActivitiesSearchParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdActivitiesSearch>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAthletesAthleteUserIdActivitiesSearchQueryOptions(athleteUserId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

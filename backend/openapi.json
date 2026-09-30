@@ -111,6 +111,97 @@
         }
       }
     },
+    "/api/athletes/{athleteUserId}/activities/search": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "sports",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SportType"
+              }
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListPageDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListPageDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityListPageDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/activities/{activityId}": {
       "get": {
         "tags": [
@@ -2360,6 +2451,132 @@
         }
       }
     },
+    "/api/integrations/{provider}/history": {
+      "post": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryBackfillRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryBackfillRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryBackfillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/sync-all": {
+      "post": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "automatic",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderSyncStatusDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderSyncStatusDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderSyncStatusDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/sync-status": {
+      "get": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderSyncStatusDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderSyncStatusDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderSyncStatusDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/integrations/{provider}/sync-history": {
       "get": {
         "tags": [
@@ -3027,6 +3244,54 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/athletes/{athleteUserId}/readiness": {
+      "get": {
+        "tags": [
+          "Readiness"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessDto"
+                }
+              }
+            }
           }
         }
       }
@@ -3822,6 +4087,284 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SleepRecordDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/strava/archive-imports": {
+      "get": {
+        "tags": [
+          "StravaArchiveImports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StravaArchiveImportDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StravaArchiveImportDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StravaArchiveImportDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/strava/archive-imports/{importId}": {
+      "get": {
+        "tags": [
+          "StravaArchiveImports"
+        ],
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/strava/archive-imports/link": {
+      "post": {
+        "tags": [
+          "StravaArchiveImports"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStravaArchiveImportFromLinkRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStravaArchiveImportFromLinkRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStravaArchiveImportFromLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/strava/archive-imports/upload": {
+      "post": {
+        "tags": [
+          "StravaArchiveImports"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "fromDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "toDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "sports": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SportType"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "file": {
+                  "style": "form"
+                },
+                "fromDate": {
+                  "style": "form"
+                },
+                "toDate": {
+                  "style": "form"
+                },
+                "sports": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/strava/archive-imports/{importId}/confirm": {
+      "post": {
+        "tags": [
+          "StravaArchiveImports"
+        ],
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/integrations/strava/archive-imports/{importId}/cancel": {
+      "post": {
+        "tags": [
+          "StravaArchiveImports"
+        ],
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaArchiveImportDto"
                 }
               }
             }
@@ -4707,6 +5250,56 @@
         },
         "additionalProperties": false
       },
+      "ActivityListPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompletedActivityDto"
+            },
+            "nullable": true
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/ActivityListSummaryDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ActivityListSummaryDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalDurationSeconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalDistanceMeters": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalElevationGainMeters": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
       "ActivityMetricDto": {
         "type": "object",
         "properties": {
@@ -4739,6 +5332,13 @@
           "WorkJoules",
           "WeightedAveragePowerWatts",
           "Intensity"
+        ],
+        "type": "string"
+      },
+      "ActivityStreamSource": {
+        "enum": [
+          "Stored",
+          "Live"
         ],
         "type": "string"
       },
@@ -4812,6 +5412,36 @@
               "format": "double"
             },
             "nullable": true
+          },
+          "latitude": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          },
+          "longitude": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          },
+          "temperatureC": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          },
+          "source": {
+            "$ref": "#/components/schemas/ActivityStreamSource"
+          },
+          "isDownsampled": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -5307,6 +5937,10 @@
             "items": {
               "$ref": "#/components/schemas/ActivityMetricDto"
             },
+            "nullable": true
+          },
+          "deviceName": {
+            "type": "string",
             "nullable": true
           }
         },
@@ -5814,6 +6448,33 @@
           },
           "notes": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateStravaArchiveImportFromLinkRequest": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "fromDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "toDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SportType"
+            },
             "nullable": true
           }
         },
@@ -6404,6 +7065,57 @@
         ],
         "type": "string"
       },
+      "HealthMetric": {
+        "enum": [
+          "Hrv",
+          "RestingHeartRate",
+          "SleepDuration",
+          "SleepScore",
+          "AvgSleepingHeartRate",
+          "SpO2"
+        ],
+        "type": "string"
+      },
+      "HealthMetricDto": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/HealthMetric"
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "rangeLow": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "rangeHigh": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/HealthMetricStatus"
+          },
+          "isConcerning": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HealthMetricStatus": {
+        "enum": [
+          "InRange",
+          "AboveRange",
+          "BelowRange",
+          "NoRange",
+          "NoData"
+        ],
+        "type": "string"
+      },
       "HeartRateZoneDto": {
         "type": "object",
         "properties": {
@@ -6476,6 +7188,16 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HistoryBackfillRequest": {
+        "type": "object",
+        "properties": {
+          "fromDate": {
+            "type": "string",
+            "format": "date"
           }
         },
         "additionalProperties": false
@@ -7368,6 +8090,26 @@
         },
         "additionalProperties": false
       },
+      "ProviderSyncStatusDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/IntegrationProviderType"
+          },
+          "connectionStatus": {
+            "$ref": "#/components/schemas/IntegrationConnectionStatus"
+          },
+          "lastSyncedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "latestRun": {
+            "$ref": "#/components/schemas/SynchronizationRunDto"
+          }
+        },
+        "additionalProperties": false
+      },
       "RaceDto": {
         "type": "object",
         "properties": {
@@ -7496,6 +8238,120 @@
           }
         },
         "additionalProperties": false
+      },
+      "ReadinessComponentDto": {
+        "type": "object",
+        "properties": {
+          "factor": {
+            "$ref": "#/components/schemas/ReadinessFactor"
+          },
+          "subScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weight": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReadinessDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "isToday": {
+            "type": "boolean"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "scoreSource": {
+            "$ref": "#/components/schemas/ReadinessScoreSource"
+          },
+          "hrvRmssdMs": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "hrvBaselineMs": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "restingHeartRateBpm": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "restingHeartRateBaselineBpm": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "sleepDurationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sleepScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "ctl": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "atl": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "hasPainOrIllness": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadinessComponentDto"
+            },
+            "nullable": true
+          },
+          "healthStatus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HealthMetricDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReadinessFactor": {
+        "enum": [
+          "Hrv",
+          "RestingHeartRate",
+          "Sleep",
+          "TrainingLoad",
+          "Subjective"
+        ],
+        "type": "string"
+      },
+      "ReadinessScoreSource": {
+        "enum": [
+          "Vendor",
+          "Computed"
+        ],
+        "type": "string"
       },
       "RecoveryMetricDto": {
         "type": "object",
@@ -7963,6 +8819,158 @@
         ],
         "type": "string"
       },
+      "StravaArchiveImportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StravaArchiveImportStatus"
+          },
+          "sourceKind": {
+            "$ref": "#/components/schemas/StravaArchiveSourceKind"
+          },
+          "originalFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "downloadedBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fromDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "toDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SportType"
+            },
+            "nullable": true
+          },
+          "previewTotal": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "previewInFilter": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "previewAlreadyImported": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "previewWouldCreate": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "previewWouldMerge": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "previewWouldReview": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "previewStreamsToAdd": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "itemsProcessed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsCreated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsMerged": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsFlaggedForReview": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsSkippedDuplicate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsFailed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsStreamsAdded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "previewReadyAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "finishedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StravaArchiveImportStatus": {
+        "enum": [
+          "Pending",
+          "Downloading",
+          "Analyzing",
+          "PreviewReady",
+          "Importing",
+          "Succeeded",
+          "Failed",
+          "Cancelled"
+        ],
+        "type": "string"
+      },
+      "StravaArchiveSourceKind": {
+        "enum": [
+          "Link",
+          "Upload"
+        ],
+        "type": "string"
+      },
       "SubmitCheckInRequest": {
         "type": "object",
         "properties": {
@@ -8035,6 +9043,16 @@
         ],
         "type": "string"
       },
+      "SyncTrigger": {
+        "enum": [
+          "Manual",
+          "Scheduled",
+          "OnConnect",
+          "OnLogin",
+          "HistoryBackfill"
+        ],
+        "type": "string"
+      },
       "SynchronizationRunDto": {
         "type": "object",
         "properties": {
@@ -8072,6 +9090,17 @@
           "errorMessage": {
             "type": "string",
             "nullable": true
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/SyncTrigger"
+          },
+          "itemsUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsFlaggedForReview": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

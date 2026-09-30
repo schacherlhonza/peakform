@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TrainCoach.Application.Common;
 using TrainCoach.Application.Execution;
+using TrainCoach.Domain.Enums;
 
 namespace TrainCoach.Api.Controllers;
 
@@ -15,6 +16,21 @@ public class ActivitiesController(IActivityService service, ICurrentUserService 
         Guid athleteUserId, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken cancellationToken)
     {
         return Ok(await service.GetForAthleteAsync(athleteUserId, from, to, cancellationToken));
+    }
+
+    /// <summary>Paged activity history with filters — the activities page. <c>pageSize</c> is capped at 100.</summary>
+    [HttpGet("athletes/{athleteUserId:guid}/activities/search")]
+    public async Task<ActionResult<ActivityListPageDto>> Search(
+        Guid athleteUserId,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] List<SportType>? sports,
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await service.SearchForAthleteAsync(athleteUserId, new ActivitySearchQuery(from, to, sports, search, page, pageSize), cancellationToken));
     }
 
     [HttpGet("activities/{activityId:guid}")]

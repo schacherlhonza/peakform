@@ -73,6 +73,15 @@ public enum SyncTrigger
     Manual = 1,
     Scheduled = 2,
     OnConnect = 3,
+
+    /// <summary>Automatic "sync everything" the frontend fires once per session after sign-in —
+    /// throttled server-side so repeated logins/tabs don't hammer provider rate limits.</summary>
+    OnLogin = 4,
+
+    /// <summary>Athlete-requested one-off pull of older history, from
+    /// <see cref="TrainCoach.Domain.Integrations.SynchronizationRun.HistoryFromUtc"/> instead of
+    /// the last sync time.</summary>
+    HistoryBackfill = 5,
 }
 
 public enum ImportFileType
@@ -90,6 +99,26 @@ public enum ImportStatus
     Confirmed = 3,
     Cancelled = 4,
     Failed = 5,
+}
+
+/// <summary>Lifecycle of a <see cref="TrainCoach.Domain.Integrations.StravaArchiveImport"/>. The three
+/// working states (Downloading, Analyzing, Importing) are what a server restart interrupts.</summary>
+public enum StravaArchiveImportStatus
+{
+    Pending = 1,
+    Downloading = 2,
+    Analyzing = 3,
+    PreviewReady = 4,
+    Importing = 5,
+    Succeeded = 6,
+    Failed = 7,
+    Cancelled = 8,
+}
+
+public enum StravaArchiveSourceKind
+{
+    Link = 1,
+    Upload = 2,
 }
 
 public enum ImportRowStatus

@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TrainCoach.Application.Integrations;
+using TrainCoach.Application.Integrations.StravaArchive;
 using TrainCoach.Integrations.IntervalsIcu;
 using TrainCoach.Integrations.Mock;
 using TrainCoach.Integrations.Oura;
 using TrainCoach.Integrations.Strava;
+using TrainCoach.Integrations.StravaArchive;
 using TrainCoach.Integrations.Whoop;
 
 namespace TrainCoach.Integrations;
@@ -16,6 +18,14 @@ public static class DependencyInjection
         services.Configure<StravaOptions>(configuration.GetSection(StravaOptions.SectionName));
         services.AddHttpClient(nameof(StravaIntegrationProvider));
         services.AddScoped<IIntegrationProvider, StravaIntegrationProvider>();
+
+        // Strava archive import: redirects are followed by hand so each hop can be checked
+        // against the allow-list, and the job's own (configurable) timeout replaces HttpClient's
+        // 100 s default, which a multi-GB download would blow through.
+        services.AddHttpClient(StravaArchiveDownloader.HttpClientName, client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        services.AddScoped<IStravaArchiveDownloader, StravaArchiveDownloader>();
+        services.AddSingleton<IActivityFileProbe, ActivityFileProbe>();
 
         services.Configure<IntervalsIcuOptions>(configuration.GetSection(IntervalsIcuOptions.SectionName));
         services.AddHttpClient(nameof(IntervalsIcuIntegrationProvider));

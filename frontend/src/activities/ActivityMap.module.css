@@ -1,0 +1,28 @@
+.map {
+  height: 340px;
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+  /* Leaflet panes sit at z-index 400+; keep them below the app's header/menus. */
+  position: relative;
+  z-index: 0;
+}
+
+/* The app is dark-only: invert the light OSM tiles into a dark map instead of adding a second
+   (paid) dark tile provider. Only the tile pane — the route and markers keep their real colors. */
+.map :global(.leaflet-tile-pane) {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
+}
+
+.map :global(.leaflet-container) {
+  background: var(--color-bg);
+  font-family: inherit;
+}
+
+.map :global(.leaflet-control-attribution) {
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--color-text-muted);
+}
+
+.map :global(.leaflet-control-attribution a) {
+  color: var(--color-text-muted);
+}

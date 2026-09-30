@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TrainCoach.Application.Common;
+using TrainCoach.Application.Execution.Streams;
 using TrainCoach.Application.Integrations;
 using TrainCoach.Domain.Enums;
 using TrainCoach.Domain.Execution;
@@ -31,6 +32,68 @@ public class ActivityService(
         return activities.Select(ToDto).ToList();
     }
 
+    public const int MaxPageSize = 100;
+
+    public async Task<ActivityListPageDto> SearchForAthleteAsync(Guid athleteUserId, ActivitySearchQuery search, CancellationToken cancellationToken = default)
+    {
+        await accessGuard.EnsureAthleteAccessAsync(athleteUserId, PermissionScope.ViewCompletedActivities, cancellationToken);
+
+        var page = Math.Max(1, search.Page);
+        var pageSize = Math.Clamp(search.PageSize, 1, MaxPageSize);
+
+        var query = db.CompletedActivities.Where(a => a.AthleteUserId == athleteUserId);
+        if (search.From is { } from)
+        {
+            query = query.Where(a => a.StartedAtUtc >= from.ToDateTime(TimeOnly.MinValue));
+        }
+        if (search.To is { } to)
+        {
+            query = query.Where(a => a.StartedAtUtc <= to.ToDateTime(TimeOnly.MaxValue));
+        }
+        if (search.Sports is { Count: > 0 } sports)
+        {
+            query = query.Where(a => sports.Contains(a.Sport));
+        }
+        if (!string.IsNullOrWhiteSpace(search.Search))
+        {
+            // ToLower + Contains rather than ILike so it translates on both Npgsql and the
+            // SQLite test host.
+            var term = search.Search.Trim().ToLower();
+            query = query.Where(a => a.Title != null && a.Title.ToLower().Contains(term));
+        }
+
+        // Totals over the full filtered set in one aggregate query. Decimals are summed as double:
+        // SQLite (test host) can't aggregate decimal columns; the precision loss is irrelevant
+        // for display totals.
+        var totals = await query
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Count = g.Count(),
+                Duration = g.Sum(a => (long)a.DurationSeconds),
+                Distance = g.Sum(a => (double?)a.DistanceMeters) ?? 0,
+                Elevation = g.Sum(a => (double?)a.ElevationGainMeters) ?? 0,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var items = await query
+            .Include(a => a.SourceRecords).Include(a => a.AdditionalMetrics)
+            .OrderByDescending(a => a.StartedAtUtc).ThenBy(a => a.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new ActivityListPageDto(
+            items.Select(ToDto).ToList(),
+            totals?.Count ?? 0,
+            page,
+            pageSize,
+            new ActivityListSummaryDto(
+                totals?.Count ?? 0,
+                totals?.Duration ?? 0,
+                (decimal)Math.Round(totals?.Distance ?? 0, 1),
+                (decimal)Math.Round(totals?.Elevation ?? 0, 1)));
+    }
+
     public async Task<CompletedActivityDto> GetByIdAsync(Guid callerUserId, Guid activityId, CancellationToken cancellationToken = default)
     {
         var activity = await LoadOwnedActivityAsync(activityId, cancellationToken);
@@ -40,6 +103,19 @@ public class ActivityService(
     public async Task<ActivityStreamsDto?> GetActivityStreamsAsync(Guid callerUserId, Guid activityId, CancellationToken cancellationToken = default)
     {
         var activity = await LoadOwnedActivityAsync(activityId, cancellationToken);
+
+        // A stored stream wins over a live fetch, from whichever source record carries it — after
+        // a Strava-archive + intervals.icu merge, the archive's stream serves the activity even
+        // when intervals.icu is the primary source.
+        var sourceRecordIds = activity.SourceRecords.Select(sr => sr.Id).ToList();
+        var stored = await db.ActivityStreams.AsNoTracking()
+            .Where(s => sourceRecordIds.Contains(s.ActivitySourceRecordId))
+            .OrderByDescending(s => s.ActivitySourceRecordId == activity.PrimarySourceRecordId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (stored is not null)
+        {
+            return ActivityStreamMapping.ToDto(activityId, activity.Sport, stored);
+        }
 
         var provenance = activity.SourceRecords.FirstOrDefault(sr => sr.Id == activity.PrimarySourceRecordId)
             ?? activity.SourceRecords.FirstOrDefault();
@@ -63,7 +139,7 @@ public class ActivityService(
         }
 
         var streams = await streamProvider.FetchActivityStreamsAsync(accessToken, externalId, cancellationToken);
-        return streams is null ? null : ToStreamsDto(activityId, streams);
+        return streams is null ? null : ToStreamsDto(activityId, activity.Sport, streams);
     }
 
     /// <summary>Only sources with a real, still-connectable <see cref="IIntegrationProvider"/> can
@@ -176,11 +252,11 @@ public class ActivityService(
         return activity;
     }
 
-    private static ActivityStreamsDto ToStreamsDto(Guid activityId, ExternalActivityStreams s) => new(
+    private static ActivityStreamsDto ToStreamsDto(Guid activityId, SportType sport, ExternalActivityStreams s) => new(
         activityId,
         s.TimeOffsetsSeconds,
         s.HeartRateBpm?.Select(RoundToInt).ToList(),
-        s.CadenceRpm?.Select(RoundToInt).ToList(),
+        ActivityStreamMapping.StepsPerMinute(sport, s.CadenceRpm?.Select(RoundToInt).ToList()),
         s.WattsOutput?.Select(RoundToInt).ToList(),
         s.DistanceMeters?.Select(v => (decimal?)v).ToList(),
         s.AltitudeMeters?.Select(v => (decimal?)v).ToList(),
@@ -197,7 +273,8 @@ public class ActivityService(
             a.Id, a.AthleteUserId, a.PlannedWorkoutId, a.Sport, a.Title, a.StartedAtUtc, a.DurationSeconds,
             a.DistanceMeters, a.ElevationGainMeters, a.AverageHeartRateBpm, a.MaxHeartRateBpm,
             a.AveragePaceSecondsPerKm, a.AveragePowerWatts, a.Calories, primarySource?.Source ?? DataSource.Manual,
-            a.AdditionalMetrics.Count > 0 ? a.AdditionalMetrics.Select(m => new ActivityMetricDto(m.MetricType, m.Value, m.Unit)).ToList() : null);
+            a.AdditionalMetrics.Count > 0 ? a.AdditionalMetrics.Select(m => new ActivityMetricDto(m.MetricType, m.Value, m.Unit)).ToList() : null,
+            primarySource?.DeviceName ?? a.SourceRecords.Select(sr => sr.DeviceName).FirstOrDefault(d => !string.IsNullOrWhiteSpace(d)));
     }
 
     private static TrainingFeedbackDto ToFeedbackDto(TrainingFeedback f) => new(

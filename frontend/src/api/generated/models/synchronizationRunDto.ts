@@ -6,6 +6,7 @@
  */
 import type { IntegrationProviderType } from './integrationProviderType';
 import type { SyncRunStatus } from './syncRunStatus';
+import type { SyncTrigger } from './syncTrigger';
 
 export interface SynchronizationRunDto {
   id?: string;
@@ -19,4 +20,7 @@ export interface SynchronizationRunDto {
   itemsSkippedDuplicate?: number;
   /** @nullable */
   errorMessage?: string | null;
+  trigger?: SyncTrigger;
+  itemsUpdated?: number;
+  itemsFlaggedForReview?: number;
 }

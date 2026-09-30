@@ -101,16 +101,44 @@ public class ActivityMatchingServiceScoringTests
     [Fact]
     public void NoGpsActivity_NoDistance_CappedBelowAutoMergeThreshold_UnlessDeviceMatches()
     {
+        // 3 minutes apart: outside the exact-match band (see the next tests), so the cap applies.
         var candidate = Candidate(SportType.Running, BaseStart, 3600, null);
-        var incoming = Incoming(SportType.Running, BaseStart, 3600, null);
+        var incoming = Incoming(SportType.Running, BaseStart.AddMinutes(3), 3600, null);
 
         var (withoutDevice, _) = ActivityMatchingService.Score(candidate, null, incoming, Options);
         withoutDevice.Should().BeLessThan(Options.AutoMergeThreshold);
         withoutDevice.Should().BeLessThanOrEqualTo(Options.NoDistanceActivityMaxScore);
 
-        var incomingWithDevice = Incoming(SportType.Running, BaseStart, 3600, null, deviceName: "Wahoo Elemnt");
+        var incomingWithDevice = Incoming(SportType.Running, BaseStart.AddMinutes(3), 3600, null, deviceName: "Wahoo Elemnt");
         var (withDevice, _) = ActivityMatchingService.Score(candidate, "Wahoo Elemnt", incomingWithDevice, Options);
         withDevice.Should().BeGreaterThan(withoutDevice);
+    }
+
+    [Fact]
+    public void NoDistance_SameStartAndDuration_AutoMerges()
+    {
+        // Real case: a strength session reported by Strava (distance 0) and intervals.icu (no
+        // distance) with identical start second and duration.
+        var viaIntervalsIcu = Candidate(SportType.Strength, BaseStart, 1080, null);
+        var viaStrava = Incoming(SportType.Strength, BaseStart.AddSeconds(30), 1090, 0);
+
+        var (score, breakdown) = ActivityMatchingService.Score(viaIntervalsIcu, null, viaStrava, Options);
+
+        score.Should().BeGreaterThanOrEqualTo(Options.AutoMergeThreshold);
+        breakdown["noDistanceExactMatch"].Should().Be(1);
+    }
+
+    [Theory]
+    [InlineData(2, 1080)] // two minutes apart
+    [InlineData(0, 1200)] // same start, 10 % longer
+    public void NoDistance_OutsideExactBand_StaysCapped(int minutesApart, int incomingDuration)
+    {
+        var candidate = Candidate(SportType.Strength, BaseStart, 1080, null);
+        var incoming = Incoming(SportType.Strength, BaseStart.AddMinutes(minutesApart), incomingDuration, null);
+
+        var (score, _) = ActivityMatchingService.Score(candidate, null, incoming, Options);
+
+        score.Should().BeLessThanOrEqualTo(Options.NoDistanceActivityMaxScore);
     }
 
     [Fact]

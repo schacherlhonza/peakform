@@ -7,11 +7,20 @@ namespace TrainCoach.Api.IntegrationTests.Infrastructure;
 /// A test-double provider standing in for a real adapter (Strava, intervals.icu, ...) so sync
 /// pipeline tests can control exactly what "arrives from the source" without any network call.
 /// Returns whatever activities/wellness samples are in the mutable lists at the time
-/// FetchRecentActivitiesAsync/FetchWellnessAsync are called.
+/// FetchRecentActivitiesAsync/FetchWellnessAsync are called. <paramref name="files"/> (external
+/// id → original activity file) makes it an <see cref="IActivityFileProvider"/> like intervals.icu.
 /// </summary>
-public class FakeIntegrationProvider(IntegrationProviderType providerType, List<ExternalActivity> activities, List<ExternalWellnessSample>? wellness = null)
-    : IIntegrationProvider, IWellnessDataProvider
+public class FakeIntegrationProvider(
+    IntegrationProviderType providerType, List<ExternalActivity> activities, List<ExternalWellnessSample>? wellness = null,
+    Dictionary<string, byte[]>? files = null)
+    : IIntegrationProvider, IWellnessDataProvider, IActivityFileProvider
 {
+    /// <summary>Every <c>sinceUtc</c> the sync asked for, in call order.</summary>
+    public List<DateTime> RequestedSince { get; } = [];
+
+    /// <summary>External ids whose file was downloaded, in call order.</summary>
+    public List<string> DownloadedFiles { get; } = [];
+
     public IntegrationProviderType ProviderType => providerType;
     public bool RequiresOAuthRedirect => false;
 
@@ -23,8 +32,23 @@ public class FakeIntegrationProvider(IntegrationProviderType providerType, List<
     public Task<ExternalTokenResult> RefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default) =>
         Task.FromResult(new ExternalTokenResult("fake-access-token-refreshed", null, null, "fake-account", null));
 
-    public Task<IReadOnlyList<ExternalActivity>> FetchRecentActivitiesAsync(string accessToken, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<ExternalActivity>>(activities.ToList());
+    public Task<IReadOnlyList<ExternalActivity>> FetchRecentActivitiesAsync(string accessToken, DateTime sinceUtc, CancellationToken cancellationToken = default)
+    {
+        lock (RequestedSince)
+        {
+            RequestedSince.Add(sinceUtc);
+        }
+        return Task.FromResult<IReadOnlyList<ExternalActivity>>(activities.ToList());
+    }
+
+    public Task<byte[]?> DownloadActivityFileAsync(string accessToken, string externalActivityId, CancellationToken cancellationToken = default)
+    {
+        lock (DownloadedFiles)
+        {
+            DownloadedFiles.Add(externalActivityId);
+        }
+        return Task.FromResult(files is not null && files.TryGetValue(externalActivityId, out var file) ? file : null);
+    }
 
     public Task<IReadOnlyList<ExternalWellnessSample>> FetchWellnessAsync(string accessToken, DateTime sinceUtc, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<ExternalWellnessSample>>((wellness ?? []).ToList());

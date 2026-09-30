@@ -7,9 +7,11 @@ using Microsoft.Extensions.Hosting;
 using TrainCoach.Application.Account;
 using TrainCoach.Application.Auth;
 using TrainCoach.Application.Common;
+using TrainCoach.Application.Integrations.StravaArchive;
 using TrainCoach.Infrastructure.BackgroundJobs;
 using TrainCoach.Infrastructure.Common;
 using TrainCoach.Infrastructure.Identity;
+using TrainCoach.Infrastructure.Integrations;
 using TrainCoach.Infrastructure.Persistence;
 using TrainCoach.Infrastructure.Security;
 
@@ -63,6 +65,9 @@ public static class DependencyInjection
         services.AddSingleton<ChannelBackgroundJobQueue>();
         services.AddSingleton<IBackgroundJobQueue>(sp => sp.GetRequiredService<ChannelBackgroundJobQueue>());
         services.AddHostedService<QueuedHostedService>();
+
+        services.AddSingleton<IStravaArchiveFileStore, StravaArchiveFileStore>();
+        services.AddHostedService<StravaArchiveRecoveryHostedService>();
 
         return services;
     }

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import { AreaChart, LineChart } from '@mantine/charts';
 import { Group, Text } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
@@ -23,6 +23,9 @@ export interface StreamChartProps {
   formatValue?: (v: number) => string;
   /** Flips the y-axis so a lower value reads higher — for metrics like pace where "better" means smaller. */
   reverseYAxis?: boolean;
+  /** Time offset under the cursor (null when it leaves the chart) — drives the map marker. Pass a
+   * stable callback: the chart is memoized so hovering doesn't re-render every other chart. */
+  onHoverTime?: (t: number | null) => void;
 }
 
 /** Zooms the y-axis to the data's own min/max (+10% padding) instead of always starting at 0 —
@@ -58,7 +61,7 @@ function buildPoints(times: readonly number[], values: readonly (number | null |
  * min/avg/max summary line (textual fallback) and a toggleable one-line explanation of what
  * the metric means, per the user's request for "vysvětlivky" alongside every chart.
  */
-export function StreamChart({ title, explanation, unit, color, kind, times, values, formatValue, reverseYAxis }: StreamChartProps) {
+export const StreamChart = memo(function StreamChart({ title, explanation, unit, color, kind, times, values, formatValue, reverseYAxis, onHoverTime }: StreamChartProps) {
   const [showInfo, setShowInfo] = useState(false);
   const points = useMemo(() => buildPoints(times, values), [times, values]);
 
@@ -88,6 +91,14 @@ export function StreamChart({ title, explanation, unit, color, kind, times, valu
     tooltipProps: { labelFormatter: (label: ReactNode) => formatClock(Number(label)) },
     valueFormatter: fmt,
   };
+  const hoverHandlers = onHoverTime
+    ? {
+        onMouseMove: (state: { activeLabel?: string | number }) => {
+          if (state?.activeLabel != null) onHoverTime(Number(state.activeLabel));
+        },
+        onMouseLeave: () => onHoverTime(null),
+      }
+    : {};
 
   return (
     <Panel>
@@ -107,9 +118,9 @@ export function StreamChart({ title, explanation, unit, color, kind, times, valu
         </Text>
       )}
       {kind === 'area' ? (
-        <AreaChart {...chartProps} curveType="natural" fillOpacity={0.16} />
+        <AreaChart {...chartProps} curveType="natural" fillOpacity={0.16} areaChartProps={hoverHandlers} />
       ) : (
-        <LineChart {...chartProps} curveType="monotone" />
+        <LineChart {...chartProps} curveType="monotone" lineChartProps={hoverHandlers} />
       )}
       <Group gap="md" mt="xs">
         <Text className="ds-metadata">min {fmt(min)}</Text>
@@ -118,4 +129,4 @@ export function StreamChart({ title, explanation, unit, color, kind, times, valu
       </Group>
     </Panel>
   );
-}
+});

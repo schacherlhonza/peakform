@@ -39,6 +39,7 @@ public interface IApplicationDbContext
     DbSet<CompletedActivity> CompletedActivities { get; }
     DbSet<ActivityMetric> ActivityMetrics { get; }
     DbSet<ActivitySourceRecord> ActivitySourceRecords { get; }
+    DbSet<ActivityStream> ActivityStreams { get; }
     DbSet<MergeDecision> MergeDecisions { get; }
     DbSet<DuplicateCandidate> DuplicateCandidates { get; }
     DbSet<DuplicateDryRunReport> DuplicateDryRunReports { get; }
@@ -67,6 +68,7 @@ public interface IApplicationDbContext
     DbSet<IntegrationCredential> IntegrationCredentials { get; }
     DbSet<SynchronizationRun> SynchronizationRuns { get; }
     DbSet<ImportedFile> ImportedFiles { get; }
+    DbSet<StravaArchiveImport> StravaArchiveImports { get; }
     DbSet<ConnectorDomainPolicy> ConnectorDomainPolicies { get; }
 
     DbSet<Notification> Notifications { get; }

@@ -3,7 +3,9 @@ import { getAccessToken, refreshAccessToken, clearTokens } from '../auth/tokenSt
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080';
 
-export const axiosInstance = axios.create({ baseURL });
+// Arrays as repeated keys (`sports=a&sports=b`), which is what ASP.NET Core binds to a
+// List<T> query parameter — axios' default `sports[]=a` would bind to nothing.
+export const axiosInstance = axios.create({ baseURL, paramsSerializer: { indexes: null } });
 
 axiosInstance.interceptors.request.use((config) => {
   const token = getAccessToken();

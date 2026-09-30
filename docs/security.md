@@ -74,6 +74,18 @@ TrainCoach ukládá citlivá zdravotní a wellness data — spánek, HRV, klidov
 - Sportovec může kdykoliv oprávnění zúžit nebo vztah ukončit; ukončení/zúžení má okamžitý efekt na autorizaci (viz §3).
 - Historie souhlasu (kdy byl udělen, kdy případně odvolán) je auditovatelná přes `AuditLog` a `CoachAthleteRelationship` (start/end date, stav).
 
+### Atribuce Garminu
+
+Data z intervals.icu, která pocházejí ze zařízení Garmin (`DeviceName` obsahuje „Garmin“), zobrazují na detailu
+aktivity text s atribucí Garminu. Vyžadují to podmínky API intervals.icu, viz `docs/integrations-research.md` §5.
+
+### GPS trasy
+
+Import archivu ze Stravy a stahování souborů z intervals.icu ukládají GPS polohu (`ActivityStream`), aby šla zobrazit mapa trasy. Mapa se řídí stejným
+oprávněním jako aktivita (`ViewCompletedActivities`): trenér s tímto oprávněním vidí i trasy, a tím i místa, kde
+tréninky obvykle začínají (typicky bydliště). Privátní zóny Stravy se zatím neuplatňují. Dlaždice mapy stahuje
+prohlížeč přímo z OpenStreetMap; kromě souřadnic dlaždic (tedy přibližné oblasti) se tam nic neposílá.
+
 ## 11. Export dat a právo na výmaz
 
 - Sportovec i trenér mohou požádat o **export** svých dat ve strojově čitelném formátu (naplnění principu přenositelnosti dat dle GDPR).

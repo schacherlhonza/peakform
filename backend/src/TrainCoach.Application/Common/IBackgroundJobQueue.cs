@@ -13,4 +13,12 @@ public interface IBackgroundJobQueue
     ValueTask QueueReportGenerationAsync(Guid athleteUserId, ReportType type, DateOnly date, CancellationToken cancellationToken = default);
 
     ValueTask QueueSyncRunAsync(Guid integrationConnectionId, SyncTrigger trigger, CancellationToken cancellationToken = default);
+
+    /// <summary>Download (for a link) and dry-run analysis of a Strava archive. The link travels
+    /// only inside the queued closure — it's a bearer secret and is never persisted.</summary>
+    ValueTask QueueStravaArchiveAnalysisAsync(Guid importId, Uri? url, CancellationToken cancellationToken = default);
+
+    ValueTask QueueStravaArchiveImportAsync(Guid importId, CancellationToken cancellationToken = default);
+
+    ValueTask QueueActivityStreamBackfillAsync(Guid integrationConnectionId, CancellationToken cancellationToken = default);
 }

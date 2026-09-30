@@ -18,5 +18,16 @@ public interface IIntegrationConnectionService
 
     Task TriggerSyncAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default);
 
+    /// <summary>Queues a one-off sync of older history from <paramref name="fromDate"/> (activities,
+    /// wellness, and then detail streams). intervals.icu only — Strava history comes from the
+    /// data archive import, the Strava API's limits and terms rule out a bulk pull.</summary>
+    Task TriggerHistoryBackfillAsync(Guid callerUserId, IntegrationProviderType provider, DateOnly fromDate, CancellationToken cancellationToken = default);
+
+    /// <summary>Queues a sync for every active connection of the caller. <paramref name="automatic"/>
+    /// (the post-login sync) skips connections synced within the last few minutes.</summary>
+    Task<IReadOnlyList<ProviderSyncStatusDto>> TriggerSyncAllAsync(Guid callerUserId, bool automatic, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ProviderSyncStatusDto>> GetSyncStatusAsync(Guid callerUserId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<SynchronizationRunDto>> GetSyncHistoryAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default);
 }
