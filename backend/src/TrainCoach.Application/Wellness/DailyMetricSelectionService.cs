@@ -20,6 +20,9 @@ public class DailyMetricSelectionService(IApplicationDbContext db, IDateTimeProv
         [DataSource.MySasyDemoProvider] = 3,
         [DataSource.FileImport] = 4,
         [DataSource.Manual] = 5,
+        // Computed by PeakForm from heart rate — by default it never displaces a provider's own
+        // value; CTL/ATL are the exception (MetricKindsPreferringPeakForm).
+        [DataSource.PeakForm] = 6,
     };
 
     public async Task RecomputeForAthleteDayAsync(Guid athleteUserId, DateOnly date, CancellationToken cancellationToken = default)
@@ -118,10 +121,22 @@ public class DailyMetricSelectionService(IApplicationDbContext db, IDateTimeProv
             return overrideRank.Rank;
         }
 
-        return DefaultRankFor(source);
+        return DefaultRankFor(kind, source);
     }
+
+    /// <summary>
+    /// CTL/ATL are cumulative over weeks of history, so the source that saw the whole history wins:
+    /// PeakForm computes them from every imported activity, while a provider (intervals.icu) only
+    /// knows activities since it was connected — its CTL starts at 0 then and stays far too low for
+    /// months (real data: 32 vs 50 a month after connecting). Decided 2026-10-01. An athlete's own
+    /// per-metric override still wins.
+    /// </summary>
+    private static readonly HashSet<WellnessMetricKind> MetricKindsPreferringPeakForm = [WellnessMetricKind.Ctl, WellnessMetricKind.Atl];
 
     /// <summary>Fallback precedence for readers (e.g. <see cref="ReadinessService"/>) resolving a
     /// day that has per-source rows but no stored selection yet — e.g. manually entered data.</summary>
-    internal static int DefaultRankFor(DataSource source) => DefaultSourceRank.GetValueOrDefault(source, int.MaxValue);
+    internal static int DefaultRankFor(WellnessMetricKind? kind, DataSource source) =>
+        kind is { } k && MetricKindsPreferringPeakForm.Contains(k) && source == DataSource.PeakForm
+            ? 0
+            : DefaultSourceRank.GetValueOrDefault(source, int.MaxValue);
 }

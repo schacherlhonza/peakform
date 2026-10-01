@@ -491,7 +491,24 @@
     "flagResolved": "Záznam byl označen jako vyřešený.",
     "healthFlagsHistory": "Historie vyřešených",
     "noResolvedFlags": "Zatím žádné vyřešené záznamy.",
-    "resolvedOn": "Vyřešeno"
+    "resolvedOn": "Vyřešeno",
+    "loadHistory": {
+      "kicker": "Tréninková zátěž",
+      "title": "Kondice, únava a forma",
+      "range": {
+        "90": "3 měsíce",
+        "365": "Rok",
+        "1825": "5 let",
+        "all": "Vše"
+      },
+      "fitness": "Kondice (CTL)",
+      "fatigue": "Únava (ATL)",
+      "form": "Forma (TSB)",
+      "formTitle": "Forma = kondice − únava",
+      "explain": "Zátěž každé aktivity počítá PeakForm z tepu (TRIMP; hodina na prahu = 100 bodů). Kondice je její 42denní a únava 7denní vážený průměr. Kladná forma znamená odpočatost, hodně záporná únavu. Řada pokrývá celou historii, i dobu před připojením intervals.icu.",
+      "emptyTitle": "Zatím žádná data o zátěži",
+      "emptyDescription": "Zátěž se počítá z tepu v aktivitách. Naimportujte historii nebo připojte hodinky."
+    }
   },
   "healthFlagType": {
     "Pain": "Bolest",

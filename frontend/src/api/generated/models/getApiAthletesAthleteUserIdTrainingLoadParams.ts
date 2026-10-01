@@ -4,8 +4,10 @@
  * TrainCoach API
  * OpenAPI spec version: v1
  */
+import type { DataSource } from './dataSource';
 
 export type GetApiAthletesAthleteUserIdTrainingLoadParams = {
 from?: string;
 to?: string;
+source?: DataSource;
 };

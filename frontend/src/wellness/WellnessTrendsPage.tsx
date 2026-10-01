@@ -25,6 +25,7 @@ import {
   getPutApiAthletesAthleteUserIdHealthFlagsFlagIdStatusMutationOptions,
 } from '../api/generated/pain-or-health-flags/pain-or-health-flags';
 import { HealthFlagSeverity, HealthFlagStatus, HealthFlagType, SportType, type PainOrHealthFlagDto } from '../api/generated/models';
+import { TrainingLoadHistorySection } from './TrainingLoadHistorySection';
 import { useAuth } from '../auth/AuthContext';
 import { addDays, toIsoDate } from '../calendar/dateUtils';
 import { Sparkline } from './Sparkline';
@@ -662,6 +663,7 @@ function WellnessTrendsPage() {
         {t('wellness.title')}
       </Title>
       <TrendsSection athleteUserId={athleteUserId} />
+      <TrainingLoadHistorySection athleteUserId={athleteUserId} />
       <PersonalRecordsSection athleteUserId={athleteUserId} />
       <HealthFlagsSection athleteUserId={athleteUserId} />
     </Stack>

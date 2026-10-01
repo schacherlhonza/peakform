@@ -8,7 +8,8 @@ namespace TrainCoach.Infrastructure.BackgroundJobs;
 /// <summary>
 /// Once per start, shortly after boot: computes best efforts for stored streams that don't have
 /// them at the current algorithm version — the history imported before efforts existed, and every
-/// stream again after a BestEffortCalculator.Version bump. Idempotent, so a restart just resumes.
+/// stream again after a BestEffortCalculator.Version bump — then rebuilds PeakForm's training load
+/// and CTL/ATL for every athlete (so they're current to today). Idempotent, so a restart just resumes.
 /// </summary>
 public class DerivedMetricsStartupService(IServiceScopeFactory scopeFactory, ILogger<DerivedMetricsStartupService> logger) : BackgroundService
 {
@@ -21,6 +22,7 @@ public class DerivedMetricsStartupService(IServiceScopeFactory scopeFactory, ILo
             await Task.Delay(StartupDelay, stoppingToken);
             using var scope = scopeFactory.CreateScope();
             await scope.ServiceProvider.GetRequiredService<IBestEffortRecomputeJob>().RunAsync(null, stoppingToken);
+            await scope.ServiceProvider.GetRequiredService<TrainCoach.Application.Wellness.ITrainingLoadRecomputeJob>().RunAsync(null, stoppingToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

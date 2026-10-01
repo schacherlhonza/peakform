@@ -130,6 +130,11 @@ public class SyncOrchestrator(
         {
             await jobQueue.QueueActivityStreamBackfillAsync(connection.Id, cancellationToken);
         }
+        // New activities change the load, and CTL/ATL decay every day even without any.
+        if (run.Status == SyncRunStatus.Succeeded)
+        {
+            await jobQueue.QueueTrainingLoadRecomputeAsync(connection.AthleteUserId, cancellationToken);
+        }
     }
 
     private async Task ProcessActivityAsync(

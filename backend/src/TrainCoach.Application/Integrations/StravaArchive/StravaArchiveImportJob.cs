@@ -110,6 +110,7 @@ public class StravaArchiveImportJob(
             {
                 await jobQueue.QueueHrZoneRecomputeAsync(import.AthleteUserId, onlyMissing: true, cancellationToken);
             }
+            await jobQueue.QueueTrainingLoadRecomputeAsync(import.AthleteUserId, cancellationToken);
         }
         catch (Exception ex) when (ex is BusinessRuleException or StravaArchiveFormatException)
         {

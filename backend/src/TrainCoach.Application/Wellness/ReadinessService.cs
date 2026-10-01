@@ -154,7 +154,7 @@ public class ReadinessService(IApplicationDbContext db, IRelationshipAccessGuard
         var result = rows
             .Where(r => r.Value is not null)
             .GroupBy(r => r.Date)
-            .ToDictionary(g => g.Key, g => g.OrderBy(r => DailyMetricSelectionService.DefaultRankFor(r.Source)).First().Value!.Value);
+            .ToDictionary(g => g.Key, g => g.OrderBy(r => DailyMetricSelectionService.DefaultRankFor(kind, r.Source)).First().Value!.Value);
 
         // A stored selection reflects the athlete's per-metric source overrides — it wins.
         foreach (var selection in selections.Where(s => s.MetricKind == kind && s.SelectedValue is not null))

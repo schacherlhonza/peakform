@@ -51,6 +51,8 @@ public class HeartRateZoneService(
 
         // Time in zones of every activity may change with the new boundaries.
         await jobQueue.QueueHrZoneRecomputeAsync(request.AthleteUserId, onlyMissing: false, cancellationToken);
+        // The load's threshold heart rate is zone 4's lower bound.
+        await jobQueue.QueueTrainingLoadRecomputeAsync(request.AthleteUserId, cancellationToken);
 
         return zones.OrderBy(z => z.ZoneNumber).Select(ToDto).ToList();
     }

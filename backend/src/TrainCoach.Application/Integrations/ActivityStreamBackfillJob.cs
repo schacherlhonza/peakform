@@ -150,6 +150,7 @@ public class ActivityStreamBackfillJob(
         if (stored > 0)
         {
             await jobQueue.QueueHrZoneRecomputeAsync(athleteUserId, onlyMissing: true, cancellationToken);
+            await jobQueue.QueueTrainingLoadRecomputeAsync(athleteUserId, cancellationToken);
         }
     }
 

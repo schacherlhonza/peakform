@@ -18,6 +18,7 @@ public static class WellnessExtrasDependencyInjection
         services.AddScoped<IPersonalRecordService, PersonalRecordService>();
         services.AddScoped<IWeightMeasurementService, WeightMeasurementService>();
         services.AddScoped<ITrainingLoadService, TrainingLoadService>();
+        services.AddScoped<ITrainingLoadRecomputeJob, TrainingLoadRecomputeJob>();
         services.AddScoped<IDailyMetricSelectionService, DailyMetricSelectionService>();
         services.AddScoped<IReadinessService, ReadinessService>();
 
