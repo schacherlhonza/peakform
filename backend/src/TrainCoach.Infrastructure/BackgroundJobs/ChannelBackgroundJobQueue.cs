@@ -47,6 +47,15 @@ public class ChannelBackgroundJobQueue : IBackgroundJobQueue
         }, cancellationToken);
     }
 
+    public ValueTask QueueHrZoneRecomputeAsync(Guid athleteUserId, bool onlyMissing, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<TrainCoach.Application.Execution.IHrZoneRecomputeJob>();
+            await job.RunAsync(athleteUserId, onlyMissing, ct);
+        }, cancellationToken);
+    }
+
     public ValueTask QueueActivityStreamBackfillAsync(Guid integrationConnectionId, CancellationToken cancellationToken = default)
     {
         return _channel.Writer.WriteAsync(async (services, ct) =>

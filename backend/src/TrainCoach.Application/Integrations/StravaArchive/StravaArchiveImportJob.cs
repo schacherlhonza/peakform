@@ -21,6 +21,7 @@ public class StravaArchiveImportJob(
     IStravaArchiveDownloader downloader,
     IActivityFileProbe fileProbe,
     IOptions<StravaArchiveImportOptions> options,
+    IBackgroundJobQueue jobQueue,
     IDateTimeProvider clock,
     ILogger<StravaArchiveImportJob> logger) : IStravaArchiveImportJob
 {
@@ -103,6 +104,11 @@ public class StravaArchiveImportJob(
                 i.StorageKey = null;
             }, cancellationToken, ignoreCancel: true);
             fileStore.Delete(import.StorageKey);
+
+            if (counts.Streams > 0)
+            {
+                await jobQueue.QueueHrZoneRecomputeAsync(import.AthleteUserId, onlyMissing: true, cancellationToken);
+            }
         }
         catch (Exception ex) when (ex is BusinessRuleException or StravaArchiveFormatException)
         {

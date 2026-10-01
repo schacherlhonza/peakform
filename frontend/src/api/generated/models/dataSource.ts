@@ -17,4 +17,5 @@ export const DataSource = {
   IntervalsIcu: 'IntervalsIcu',
   Oura: 'Oura',
   Whoop: 'Whoop',
+  PeakForm: 'PeakForm',
 } as const;

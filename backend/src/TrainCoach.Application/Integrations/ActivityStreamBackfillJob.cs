@@ -28,6 +28,7 @@ public class ActivityStreamBackfillJob(
     IServiceScopeFactory scopeFactory,
     IEnumerable<IIntegrationProvider> providers,
     IActivityFileProbe fileProbe,
+    IBackgroundJobQueue jobQueue,
     IDateTimeProvider clock,
     ILogger<ActivityStreamBackfillJob> logger) : IActivityStreamBackfillJob
 {
@@ -111,6 +112,7 @@ public class ActivityStreamBackfillJob(
                 catch (ProviderRateLimitedException)
                 {
                     logger.LogInformation("Doplňování streamů ({Provider}) narazilo na limit API po {Attempted} aktivitách, pokračuje při další synchronizaci.", providerType, attempted);
+                    await QueueZonesIfStoredAsync(athleteUserId, stored, cancellationToken);
                     return;
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
@@ -120,6 +122,7 @@ public class ActivityStreamBackfillJob(
                     logger.LogWarning(ex, "Soubor aktivity {ExternalId} z {Provider} se nepodařilo stáhnout.", externalId, providerType);
                     if (++consecutiveErrors >= MaxConsecutiveErrors)
                     {
+                        await QueueZonesIfStoredAsync(athleteUserId, stored, cancellationToken);
                         return;
                     }
                     continue;
@@ -137,6 +140,15 @@ public class ActivityStreamBackfillJob(
         if (attempted > 0)
         {
             logger.LogInformation("Doplňování streamů ({Provider}): staženo {Attempted} souborů, uloženo {Stored} streamů.", providerType, attempted, stored);
+        }
+        await QueueZonesIfStoredAsync(athleteUserId, stored, cancellationToken);
+    }
+
+    private async Task QueueZonesIfStoredAsync(Guid athleteUserId, int stored, CancellationToken cancellationToken)
+    {
+        if (stored > 0)
+        {
+            await jobQueue.QueueHrZoneRecomputeAsync(athleteUserId, onlyMissing: true, cancellationToken);
         }
     }
 

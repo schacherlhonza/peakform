@@ -5370,7 +5370,15 @@
           "TrainingLoad",
           "WorkJoules",
           "WeightedAveragePowerWatts",
-          "Intensity"
+          "Intensity",
+          "TimeInHrZone1",
+          "TimeInHrZone2",
+          "TimeInHrZone3",
+          "TimeInHrZone4",
+          "TimeInHrZone5",
+          "TimeInHrZone6",
+          "TimeInHrZone7",
+          "TimeBelowHrZones"
         ],
         "type": "string"
       },
@@ -6748,7 +6756,8 @@
           "MySasyDemoProvider",
           "IntervalsIcu",
           "Oura",
-          "Whoop"
+          "Whoop",
+          "PeakForm"
         ],
         "type": "string"
       },

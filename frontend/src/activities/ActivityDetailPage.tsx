@@ -9,6 +9,9 @@ import { useGetApiActivitiesActivityId, useGetApiActivitiesActivityIdStreams } f
 import { ActivityMetricType, AppRole, SportType } from '../api/generated/models';
 import { Panel, Badge, CardHeader, MetricStrip, EmptyState, Skeleton, type Metric } from '../design-system/components';
 import { StreamChart } from './StreamChart';
+import { HrZoneBars } from './HrZoneBars';
+import { sumZoneSeconds } from './hrZones';
+import { useGetApiAthletesAthleteUserIdHeartRateZones } from '../api/generated/heart-rate-zones/heart-rate-zones';
 import { formatClock, formatDistanceKm, formatPace } from './activityFormat';
 
 // Leaflet (~40 kB gzip) only loads when an activity actually has a GPS route.
@@ -36,6 +39,8 @@ export function ActivityDetailPage() {
 
   const activityQuery = useGetApiActivitiesActivityId(activityId ?? '', { query: { enabled: !!activityId } });
   const streamsQuery = useGetApiActivitiesActivityIdStreams(activityId ?? '', { query: { enabled: !!activityId } });
+  const athleteId = activityQuery.data?.athleteUserId ?? '';
+  const zonesQuery = useGetApiAthletesAthleteUserIdHeartRateZones(athleteId, { query: { enabled: !!athleteId } });
 
   if (!activityId) return null;
   if (activityQuery.isLoading) return <ActivityDetailSkeleton />;
@@ -103,6 +108,13 @@ export function ActivityDetailPage() {
       <Panel>
         <MetricStrip metrics={metrics} />
       </Panel>
+
+      {sumZoneSeconds([activity.additionalMetrics]).total > 0 && (
+        <Panel>
+          <CardHeader kicker={t('activity.hrZones.title')} />
+          <HrZoneBars data={sumZoneSeconds([activity.additionalMetrics])} zones={zonesQuery.data} />
+        </Panel>
+      )}
 
       {streamsUnavailable && (
         <Panel>

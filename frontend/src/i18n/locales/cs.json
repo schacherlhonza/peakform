@@ -177,7 +177,14 @@
     "insights": "Souvislosti",
     "insightsEmptyTitle": "Zatím nic nevybočuje",
     "insightsEmptyDescription": "Podle dostupných dat nevidíme nic, co by se lišilo od tvého obvyklého vzorce.",
-    "viewAllInsights": "Zobrazit všechny reporty"
+    "viewAllInsights": "Zobrazit všechny reporty",
+    "weekHrZones": {
+      "kicker": "Tento týden",
+      "title": "Čas v tepových zónách",
+      "empty": "Tento týden zatím nejsou aktivity s tepem z hodinek.",
+      "noZones": "Pro výpočet času v zónách si nastavte tepové zóny.",
+      "setZones": "Nastavit zóny"
+    }
   },
   "athletes": {
     "notFoundTitle": "Sportovec nenalezen",
@@ -261,7 +268,11 @@
       "start": "Start",
       "finish": "Cíl"
     },
-    "garminAttribution": "Data zaznamenána zařízením Garmin ({{device}}). Garmin je ochranná známka společnosti Garmin Ltd."
+    "garminAttribution": "Data zaznamenána zařízením Garmin ({{device}}). Garmin je ochranná známka společnosti Garmin Ltd.",
+    "hrZones": {
+      "title": "Čas v tepových zónách",
+      "below": "Pod Z1"
+    }
   },
   "weekday": {
     "0": "Pondělí",

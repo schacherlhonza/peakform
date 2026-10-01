@@ -10,6 +10,7 @@ import { TrainingLoadCard } from './TrainingLoadCard';
 import { TodayWorkoutCard } from './TodayWorkoutCard';
 import { FuelHydrationCard } from './FuelHydrationCard';
 import { WeekTimelineSection } from './WeekTimelineSection';
+import { WeekHrZonesCard } from './WeekHrZonesCard';
 import { RecoveryInsightsSection } from './RecoveryInsightsSection';
 import classes from './AthleteDashboardPage.module.css';
 
@@ -38,6 +39,11 @@ export function AthleteDashboardPage() {
       </div>
 
       <WeekTimelineSection data={data.weekTimeline} />
+      <WeekHrZonesCard
+        athleteUserId={athleteUserId}
+        activities={data.weekTimeline.activities}
+        isLoading={data.weekTimeline.isLoading}
+      />
       <RecoveryInsightsSection data={data.insight} />
       <TrainingLoadCard data={data.trainingLoad} />
 

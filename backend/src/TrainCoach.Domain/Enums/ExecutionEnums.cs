@@ -18,6 +18,10 @@ public enum DataSource
 
     /// <summary>Not yet activated — see docs/integrations/oura-whoop-activation.md.</summary>
     Whoop = 8,
+
+    /// <summary>Derived by PeakForm itself from other sources' data (e.g. time in heart rate
+    /// zones from a stored stream) — never imported.</summary>
+    PeakForm = 9,
 }
 
 /// <summary>
@@ -94,6 +98,19 @@ public enum ActivityMetricType
     WorkJoules = 11,
     WeightedAveragePowerWatts = 12,
     Intensity = 13,
+
+    /// <summary>Seconds spent in heart rate zone N (1-7), computed by PeakForm from the stored
+    /// stream and the athlete's zones in effect on the activity's date (HrZoneRecomputeJob).</summary>
+    TimeInHrZone1 = 14,
+    TimeInHrZone2 = 15,
+    TimeInHrZone3 = 16,
+    TimeInHrZone4 = 17,
+    TimeInHrZone5 = 18,
+    TimeInHrZone6 = 19,
+    TimeInHrZone7 = 20,
+
+    /// <summary>Seconds with heart rate below the lowest zone (counted apart, never as zone 1).</summary>
+    TimeBelowHrZones = 21,
 }
 
 public enum ActivityStreamOrigin

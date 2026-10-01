@@ -8,6 +8,7 @@ namespace TrainCoach.Application.Planning;
 public class HeartRateZoneService(
     IApplicationDbContext db,
     IRelationshipAccessGuard accessGuard,
+    IBackgroundJobQueue jobQueue,
     IDateTimeProvider clock) : IHeartRateZoneService
 {
     public async Task<IReadOnlyList<HeartRateZoneDto>> GetForAthleteAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
@@ -47,6 +48,9 @@ public class HeartRateZoneService(
 
         db.HeartRateZones.AddRange(zones);
         await db.SaveChangesAsync(cancellationToken);
+
+        // Time in zones of every activity may change with the new boundaries.
+        await jobQueue.QueueHrZoneRecomputeAsync(request.AthleteUserId, onlyMissing: false, cancellationToken);
 
         return zones.OrderBy(z => z.ZoneNumber).Select(ToDto).ToList();
     }

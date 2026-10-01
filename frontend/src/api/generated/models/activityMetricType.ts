@@ -22,4 +22,12 @@ export const ActivityMetricType = {
   WorkJoules: 'WorkJoules',
   WeightedAveragePowerWatts: 'WeightedAveragePowerWatts',
   Intensity: 'Intensity',
+  TimeInHrZone1: 'TimeInHrZone1',
+  TimeInHrZone2: 'TimeInHrZone2',
+  TimeInHrZone3: 'TimeInHrZone3',
+  TimeInHrZone4: 'TimeInHrZone4',
+  TimeInHrZone5: 'TimeInHrZone5',
+  TimeInHrZone6: 'TimeInHrZone6',
+  TimeInHrZone7: 'TimeInHrZone7',
+  TimeBelowHrZones: 'TimeBelowHrZones',
 } as const;

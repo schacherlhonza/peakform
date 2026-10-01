@@ -21,4 +21,6 @@ public interface IBackgroundJobQueue
     ValueTask QueueStravaArchiveImportAsync(Guid importId, CancellationToken cancellationToken = default);
 
     ValueTask QueueActivityStreamBackfillAsync(Guid integrationConnectionId, CancellationToken cancellationToken = default);
+
+    ValueTask QueueHrZoneRecomputeAsync(Guid athleteUserId, bool onlyMissing, CancellationToken cancellationToken = default);
 }
