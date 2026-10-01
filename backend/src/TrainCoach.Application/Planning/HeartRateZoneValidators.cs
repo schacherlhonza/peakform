@@ -8,7 +8,8 @@ public class HeartRateZoneInputValidator : AbstractValidator<HeartRateZoneInput>
     {
         RuleFor(x => x.ZoneNumber).InclusiveBetween(1, 7);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.MinBpm).GreaterThan(0);
+        // Zone 1 commonly starts "from 0" — only negative values are invalid.
+        RuleFor(x => x.MinBpm).GreaterThanOrEqualTo(0);
         RuleFor(x => x.MaxBpm).GreaterThan(x => x.MinBpm);
         RuleFor(x => x.MinPaceSecondsPerKm).GreaterThan(0).When(x => x.MinPaceSecondsPerKm.HasValue);
         RuleFor(x => x.MaxPaceSecondsPerKm).GreaterThan(0).When(x => x.MaxPaceSecondsPerKm.HasValue);
