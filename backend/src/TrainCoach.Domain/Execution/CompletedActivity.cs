@@ -51,4 +51,5 @@ public class CompletedActivity : AuditableEntity, ISoftDeletable
 
     public ICollection<ActivitySourceRecord> SourceRecords { get; set; } = new List<ActivitySourceRecord>();
     public ICollection<ActivityMetric> AdditionalMetrics { get; set; } = new List<ActivityMetric>();
+    public ICollection<ActivityBestEffort> BestEfforts { get; set; } = new List<ActivityBestEffort>();
 }

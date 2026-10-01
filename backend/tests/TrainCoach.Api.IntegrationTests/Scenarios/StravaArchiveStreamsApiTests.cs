@@ -230,4 +230,67 @@ public class StravaArchiveStreamsApiTests : IntegrationTestBase
 
         (await other.GetAsync($"/api/activities/{runId}/streams")).StatusCode.Should().Be(System.Net.HttpStatusCode.Forbidden);
     }
+
+    private record PersonalBestDto(string Sport, string Type, decimal Value, Guid ActivityId, bool IsPrecise, int EffortCount, List<StepDto> Progression);
+    private record StepDto(DateTime AchievedAtUtc, decimal Value, Guid ActivityId);
+    private record EffortDto(string Type, decimal Value, bool IsPrecise, int Rank, bool IsPersonalBest);
+
+    [Fact]
+    public async Task Import_computes_precise_best_efforts_and_personal_bests_with_progression()
+    {
+        var auth = await RegisterAsync($"{Guid.NewGuid():N}@test.cz", "Athlete");
+        var client = AuthenticatedClient(auth);
+
+        await ImportAsync(client);
+
+        var bests = (await client.GetFromJsonAsync<List<PersonalBestDto>>($"/api/athletes/{auth.UserId}/personal-bests", JsonOptions))!;
+        var km = bests.Single(b => b.Sport == "Running" && b.Type == "Distance1Km");
+        km.Value.Should().BeApproximately(333m, 2m, "1000 m at 3 m/s");
+        km.IsPrecise.Should().BeTrue("computed from the full file during the import");
+        km.EffortCount.Should().Be(2, "two runs in the archive");
+        km.Progression.Should().HaveCount(1, "both runs are equally fast — the later one doesn't beat the first");
+        km.Progression[0].AchievedAtUtc.Should().Be(OldRunStart);
+
+        var power = bests.Single(b => b.Sport == "Cycling" && b.Type == "Power20Min");
+        power.Value.Should().BeInRange(220m, 230m, "200–249 W cycling sawtooth");
+        bests.Should().NotContain(b => b.Sport == "Cycling" && b.Type.StartsWith("Distance"), "distance efforts are for runs only");
+
+        var efforts = (await client.GetFromJsonAsync<List<EffortDto>>($"/api/activities/{km.ActivityId}/best-efforts", JsonOptions))!;
+        efforts.Single(e => e.Type == "Distance1Km").Should().Match<EffortDto>(e => e.Rank == 1 && e.IsPersonalBest);
+    }
+
+    [Fact]
+    public async Task Background_pass_computes_estimates_for_streams_stored_without_efforts()
+    {
+        var auth = await RegisterAsync($"{Guid.NewGuid():N}@test.cz", "Athlete");
+        var client = AuthenticatedClient(auth);
+        Guid activityId;
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TrainCoachDbContext>();
+            var builder = new TrainCoach.Application.Execution.Streams.ActivityStreamBuilder();
+            for (var s = 0; s <= 400; s++)
+            {
+                builder.Add(new TrainCoach.Application.Execution.Streams.ActivityStreamBuilder.Sample(RunStart.AddSeconds(s), Distance: s * 4.0));
+            }
+            var record = new ActivitySourceRecord { Source = DataSource.Strava, ExternalId = $"{auth.UserId}-old", FetchedAtUtc = DateTime.UtcNow };
+            var activity = new CompletedActivity
+            {
+                AthleteUserId = Guid.Parse(auth.UserId), Sport = SportType.Running, StartedAtUtc = RunStart, DurationSeconds = 400,
+                CreatedAtUtc = DateTime.UtcNow, PrimarySourceRecordId = record.Id, SourceRecords = { record },
+            };
+            db.CompletedActivities.Add(activity);
+            db.ActivityStreams.Add(TrainCoach.Application.Execution.Streams.ActivityStreamMapping.ToEntity(record.Id, builder.Build()!, ActivityStreamOrigin.StravaArchive, DateTime.UtcNow));
+            await db.SaveChangesAsync();
+            activityId = activity.Id;
+        }
+
+        using (var scope = Factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<TrainCoach.Application.Execution.IBestEffortRecomputeJob>().RunAsync(Guid.Parse(auth.UserId));
+        }
+
+        var efforts = (await client.GetFromJsonAsync<List<EffortDto>>($"/api/activities/{activityId}/best-efforts", JsonOptions))!;
+        efforts.Single(e => e.Type == "Distance1Km").Should().Match<EffortDto>(e => e.Value == 250m && !e.IsPrecise);
+    }
 }

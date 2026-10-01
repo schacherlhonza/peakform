@@ -272,6 +272,12 @@
     "hrZones": {
       "title": "Čas v tepových zónách",
       "below": "Pod Z1"
+    },
+    "bestEfforts": {
+      "title": "Nejlepší výkony v této aktivitě",
+      "personalBest": "Osobní rekord",
+      "rank": "{{rank}}. nejlepší",
+      "at": "od {{time}}"
     }
   },
   "weekday": {
@@ -836,6 +842,38 @@
     "noMatchTitle": "Filtru neodpovídá žádná aktivita",
     "noMatchDescription": "Zkuste upravit hledání nebo rozsah dat.",
     "pageInfo": "{{from}}–{{to}} z {{total}}",
-    "backToList": "Všechny aktivity"
+    "backToList": "Všechny aktivity",
+    "views": {
+      "list": "Seznam",
+      "records": "Rekordy"
+    },
+    "records": {
+      "kicker": "Osobní rekordy",
+      "title": "Nejlepší výkony",
+      "columns": {
+        "record": "Rekord",
+        "value": "Výkon",
+        "date": "Datum",
+        "activity": "Aktivita"
+      },
+      "type": {
+        "Distance1Km": "1 km",
+        "Distance5Km": "5 km",
+        "Distance10Km": "10 km",
+        "DistanceHalfMarathon": "Půlmaraton",
+        "DistanceMarathon": "Maraton",
+        "Power1Min": "Výkon 1 min",
+        "Power5Min": "Výkon 5 min",
+        "Power20Min": "Výkon 20 min"
+      },
+      "estimate": "Odhad ze zmenšených dat (±5 s). Při dalším importu archivu se přepočítá přesně.",
+      "footnote": "Nejrychlejší úsek dané délky uvnitř jakékoli aktivity, ne jen závody. Výkon je nejlepší průměr za daný čas. Kliknutím na řádek zobrazíte vývoj rekordu.",
+      "progressionTitle": "Vývoj rekordu – {{name}}",
+      "progressionHint_one": "{{count}} zlepšení",
+      "progressionHint_few": "{{count}} zlepšení",
+      "progressionHint_other": "{{count}} zlepšení",
+      "emptyTitle": "Zatím žádné rekordy",
+      "emptyDescription": "Rekordy se počítají z podrobných dat aktivit (archiv Stravy nebo soubory z intervals.icu)."
+    }
   }
 }

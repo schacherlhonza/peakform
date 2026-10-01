@@ -11,6 +11,7 @@ import { useGetApiAthletesAthleteUserIdActivitiesSearch } from '../api/generated
 import { SportType, type CompletedActivityDto } from '../api/generated/models';
 import { Panel, Badge, Button, EmptyState, MetricStrip, SegmentedControl, Skeleton } from '../design-system/components';
 import { formatClock, formatDistanceKm, formatPace } from './activityFormat';
+import PersonalBestsView from './PersonalBestsView';
 
 const PAGE_SIZE = 25;
 const SPORTS: SportType[] = [SportType.Running, SportType.Cycling, SportType.Swimming, SportType.Strength, SportType.CrossTraining, SportType.Other];
@@ -133,11 +134,35 @@ export default function ActivitiesPage() {
     setParams(new URLSearchParams(), { replace: true });
   };
 
-  return (
-    <Stack gap="lg">
+  const view = params.get('view') === 'records' ? 'records' : 'list';
+  const viewSwitch = (
+    <Group justify="space-between" align="center" wrap="wrap">
       <Title className="ds-page-title" order={2}>
         {t('nav.activities')}
       </Title>
+      <SegmentedControl
+        value={view}
+        onChange={(v) => setParams(v === 'records' ? new URLSearchParams({ view: 'records' }) : new URLSearchParams(), { replace: true })}
+        data={[
+          { value: 'list', label: t('activities.views.list') },
+          { value: 'records', label: t('activities.views.records') },
+        ]}
+      />
+    </Group>
+  );
+
+  if (view === 'records') {
+    return (
+      <Stack gap="lg">
+        {viewSwitch}
+        <PersonalBestsView athleteUserId={athleteUserId} />
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap="lg">
+      {viewSwitch}
 
       <Panel>
         <Stack gap="sm">

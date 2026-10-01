@@ -63,6 +63,19 @@ public class ActivityStreamConfiguration : IEntityTypeConfiguration<ActivityStre
     }
 }
 
+public class ActivityBestEffortConfiguration : IEntityTypeConfiguration<ActivityBestEffort>
+{
+    public void Configure(EntityTypeBuilder<ActivityBestEffort> builder)
+    {
+        builder.HasOne(x => x.CompletedActivity).WithMany(x => x.BestEfforts)
+            .HasForeignKey(x => x.CompletedActivityId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => new { x.CompletedActivityId, x.Type }).IsUnique();
+        builder.HasIndex(x => new { x.AthleteUserId, x.Sport, x.Type });
+        builder.Property(x => x.Value).HasPrecision(10, 2);
+        builder.HasQueryFilter(x => !x.CompletedActivity.IsDeleted);
+    }
+}
+
 public class MergeDecisionConfiguration : IEntityTypeConfiguration<MergeDecision>
 {
     public void Configure(EntityTypeBuilder<MergeDecision> builder)

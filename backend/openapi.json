@@ -46,6 +46,104 @@
         }
       }
     },
+    "/api/athletes/{athleteUserId}/personal-bests": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalBestDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalBestDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalBestDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/activities/{activityId}/best-efforts": {
+      "get": {
+        "tags": [
+          "Activities"
+        ],
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityBestEffortDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityBestEffortDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActivityBestEffortDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/athletes/{athleteUserId}/activities": {
       "get": {
         "tags": [
@@ -5289,6 +5387,33 @@
         },
         "additionalProperties": false
       },
+      "ActivityBestEffortDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/BestEffortType"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "startOffsetSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPrecise": {
+            "type": "boolean"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPersonalBest": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "ActivityListPageDto": {
         "type": "object",
         "properties": {
@@ -5751,6 +5876,19 @@
           }
         },
         "additionalProperties": false
+      },
+      "BestEffortType": {
+        "enum": [
+          "Distance1Km",
+          "Distance5Km",
+          "Distance10Km",
+          "DistanceHalfMarathon",
+          "DistanceMarathon",
+          "Power1Min",
+          "Power5Min",
+          "Power20Min"
+        ],
+        "type": "string"
       },
       "CheckInType": {
         "enum": [
@@ -7926,6 +8064,66 @@
           "ViewPersonalRecords"
         ],
         "type": "string"
+      },
+      "PersonalBestDto": {
+        "type": "object",
+        "properties": {
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "type": {
+            "$ref": "#/components/schemas/BestEffortType"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "activityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "activityTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "achievedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isPrecise": {
+            "type": "boolean"
+          },
+          "effortCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "progression": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonalBestStepDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PersonalBestStepDto": {
+        "type": "object",
+        "properties": {
+          "achievedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          },
+          "activityId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
       },
       "PersonalRecordDto": {
         "type": "object",

@@ -9,8 +9,21 @@ namespace TrainCoach.Api.Controllers;
 [ApiController]
 [Route("api")]
 [Authorize]
-public class ActivitiesController(IActivityService service, ICurrentUserService currentUser) : ControllerBase
+public class ActivitiesController(IActivityService service, IPersonalBestService personalBests, ICurrentUserService currentUser) : ControllerBase
 {
+    /// <summary>Personal bests derived from every activity's best efforts, with their progression.</summary>
+    [HttpGet("athletes/{athleteUserId:guid}/personal-bests")]
+    public async Task<ActionResult<IReadOnlyList<PersonalBestDto>>> GetPersonalBests(Guid athleteUserId, CancellationToken cancellationToken)
+    {
+        return Ok(await personalBests.GetForAthleteAsync(athleteUserId, cancellationToken));
+    }
+
+    [HttpGet("activities/{activityId:guid}/best-efforts")]
+    public async Task<ActionResult<IReadOnlyList<ActivityBestEffortDto>>> GetBestEfforts(Guid activityId, CancellationToken cancellationToken)
+    {
+        return Ok(await personalBests.GetForActivityAsync(activityId, cancellationToken));
+    }
+
     [HttpGet("athletes/{athleteUserId:guid}/activities")]
     public async Task<ActionResult<IReadOnlyList<CompletedActivityDto>>> GetForAthlete(
         Guid athleteUserId, [FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken cancellationToken)

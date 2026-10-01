@@ -6,6 +6,7 @@
  */
 
 export * from './accountDataExportDto';
+export * from './activityBestEffortDto';
 export * from './activityListPageDto';
 export * from './activityListSummaryDto';
 export * from './activityMetricDto';
@@ -19,6 +20,7 @@ export * from './auditAction';
 export * from './auditLogExportDto';
 export * from './authorizationUrlDto';
 export * from './authResult';
+export * from './bestEffortType';
 export * from './checkInType';
 export * from './coachAthleteRelationshipDto';
 export * from './coachProfileExportDto';
@@ -113,6 +115,8 @@ export * from './oAuthCallbackRequest';
 export * from './painOrHealthFlagDto';
 export * from './painOrHealthFlagExportDto';
 export * from './permissionScope';
+export * from './personalBestDto';
+export * from './personalBestStepDto';
 export * from './personalRecordDto';
 export * from './personalRecordExportDto';
 export * from './plannedWorkoutDto';

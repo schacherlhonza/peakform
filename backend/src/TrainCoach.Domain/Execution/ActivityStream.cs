@@ -31,6 +31,13 @@ public class ActivityStream : Entity
     public double? MaxLatitude { get; set; }
     public double? MaxLongitude { get; set; }
 
+    /// <summary>Version of BestEffortCalculator that last computed this activity's best efforts
+    /// from this stream (0 = never) — lets the background pass find what still needs (re)computing.</summary>
+    public int BestEffortsVersion { get; set; }
+
+    /// <summary>The efforts came from the full-resolution file rather than this downsampled stream.</summary>
+    public bool BestEffortsPrecise { get; set; }
+
     public byte FormatVersion { get; set; }
     public byte[] Payload { get; set; } = [];
 

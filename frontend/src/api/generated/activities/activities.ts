@@ -24,6 +24,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActivityBestEffortDto,
   ActivityListPageDto,
   ActivityStreamsDto,
   CompletedActivityDto,
@@ -31,6 +32,7 @@ import type {
   GetApiAthletesAthleteUserIdActivitiesParams,
   GetApiAthletesAthleteUserIdActivitiesSearchParams,
   GetApiAthletesAthleteUserIdFeedbackParams,
+  PersonalBestDto,
   TrainingFeedbackDto,
   UpsertTrainingFeedbackRequest
 } from '../models';
@@ -55,6 +57,178 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getApiAthletesAthleteUserIdPersonalBests = (
+    athleteUserId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<PersonalBestDto[]>(
+      {url: `/api/athletes/${athleteUserId}/personal-bests`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiAthletesAthleteUserIdPersonalBestsQueryKey = (athleteUserId: string,) => {
+    return [
+    `/api/athletes/${athleteUserId}/personal-bests`
+    ] as const;
+    }
+
+
+export const getGetApiAthletesAthleteUserIdPersonalBestsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError = ErrorType<unknown>>(athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAthletesAthleteUserIdPersonalBestsQueryKey(athleteUserId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>> = ({ signal }) => getApiAthletesAthleteUserIdPersonalBests(athleteUserId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteUserId !== null && athleteUserId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAthletesAthleteUserIdPersonalBestsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>>
+export type GetApiAthletesAthleteUserIdPersonalBestsQueryError = ErrorType<unknown>
+
+
+export function useGetApiAthletesAthleteUserIdPersonalBests<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdPersonalBests<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdPersonalBests<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAthletesAthleteUserIdPersonalBests<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPersonalBests>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAthletesAthleteUserIdPersonalBestsQueryOptions(athleteUserId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getApiActivitiesActivityIdBestEfforts = (
+    activityId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<ActivityBestEffortDto[]>(
+      {url: `/api/activities/${activityId}/best-efforts`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiActivitiesActivityIdBestEffortsQueryKey = (activityId: string,) => {
+    return [
+    `/api/activities/${activityId}/best-efforts`
+    ] as const;
+    }
+
+
+export const getGetApiActivitiesActivityIdBestEffortsQueryOptions = <TData = Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError = ErrorType<unknown>>(activityId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiActivitiesActivityIdBestEffortsQueryKey(activityId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>> = ({ signal }) => getApiActivitiesActivityIdBestEfforts(activityId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: activityId !== null && activityId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiActivitiesActivityIdBestEffortsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>>
+export type GetApiActivitiesActivityIdBestEffortsQueryError = ErrorType<unknown>
+
+
+export function useGetApiActivitiesActivityIdBestEfforts<TData = Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError = ErrorType<unknown>>(
+ activityId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>,
+          TError,
+          Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiActivitiesActivityIdBestEfforts<TData = Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError = ErrorType<unknown>>(
+ activityId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>,
+          TError,
+          Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiActivitiesActivityIdBestEfforts<TData = Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError = ErrorType<unknown>>(
+ activityId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiActivitiesActivityIdBestEfforts<TData = Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError = ErrorType<unknown>>(
+ activityId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiActivitiesActivityIdBestEfforts>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiActivitiesActivityIdBestEffortsQueryOptions(activityId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
 
 export const getApiAthletesAthleteUserIdActivities = (
     athleteUserId: string,

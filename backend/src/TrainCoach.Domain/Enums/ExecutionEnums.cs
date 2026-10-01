@@ -113,6 +113,21 @@ public enum ActivityMetricType
     TimeBelowHrZones = 21,
 }
 
+/// <summary>Kinds of best effort. 1-99: fastest time over a distance (value = seconds);
+/// 100+: best average power over a duration (value = watts).</summary>
+public enum BestEffortType
+{
+    Distance1Km = 1,
+    Distance5Km = 2,
+    Distance10Km = 3,
+    DistanceHalfMarathon = 4,
+    DistanceMarathon = 5,
+
+    Power1Min = 101,
+    Power5Min = 102,
+    Power20Min = 103,
+}
+
 public enum ActivityStreamOrigin
 {
     /// <summary>Parsed from the activity file (FIT/GPX/TCX) in the athlete's Strava data export.</summary>

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TrainCoach.Application.Common;
+using TrainCoach.Application.Execution;
 using TrainCoach.Application.Execution.Streams;
 using TrainCoach.Application.Integrations.StravaArchive;
 using TrainCoach.Domain.Enums;
@@ -181,7 +182,8 @@ public class ActivityStreamBackfillJob(
 
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
-        var record = await db.ActivitySourceRecords.Include(sr => sr.Stream).FirstOrDefaultAsync(sr => sr.Id == recordId, cancellationToken);
+        var record = await db.ActivitySourceRecords.Include(sr => sr.Stream).Include(sr => sr.CompletedActivity)
+            .FirstOrDefaultAsync(sr => sr.Id == recordId, cancellationToken);
         if (record is null)
         {
             return false;
@@ -192,8 +194,11 @@ public class ActivityStreamBackfillJob(
         var added = false;
         if (stream is not null && record.Stream is null)
         {
-            db.ActivityStreams.Add(ActivityStreamMapping.ToEntity(
-                record.Id, ActivityStreamDownsampler.Downsample(stream), ToOrigin(source), clock.UtcNow));
+            var entity = ActivityStreamMapping.ToEntity(record.Id, ActivityStreamDownsampler.Downsample(stream), ToOrigin(source), clock.UtcNow);
+            db.ActivityStreams.Add(entity);
+            // Precise best efforts from the full-resolution file, before it's thrown away.
+            await BestEffortStore.ReplaceAsync(db, record.CompletedActivity,
+                BestEffortCalculator.Compute(record.CompletedActivity.Sport, stream), precise: true, [entity], clock.UtcNow, cancellationToken);
             added = true;
         }
 

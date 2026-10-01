@@ -32,7 +32,10 @@ public interface IActivityFileProbe
 }
 
 /// <param name="Stream">Downsampled detail stream — only read when the caller asked for streams.</param>
-public record StravaArchiveActivity(StravaCsvActivity Row, ActivityFileInfo? File, ExternalActivity? Activity, string? Error, ActivityStreamData? Stream = null);
+/// <param name="BestEfforts">Computed from the full-resolution file before downsampling (precise) — only with streams.</param>
+public record StravaArchiveActivity(
+    StravaCsvActivity Row, ActivityFileInfo? File, ExternalActivity? Activity, string? Error,
+    ActivityStreamData? Stream = null, IReadOnlyList<BestEffortResult>? BestEfforts = null);
 
 /// <summary>
 /// Streams the activities out of a Strava export ZIP without extracting anything to disk: only
@@ -70,11 +73,17 @@ public static class StravaArchiveReader
             // The CSV already has sport and start for almost every row; the file is then only
             // needed for its FIT identity, which is far cheaper than a full decode.
             var identityOnly = row.StartedAtUtc is not null && StravaSportTypeMapper.FromLabel(row.TypeLabel) is not null;
-            var (file, stream) = ProbeFile(zip, row.FileName, probe, identityOnly, includeStreams);
+            var (file, fullStream) = ProbeFile(zip, row.FileName, probe, identityOnly, includeStreams);
             var activity = StravaArchiveActivityMapper.ToExternalActivity(row, file);
-            yield return activity is null
-                ? new StravaArchiveActivity(row, file, null, "Nelze určit čas začátku aktivity.")
-                : new StravaArchiveActivity(row, file, activity, null, stream);
+            if (activity is null)
+            {
+                yield return new StravaArchiveActivity(row, file, null, "Nelze určit čas začátku aktivity.");
+                continue;
+            }
+            yield return fullStream is null
+                ? new StravaArchiveActivity(row, file, activity, null)
+                : new StravaArchiveActivity(row, file, activity, null,
+                    ActivityStreamDownsampler.Downsample(fullStream), BestEffortCalculator.Compute(activity.Sport, fullStream));
         }
     }
 
@@ -170,8 +179,8 @@ public static class StravaArchiveReader
                 return (info, null);
             }
             buffer.Position = 0;
-            var stream = probe.ReadStream(buffer, format.Value);
-            return (info, stream is null ? null : ActivityStreamDownsampler.Downsample(stream));
+            // Full resolution — the caller computes precise best efforts before downsampling.
+            return (info, probe.ReadStream(buffer, format.Value));
         }
         catch (Exception ex) when (ex is InvalidDataException or IOException or StravaArchiveFormatException)
         {

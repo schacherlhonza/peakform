@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TrainCoach.Application.Common;
+using TrainCoach.Application.Execution;
 using TrainCoach.Application.Execution.Streams;
 using TrainCoach.Domain.Enums;
 using TrainCoach.Domain.Integrations;
@@ -421,22 +422,37 @@ public class StravaArchiveImportJob(
 
         var ids = withStream.Select(i => i.Activity!.ExternalId).ToList();
         var records = await db.ActivitySourceRecords
+            .Include(sr => sr.Stream)
+            .Include(sr => sr.CompletedActivity)
             .Where(sr => sr.Source == DataSource.Strava && sr.ExternalId != null && ids.Contains(sr.ExternalId)
-                && sr.CompletedActivity.AthleteUserId == athleteUserId && sr.Stream == null)
-            .Select(sr => new { sr.Id, sr.ExternalId })
+                && sr.CompletedActivity.AthleteUserId == athleteUserId)
             .ToListAsync(cancellationToken);
         if (records.Count == 0)
         {
             return 0;
         }
 
-        var byExternalId = withStream.ToDictionary(i => i.Activity!.ExternalId, i => i.Stream!);
+        var byExternalId = withStream.ToDictionary(i => i.Activity!.ExternalId);
+        var added = 0;
         foreach (var record in records)
         {
-            db.ActivityStreams.Add(ActivityStreamMapping.ToEntity(record.Id, byExternalId[record.ExternalId!], ActivityStreamOrigin.StravaArchive, clock.UtcNow));
+            var item = byExternalId[record.ExternalId!];
+            if (record.Stream is null)
+            {
+                record.Stream = ActivityStreamMapping.ToEntity(record.Id, item.Stream!, ActivityStreamOrigin.StravaArchive, clock.UtcNow);
+                db.ActivityStreams.Add(record.Stream);
+                added++;
+            }
+            // Best efforts from the full-resolution file — also replaces estimates an earlier pass
+            // computed from the downsampled stream (the "precise on the next import" promise).
+            if (item.BestEfforts is { } efforts
+                && !(record.Stream.BestEffortsPrecise && record.Stream.BestEffortsVersion >= BestEffortCalculator.Version))
+            {
+                await BestEffortStore.ReplaceAsync(db, record.CompletedActivity, efforts, precise: true, [record.Stream], clock.UtcNow, cancellationToken);
+            }
         }
         await db.SaveChangesAsync(cancellationToken);
-        return records.Count;
+        return added;
     }
 
     private static async Task<HashSet<string>> ExternalIdsWithStreamAsync(

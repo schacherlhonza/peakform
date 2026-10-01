@@ -40,6 +40,7 @@ public interface IApplicationDbContext
     DbSet<ActivityMetric> ActivityMetrics { get; }
     DbSet<ActivitySourceRecord> ActivitySourceRecords { get; }
     DbSet<ActivityStream> ActivityStreams { get; }
+    DbSet<ActivityBestEffort> ActivityBestEfforts { get; }
     DbSet<MergeDecision> MergeDecisions { get; }
     DbSet<DuplicateCandidate> DuplicateCandidates { get; }
     DbSet<DuplicateDryRunReport> DuplicateDryRunReports { get; }

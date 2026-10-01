@@ -10,6 +10,7 @@ import { ActivityMetricType, AppRole, SportType } from '../api/generated/models'
 import { Panel, Badge, CardHeader, MetricStrip, EmptyState, Skeleton, type Metric } from '../design-system/components';
 import { StreamChart } from './StreamChart';
 import { HrZoneBars } from './HrZoneBars';
+import { BestEffortsPanel } from './BestEffortsPanel';
 import { sumZoneSeconds } from './hrZones';
 import { useGetApiAthletesAthleteUserIdHeartRateZones } from '../api/generated/heart-rate-zones/heart-rate-zones';
 import { formatClock, formatDistanceKm, formatPace } from './activityFormat';
@@ -108,6 +109,8 @@ export function ActivityDetailPage() {
       <Panel>
         <MetricStrip metrics={metrics} />
       </Panel>
+
+      <BestEffortsPanel activityId={activity.id!} />
 
       {sumZoneSeconds([activity.additionalMetrics]).total > 0 && (
         <Panel>

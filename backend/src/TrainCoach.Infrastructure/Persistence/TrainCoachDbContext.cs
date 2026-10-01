@@ -43,6 +43,7 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     public DbSet<ActivityMetric> ActivityMetrics => Set<ActivityMetric>();
     public DbSet<ActivitySourceRecord> ActivitySourceRecords => Set<ActivitySourceRecord>();
     public DbSet<ActivityStream> ActivityStreams => Set<ActivityStream>();
+    public DbSet<ActivityBestEffort> ActivityBestEfforts => Set<ActivityBestEffort>();
     public DbSet<MergeDecision> MergeDecisions => Set<MergeDecision>();
     public DbSet<DuplicateCandidate> DuplicateCandidates => Set<DuplicateCandidate>();
     public DbSet<DuplicateDryRunReport> DuplicateDryRunReports => Set<DuplicateDryRunReport>();

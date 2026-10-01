@@ -68,6 +68,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IStravaArchiveFileStore, StravaArchiveFileStore>();
         services.AddHostedService<StravaArchiveRecoveryHostedService>();
+        services.AddHostedService<DerivedMetricsStartupService>();
 
         return services;
     }
