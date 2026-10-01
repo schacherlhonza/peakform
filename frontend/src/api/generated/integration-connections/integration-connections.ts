@@ -31,6 +31,7 @@ import type {
   OAuthCallbackRequest,
   PostApiIntegrationsSyncAllParams,
   ProviderSyncStatusDto,
+  StravaDisconnectImpactDto,
   SynchronizationRunDto
 } from '../models';
 
@@ -348,7 +349,93 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getPostApiIntegrationsProviderConnectDemoMutationOptions(options), queryClient);
     }
-    export const deleteApiIntegrationsProvider = (
+    export const getApiIntegrationsProviderDisconnectImpact = (
+    provider: IntegrationProviderType,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<StravaDisconnectImpactDto>(
+      {url: `/api/integrations/${provider}/disconnect-impact`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiIntegrationsProviderDisconnectImpactQueryKey = (provider: IntegrationProviderType,) => {
+    return [
+    `/api/integrations/${provider}/disconnect-impact`
+    ] as const;
+    }
+
+
+export const getGetApiIntegrationsProviderDisconnectImpactQueryOptions = <TData = Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError = ErrorType<unknown>>(provider: IntegrationProviderType, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiIntegrationsProviderDisconnectImpactQueryKey(provider);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>> = ({ signal }) => getApiIntegrationsProviderDisconnectImpact(provider, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: provider !== null && provider !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiIntegrationsProviderDisconnectImpactQueryResult = NonNullable<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>>
+export type GetApiIntegrationsProviderDisconnectImpactQueryError = ErrorType<unknown>
+
+
+export function useGetApiIntegrationsProviderDisconnectImpact<TData = Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError = ErrorType<unknown>>(
+ provider: IntegrationProviderType, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>,
+          TError,
+          Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiIntegrationsProviderDisconnectImpact<TData = Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError = ErrorType<unknown>>(
+ provider: IntegrationProviderType, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>,
+          TError,
+          Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiIntegrationsProviderDisconnectImpact<TData = Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError = ErrorType<unknown>>(
+ provider: IntegrationProviderType, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiIntegrationsProviderDisconnectImpact<TData = Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError = ErrorType<unknown>>(
+ provider: IntegrationProviderType, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiIntegrationsProviderDisconnectImpact>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiIntegrationsProviderDisconnectImpactQueryOptions(provider,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const deleteApiIntegrationsProvider = (
     provider: IntegrationProviderType,
  signal?: AbortSignal
 ) => {

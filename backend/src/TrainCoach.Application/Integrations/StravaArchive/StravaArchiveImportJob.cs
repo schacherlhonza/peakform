@@ -221,11 +221,19 @@ public class StravaArchiveImportJob(
         }, cancellationToken);
     }
 
-    /// <summary>The archive's athlete id (from the S3 path or the export_{id}.zip name) must match
-    /// the connected Strava account, when both are known — guards against importing someone
-    /// else's history by mistake. Without a Strava connection there's nothing to compare against.</summary>
+    /// <summary>The archive's athlete id must match the connected Strava account, when both are
+    /// known — guards against importing someone else's history by mistake. The id comes from the
+    /// archive's own profile.csv; the S3 path / export_{id}.zip name is only a fallback (a file
+    /// name can be renamed). Without a Strava connection there's nothing to compare against.</summary>
     private async Task EnsureArchiveBelongsToAthleteAsync(StravaArchiveImport import, CancellationToken cancellationToken)
     {
+        if (StravaArchiveReader.ReadAthleteId(fileStore.GetPath(import.StorageKey!)) is { } profileAthleteId
+            && profileAthleteId != import.StravaAthleteId)
+        {
+            import.StravaAthleteId = profileAthleteId;
+            await UpdateAsync(import.Id, i => i.StravaAthleteId = profileAthleteId, cancellationToken);
+        }
+
         if (import.StravaAthleteId is null)
         {
             return;

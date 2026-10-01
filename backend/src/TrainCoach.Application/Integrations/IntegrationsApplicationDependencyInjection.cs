@@ -18,6 +18,7 @@ public static class IntegrationsApplicationDependencyInjection
         services.AddScoped<IActivityMatchingService, ActivityMatchingService>();
         services.AddScoped<IActivityIngestionService, ActivityIngestionService>();
         services.AddScoped<IActivityStreamBackfillJob, ActivityStreamBackfillJob>();
+        services.AddScoped<IStravaApiDataPurgeService, StravaApiDataPurgeService>();
         services.AddScoped<IConnectorPolicyService, ConnectorPolicyService>();
         services.AddScoped<IBackfillActivitySourceRecordsCommand, BackfillActivitySourceRecordsCommand>();
         services.AddScoped<IDuplicateDryRunReportService, DuplicateDryRunReportService>();

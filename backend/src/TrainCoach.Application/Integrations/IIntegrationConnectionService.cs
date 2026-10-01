@@ -16,6 +16,9 @@ public interface IIntegrationConnectionService
 
     Task DisconnectAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default);
 
+    /// <summary>What disconnecting would delete — only Strava deletes data (API terms); others return zeros.</summary>
+    Task<StravaDisconnectImpactDto> GetDisconnectImpactAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default);
+
     Task TriggerSyncAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default);
 
     /// <summary>Queues a one-off sync of older history from <paramref name="fromDate"/> (activities,

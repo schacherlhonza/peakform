@@ -633,6 +633,21 @@
       "submit": "Stáhnout",
       "started": "Stahování starší historie bylo spuštěno.",
       "runLabel": "historie"
+    },
+    "stravaDisconnect": {
+      "title": "Odpojit Stravu",
+      "intro": "Podmínky Strava API vyžadují, aby se po odpojení trvale smazala data získaná přes API. Odpojením se:",
+      "deleted_one": "smaže {{count}} aktivita dostupná jen ze Stravy",
+      "deleted_few": "smažou {{count}} aktivity dostupné jen ze Stravy",
+      "deleted_other": "smaže {{count}} aktivit dostupných jen ze Stravy",
+      "sourcesRemoved_one": "u {{count}} aktivity odebere jen zdroj Strava (zůstane z intervals.icu nebo archivu)",
+      "sourcesRemoved_few": "u {{count}} aktivit odebere jen zdroj Strava (zůstanou z intervals.icu nebo archivu)",
+      "sourcesRemoved_other": "u {{count}} aktivit odebere jen zdroj Strava (zůstanou z intervals.icu nebo archivu)",
+      "keptFromArchive_one": "ponechá {{count}} aktivita, kterou máte i v importovaném archivu",
+      "keptFromArchive_few": "ponechají {{count}} aktivity, které máte i v importovaném archivu",
+      "keptFromArchive_other": "ponechá {{count}} aktivit, které máte i v importovaném archivu",
+      "archiveNote": "Aktivity naimportované z archivu dat Stravy jsou vaše vlastní data a zůstávají. Tuto akci nelze vrátit.",
+      "confirm": "Odpojit a smazat"
     }
   },
   "sync": {

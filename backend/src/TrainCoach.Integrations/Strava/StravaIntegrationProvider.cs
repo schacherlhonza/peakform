@@ -22,6 +22,13 @@ public class StravaIntegrationProvider(IHttpClientFactory httpClientFactory, IOp
     private const string TokenUrl = "https://www.strava.com/oauth/token";
     private const string ActivitiesUrl = "https://www.strava.com/api/v3/athlete/activities";
     private const string ActivityDetailUrl = "https://www.strava.com/api/v3/activities";
+    /// <summary>Strava's maximum page size for <c>/athlete/activities</c>.</summary>
+    private const int ActivitiesPageSize = 200;
+
+    /// <summary>Safety cap (10 000 activities per sync): each page costs one request against the
+    /// app-wide read limit of 100 per 15 minutes. Full history comes from the data archive import.</summary>
+    private const int MaxActivityPages = 50;
+
     private const string StreamKeys = "time,heartrate,watts,cadence,distance,altitude,velocity_smooth,grade_smooth";
 
     private readonly StravaOptions _options = options.Value;
@@ -79,14 +86,26 @@ public class StravaIntegrationProvider(IHttpClientFactory httpClientFactory, IOp
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
         var afterUnixSeconds = new DateTimeOffset(DateTime.SpecifyKind(sinceUtc, DateTimeKind.Utc)).ToUnixTimeSeconds();
-        var response = await client.GetAsync($"{ActivitiesUrl}?after={afterUnixSeconds}&per_page=100", cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
+        // Page until Strava returns a short page — a single page silently dropped everything past
+        // the first 100 activities after a longer gap between syncs, while the sync cursor still
+        // moved to "now", so those activities were never fetched later either.
+        var activities = new List<StravaActivity>();
+        for (var page = 1; page <= MaxActivityPages; page++)
         {
-            throw new BusinessRuleException($"Strava API vrátilo chybu {(int)response.StatusCode} při načítání aktivit.");
-        }
+            var response = await client.GetAsync($"{ActivitiesUrl}?after={afterUnixSeconds}&per_page={ActivitiesPageSize}&page={page}", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new BusinessRuleException($"Strava API vrátilo chybu {(int)response.StatusCode} při načítání aktivit.");
+            }
 
-        var activities = await response.Content.ReadFromJsonAsync<List<StravaActivity>>(cancellationToken: cancellationToken) ?? [];
+            var batch = await response.Content.ReadFromJsonAsync<List<StravaActivity>>(cancellationToken: cancellationToken) ?? [];
+            activities.AddRange(batch);
+            if (batch.Count < ActivitiesPageSize)
+            {
+                break;
+            }
+        }
 
         return activities.Select(a => new ExternalActivity(
             ExternalId: a.Id.ToString(),

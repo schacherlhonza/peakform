@@ -104,6 +104,9 @@ Uživatel může mít nejvýš jeden aktivní import. Klient se dotazuje na `GET
 - Maximální velikost archivu je `StravaArchiveImport:MaxArchiveBytes` (výchozí 4 GB). Pokud aplikace běží za reverse
   proxy, musí ten stejný limit povolit i proxy (např. `client_max_body_size`).
 - Import je jen pro vlastní účet. Cizí import vrací 404.
+- Vlastník archivu se určuje z `profile.csv` (`ID sportovce`). Athlete id z adresy S3 nebo z názvu
+  `export_{id}.zip` slouží jen jako záloha, protože soubor jde přejmenovat.
+- Při odpojení Stravy data z archivu zůstávají; maže se jen to, co přišlo přes API (viz `security.md`).
 
 ## Odolnost
 

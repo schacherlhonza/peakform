@@ -74,6 +74,23 @@ TrainCoach ukládá citlivá zdravotní a wellness data — spánek, HRV, klidov
 - Sportovec může kdykoliv oprávnění zúžit nebo vztah ukončit; ukončení/zúžení má okamžitý efekt na autorizaci (viz §3).
 - Historie souhlasu (kdy byl udělen, kdy případně odvolán) je auditovatelná přes `AuditLog` a `CoachAthleteRelationship` (start/end date, stav).
 
+### Odpojení Stravy (mazání dat ze Strava API)
+
+Podmínky Strava API vyžadují po ukončení přístupu trvale smazat data získaná přes API. `DisconnectAsync` proto u
+Stravy volá `StravaApiDataPurgeService`:
+
+- Smažou se zdrojové záznamy `Source = Strava` bez `StravaArchiveImportId`. Aktivita, které žádný zdroj nezbude,
+  se smaže natvrdo (i když byla soft-smazaná), včetně metrik a streamů. Smažou se i `MergeDecision` a
+  `DuplicateCandidate`, které na ni odkazují. Vlastní zpětná vazba sportovce (`TrainingFeedback`) zůstane, jen bez
+  vazby na aktivitu.
+- U sloučené aktivity se odebere jen záznam ze Stravy a primárním zdrojem se stane zbývající. Zobrazené hodnoty
+  zůstanou, protože párování slučuje jen téměř shodné záznamy. Metriky se `Source = Strava` na takové aktivitě
+  zůstávají, protože od metrik z archivu (také `Source = Strava`) je nejde rozlišit.
+- Záznam z API, ke kterému import archivu doplnil stream, se nesmaže. Aktivita je i v archivu, takže se záznam
+  přeřadí pod poslední úspěšný import archivu a odebere se z něj surová odpověď API.
+- Data z archivu dat Stravy jsou vlastní data sportovce a zůstávají.
+- UI před odpojením ukáže počty (`GET /api/integrations/Strava/disconnect-impact`) a vyžaduje potvrzení.
+
 ### Atribuce Garminu
 
 Data z intervals.icu, která pocházejí ze zařízení Garmin (`DeviceName` obsahuje „Garmin“), zobrazují na detailu

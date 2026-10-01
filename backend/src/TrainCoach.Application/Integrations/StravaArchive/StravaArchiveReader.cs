@@ -78,6 +78,30 @@ public static class StravaArchiveReader
         }
     }
 
+    /// <summary>
+    /// The Strava athlete id from the archive's own <c>profile.csv</c> (<c>ID sportovce</c> /
+    /// <c>Athlete ID</c>, the first column). Authoritative, unlike the download file name, which
+    /// anyone can rename. Null when the file or the value is missing.
+    /// </summary>
+    public static string? ReadAthleteId(string zipPath)
+    {
+        using var zip = OpenZip(zipPath);
+        if (zip.GetEntry("profile.csv") is not { } entry)
+        {
+            return null;
+        }
+        using var reader = new StreamReader(new LimitedReadStream(entry.Open(), 1024 * 1024), Encoding.UTF8);
+        var records = StravaActivitiesCsvReader.ReadRecords(reader).Take(2).ToList();
+        if (records.Count < 2)
+        {
+            return null;
+        }
+        var header = records[0].Select(h => h.Trim()).ToList();
+        var column = header.FindIndex(h => h is "ID sportovce" or "Athlete ID");
+        var value = records[1].ElementAtOrDefault(column < 0 ? 0 : column)?.Trim();
+        return !string.IsNullOrEmpty(value) && value.All(char.IsAsciiDigit) ? value : null;
+    }
+
     /// <summary>Counts the rows without probing any activity file — cheap first pass for progress.</summary>
     public static int CountActivities(string zipPath)
     {

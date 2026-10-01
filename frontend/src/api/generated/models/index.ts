@@ -150,6 +150,7 @@ export * from './sportType';
 export * from './stravaArchiveImportDto';
 export * from './stravaArchiveImportStatus';
 export * from './stravaArchiveSourceKind';
+export * from './stravaDisconnectImpactDto';
 export * from './submitCheckInRequest';
 export * from './synchronizationRunDto';
 export * from './syncRunStatus';

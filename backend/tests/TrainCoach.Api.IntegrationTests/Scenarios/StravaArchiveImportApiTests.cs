@@ -30,7 +30,7 @@ public class StravaArchiveImportApiTests : IntegrationTestBase
         "ID aktivity,Datum aktivity,Název aktivity,Typ aktivity,Popis aktivity,Uplynulý čas,Vzdálenost,Maximální tepová frekvence,Relativní úsilí,Dojíždění,Soukromá poznámka k aktivitě,Vybavení na aktivitu,Název souboru,Hmotnost sportovce,Hmotnost kola,"
         + "Uplynulý čas,Aktivní čas,Vzdálenost,Maximální rychlost,Průměrná rychlost,Nastoupaná výška,Naklesaná výška,Nejnižší nadmořská výška,Nejvyšší nadmořská výška,Maximální sklon,Průměrný sklon,Průměrný pozitivní sklon,Průměrný záporný sklon,Maximální kadence,Průměrná kadence,Maximální tepová frekvence,Průměrná tepová frekvence,Maximální výkon ve wattech,Průměrný výkon ve wattech,Kalorie";
 
-    private static byte[] BuildArchive()
+    private static byte[] BuildArchive(string? profileAthleteId = null)
     {
         var csv = new StringBuilder(Header).Append('\n')
             // A run with a GPX file…
@@ -56,6 +56,10 @@ public class StravaArchiveImportApiTests : IntegrationTestBase
             AddEntry(zip, "activities/2002.tcx.gz", Gzip("""<?xml version="1.0"?><TrainingCenterDatabase><Activities><Activity Sport="Other"><Id>2024-03-04T16:00:00Z</Id></Activity></Activities></TrainingCenterDatabase>"""));
             // Private data the importer must never need — present only to mirror a real export.
             AddEntry(zip, "messaging.json", Encoding.UTF8.GetBytes("[]"));
+            if (profileAthleteId is not null)
+            {
+                AddEntry(zip, "profile.csv", Encoding.UTF8.GetBytes($"ID sportovce,E-mailová adresa,Jméno\n{profileAthleteId},x@example.com,Test\n"));
+            }
         }
         return buffer.ToArray();
     }
@@ -76,11 +80,11 @@ public class StravaArchiveImportApiTests : IntegrationTestBase
         return buffer.ToArray();
     }
 
-    private static MultipartFormDataContent UploadContent(byte[] archive, string? fromDate = null)
+    private static MultipartFormDataContent UploadContent(byte[] archive, string? fromDate = null, string fileName = "export_42.zip")
     {
         var file = new ByteArrayContent(archive);
         file.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
-        var form = new MultipartFormDataContent { { file, "file", "export_42.zip" } };
+        var form = new MultipartFormDataContent { { file, "file", fileName } };
         if (fromDate is not null)
         {
             form.Add(new StringContent(fromDate), "fromDate");
@@ -209,5 +213,41 @@ public class StravaArchiveImportApiTests : IntegrationTestBase
         (await other.GetAsync($"{Route}/{id}")).StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await other.PostAsync($"{Route}/{id}/confirm", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
         await WaitForAsync(owner, id, "PreviewReady");
+    }
+
+    [Theory]
+    [InlineData("999", "Failed")] // renamed archive of another Strava account
+    [InlineData("42", "PreviewReady")]
+    public async Task Archive_owner_is_checked_against_profile_csv_not_the_file_name(string profileAthleteId, string expectedStatus)
+    {
+        var auth = await RegisterAsync($"{Guid.NewGuid():N}@test.cz", "Athlete");
+        var client = AuthenticatedClient(auth);
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TrainCoachDbContext>();
+            db.IntegrationConnections.Add(new TrainCoach.Domain.Integrations.IntegrationConnection
+            {
+                AthleteUserId = Guid.Parse(auth.UserId), Provider = IntegrationProviderType.Strava, ExternalAccountId = "42",
+                Status = IntegrationConnectionStatus.Connected, ConnectedAtUtc = DateTime.UtcNow, CreatedAtUtc = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var created = await client.PostAsync($"{Route}/upload", UploadContent(BuildArchive(profileAthleteId), fileName: "moje-data.zip"));
+        var id = (await created.Content.ReadFromJsonAsync<ImportDto>(JsonOptions))!.Id;
+
+        ImportDto dto = null!;
+        for (var attempt = 0; attempt < 150; attempt++)
+        {
+            dto = (await client.GetFromJsonAsync<ImportDto>($"{Route}/{id}", JsonOptions))!;
+            if (dto.Status is "Failed" or "PreviewReady") break;
+            await Task.Delay(100);
+        }
+
+        dto.Status.Should().Be(expectedStatus);
+        if (expectedStatus == "Failed")
+        {
+            dto.ErrorMessage.Should().Contain("jinému účtu Strava");
+        }
     }
 }

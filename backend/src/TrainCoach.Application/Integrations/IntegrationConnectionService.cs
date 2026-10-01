@@ -17,6 +17,7 @@ public class IntegrationConnectionService(
     ITokenEncryptor tokenEncryptor,
     IBackgroundJobQueue jobQueue,
     IConnectorPolicyService policyService,
+    IStravaApiDataPurgeService stravaPurgeService,
     IDateTimeProvider clock,
     ILogger<IntegrationConnectionService> logger) : IIntegrationConnectionService
 {
@@ -102,10 +103,25 @@ public class IntegrationConnectionService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        // Strava API Agreement: data obtained through the API is deleted once access ends
+        // (the athlete's own data-archive import stays) — see StravaApiDataPurgeService.
+        if (provider == IntegrationProviderType.Strava)
+        {
+            var impact = await stravaPurgeService.PurgeAsync(callerUserId, cancellationToken);
+            logger.LogInformation(
+                "Odpojení Stravy: smazáno {Deleted} aktivit, odebrán zdroj u {Removed}, ponecháno z archivu {Kept}.",
+                impact.ActivitiesDeleted, impact.SourcesRemoved, impact.KeptFromArchive);
+        }
+
         // Reseed non-overridden policy defaults now that this provider is no longer connected —
         // e.g. disconnecting intervals.icu should flip Strava's Activities default back to Primary.
         await policyService.EnsureDefaultsAsync(callerUserId, cancellationToken);
     }
+
+    public Task<StravaDisconnectImpactDto> GetDisconnectImpactAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default) =>
+        provider == IntegrationProviderType.Strava
+            ? stravaPurgeService.GetImpactAsync(callerUserId, cancellationToken)
+            : Task.FromResult(new StravaDisconnectImpactDto(0, 0, 0));
 
     public async Task TriggerSyncAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default)
     {

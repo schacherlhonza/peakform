@@ -9,10 +9,12 @@ import type { BadgeTone } from '../design-system/components';
 import { useAuth } from '../auth/AuthContext';
 import StravaArchiveImportPanel from './StravaArchiveImportPanel';
 import { HistoryBackfillButton } from './HistoryBackfillButton';
+import { StravaDisconnectModal } from './StravaDisconnectModal';
 import {
   useGetApiIntegrations,
   useGetApiIntegrationsProviderSyncHistory,
   getApiIntegrationsProviderAuthorizeUrl,
+  getApiIntegrationsProviderDisconnectImpact,
   getGetApiIntegrationsQueryKey,
   getGetApiIntegrationsProviderSyncHistoryQueryKey,
   getGetApiIntegrationsSyncStatusQueryKey,
@@ -34,6 +36,7 @@ import {
   DataDomain,
   ConnectorMode,
   type IntegrationConnectionDto,
+  type StravaDisconnectImpactDto,
   type SynchronizationRunDto,
 } from '../api/generated/models';
 
@@ -325,10 +328,26 @@ export default function IntegrationsPage() {
     }
   };
 
-  const handleDisconnect = async (provider: IntegrationProviderType) => {
+  const disconnect = async (provider: IntegrationProviderType) => {
     try {
       await disconnectMutation.mutateAsync({ provider });
       await invalidateConnections();
+      // Disconnecting Strava deletes API-sourced activities — every activity view is stale.
+      if (provider === IntegrationProviderType.Strava) await queryClient.invalidateQueries();
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    }
+  };
+
+  // Strava: show what the API-terms purge deletes before disconnecting (StravaDisconnectModal).
+  const [stravaImpact, setStravaImpact] = useState<StravaDisconnectImpactDto | null>(null);
+  const handleDisconnect = async (provider: IntegrationProviderType) => {
+    if (provider !== IntegrationProviderType.Strava) {
+      await disconnect(provider);
+      return;
+    }
+    try {
+      setStravaImpact(await getApiIntegrationsProviderDisconnectImpact(provider));
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
@@ -449,6 +468,14 @@ export default function IntegrationsPage() {
         />
       </SimpleGrid>
       <StravaArchiveImportPanel />
+      <StravaDisconnectModal
+        impact={stravaImpact}
+        pending={disconnectMutation.isPending}
+        onCancel={() => setStravaImpact(null)}
+        onConfirm={() => {
+          void disconnect(IntegrationProviderType.Strava).then(() => setStravaImpact(null));
+        }}
+      />
     </Stack>
   );
 }

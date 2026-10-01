@@ -2407,6 +2407,45 @@
         }
       }
     },
+    "/api/integrations/{provider}/disconnect-impact": {
+      "get": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaDisconnectImpactDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaDisconnectImpactDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StravaDisconnectImpactDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/integrations/{provider}": {
       "delete": {
         "tags": [
@@ -8970,6 +9009,24 @@
           "Upload"
         ],
         "type": "string"
+      },
+      "StravaDisconnectImpactDto": {
+        "type": "object",
+        "properties": {
+          "activitiesDeleted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sourcesRemoved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "keptFromArchive": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
       },
       "SubmitCheckInRequest": {
         "type": "object",

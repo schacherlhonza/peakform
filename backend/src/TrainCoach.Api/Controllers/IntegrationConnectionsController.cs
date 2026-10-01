@@ -37,6 +37,13 @@ public class IntegrationConnectionsController(IIntegrationConnectionService serv
         return Ok(await service.ConnectMockProviderAsync(currentUser.UserId, provider, cancellationToken));
     }
 
+    /// <summary>Preview for the disconnect confirmation: what disconnecting would delete.</summary>
+    [HttpGet("{provider}/disconnect-impact")]
+    public async Task<ActionResult<StravaDisconnectImpactDto>> GetDisconnectImpact(IntegrationProviderType provider, CancellationToken cancellationToken)
+    {
+        return Ok(await service.GetDisconnectImpactAsync(currentUser.UserId, provider, cancellationToken));
+    }
+
     [HttpDelete("{provider}")]
     public async Task<IActionResult> Disconnect(IntegrationProviderType provider, CancellationToken cancellationToken)
     {
