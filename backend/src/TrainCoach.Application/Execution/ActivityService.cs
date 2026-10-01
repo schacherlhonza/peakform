@@ -19,13 +19,14 @@ public class ActivityService(
         await accessGuard.EnsureAthleteAccessAsync(athleteUserId, PermissionScope.ViewCompletedActivities, cancellationToken);
 
         var query = db.CompletedActivities.Include(a => a.SourceRecords).Include(a => a.AdditionalMetrics).Where(a => a.AthleteUserId == athleteUserId);
-        if (from is not null)
+        var (fromUtc, toUtcExclusive) = AthleteLocalDates.ToUtcRange(from, to, await AthleteTimeZoneAsync(athleteUserId, cancellationToken));
+        if (fromUtc is { } lower)
         {
-            query = query.Where(a => a.StartedAtUtc >= from.Value.ToDateTime(TimeOnly.MinValue));
+            query = query.Where(a => a.StartedAtUtc >= lower);
         }
-        if (to is not null)
+        if (toUtcExclusive is { } upper)
         {
-            query = query.Where(a => a.StartedAtUtc <= to.Value.ToDateTime(TimeOnly.MaxValue));
+            query = query.Where(a => a.StartedAtUtc < upper);
         }
 
         var activities = await query.OrderByDescending(a => a.StartedAtUtc).ToListAsync(cancellationToken);
@@ -42,13 +43,14 @@ public class ActivityService(
         var pageSize = Math.Clamp(search.PageSize, 1, MaxPageSize);
 
         var query = db.CompletedActivities.Where(a => a.AthleteUserId == athleteUserId);
-        if (search.From is { } from)
+        var (fromUtc, toUtcExclusive) = AthleteLocalDates.ToUtcRange(search.From, search.To, await AthleteTimeZoneAsync(athleteUserId, cancellationToken));
+        if (fromUtc is { } lower)
         {
-            query = query.Where(a => a.StartedAtUtc >= from.ToDateTime(TimeOnly.MinValue));
+            query = query.Where(a => a.StartedAtUtc >= lower);
         }
-        if (search.To is { } to)
+        if (toUtcExclusive is { } upper)
         {
-            query = query.Where(a => a.StartedAtUtc <= to.ToDateTime(TimeOnly.MaxValue));
+            query = query.Where(a => a.StartedAtUtc < upper);
         }
         if (search.Sports is { Count: > 0 } sports)
         {
@@ -241,6 +243,13 @@ public class ActivityService(
         var results = await query.OrderByDescending(f => f.Date).ToListAsync(cancellationToken);
         return results.Select(ToFeedbackDto).ToList();
     }
+
+    /// <summary>Activity date filters are the athlete's calendar dates, in their own time zone.</summary>
+    private async Task<TimeZoneInfo> AthleteTimeZoneAsync(Guid athleteUserId, CancellationToken cancellationToken) =>
+        AthleteLocalDates.ResolveTimeZone(await db.UserProfiles
+            .Where(p => p.Id == athleteUserId)
+            .Select(p => p.TimeZoneId)
+            .FirstOrDefaultAsync(cancellationToken));
 
     private async Task<CompletedActivity> LoadOwnedActivityAsync(Guid activityId, CancellationToken cancellationToken)
     {

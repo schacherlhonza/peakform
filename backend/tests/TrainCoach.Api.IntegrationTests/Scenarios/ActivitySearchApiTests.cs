@@ -105,4 +105,36 @@ public class ActivitySearchApiTests : IntegrationTestBase
 
         (await AuthenticatedClient(other).GetAsync($"/api/athletes/{auth.UserId}/activities/search")).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    [Fact]
+    public async Task Date_filters_use_the_athletes_time_zone_not_utc()
+    {
+        var auth = await RegisterAsync($"{Guid.NewGuid():N}@test.cz", "Athlete"); // Europe/Prague
+        var client = AuthenticatedClient(auth);
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TrainCoachDbContext>();
+            foreach (var (title, utc) in new[]
+            {
+                ("Neděle 23:30", new DateTime(2026, 9, 27, 21, 30, 0, DateTimeKind.Utc)), // Sunday in Prague
+                ("Pondělí 0:30", new DateTime(2026, 9, 27, 22, 30, 0, DateTimeKind.Utc)), // Monday in Prague, still Sunday in UTC
+                ("Neděle 22:30", new DateTime(2026, 10, 4, 20, 30, 0, DateTimeKind.Utc)),  // last day of that week
+            })
+            {
+                var record = new ActivitySourceRecord { Source = DataSource.Strava, ExternalId = $"{auth.UserId}-{title}", FetchedAtUtc = DateTime.UtcNow };
+                db.CompletedActivities.Add(new CompletedActivity
+                {
+                    AthleteUserId = Guid.Parse(auth.UserId), Sport = SportType.Running, Title = title, StartedAtUtc = utc, DurationSeconds = 600,
+                    CreatedAtUtc = DateTime.UtcNow, PrimarySourceRecordId = record.Id, SourceRecords = { record },
+                });
+            }
+            await db.SaveChangesAsync();
+        }
+
+        var week = (await client.GetFromJsonAsync<List<ItemDto>>($"/api/athletes/{auth.UserId}/activities?from=2026-09-28&to=2026-10-04", JsonOptions))!;
+        week.Select(a => a.Title).Should().BeEquivalentTo(["Pondělí 0:30", "Neděle 22:30"]);
+
+        var search = (await client.GetFromJsonAsync<PageDto>($"/api/athletes/{auth.UserId}/activities/search?from=2026-09-28&to=2026-10-04", JsonOptions))!;
+        search.TotalCount.Should().Be(2);
+    }
 }
