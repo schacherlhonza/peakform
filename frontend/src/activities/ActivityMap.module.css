@@ -9,7 +9,7 @@
 
 /* The app is dark-only: invert the light OSM tiles into a dark map instead of adding a second
    (paid) dark tile provider. Only the tile pane — the route and markers keep their real colors. */
-.map :global(.leaflet-tile-pane) {
+.invertTiles :global(.leaflet-tile-pane) {
   filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.6);
 }
 

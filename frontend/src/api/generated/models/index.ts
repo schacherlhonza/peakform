@@ -122,7 +122,6 @@ export * from './personalRecordExportDto';
 export * from './plannedWorkoutDto';
 export * from './plannedWorkoutExportDto';
 export * from './postApiImportPreviewBody';
-export * from './postApiIntegrationsStravaArchiveImportsUploadBody';
 export * from './postApiIntegrationsSyncAllParams';
 export * from './profileExportDto';
 export * from './providerSyncStatusDto';

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Stack, Text, Title } from '@mantine/core';
+import { AthleteViewSwitch } from './AthleteViewSwitch';
+import { Group, Stack, Text, Title } from '@mantine/core';
 import { IconUserExclamation } from '@tabler/icons-react';
 import { Button, EmptyState, Skeleton } from '../design-system/components';
 import { useGetApiRelationships } from '../api/generated/relationships/relationships';
@@ -56,12 +57,15 @@ export function AthleteDetailPage() {
 
   return (
     <Stack gap="lg">
-      <div>
-        <Title className="ds-page-title" order={2}>
-          {relationship.athleteName}
-        </Title>
-        <Text className="ds-body">{relationship.athleteEmail}</Text>
-      </div>
+      <Group justify="space-between" align="flex-end" wrap="wrap">
+        <div>
+          <Title className="ds-page-title" order={2}>
+            {relationship.athleteName}
+          </Title>
+          <Text className="ds-body">{relationship.athleteEmail}</Text>
+        </div>
+        <AthleteViewSwitch athleteId={athleteId} />
+      </Group>
       <WeekCalendar athleteUserId={athleteId} canEdit />
     </Stack>
   );

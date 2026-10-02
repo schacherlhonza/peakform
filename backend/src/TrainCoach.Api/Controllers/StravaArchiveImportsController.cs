@@ -1,5 +1,10 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Net.Http.Headers;
 using TrainCoach.Application.Common;
 using TrainCoach.Application.Integrations.StravaArchive;
 using TrainCoach.Domain.Enums;
@@ -40,24 +45,70 @@ public class StravaArchiveImportsController(IStravaArchiveImportService service,
         return Accepted(await service.CreateFromLinkAsync(currentUser.UserId, request, cancellationToken));
     }
 
+    /// <summary>
+    /// Multipart upload, streamed straight into the archive store — no <c>IFormFile</c>, which
+    /// would first buffer a multi-GB archive into ASP.NET's own temp file and then get copied again.
+    /// The optional fields <c>fromDate</c>, <c>toDate</c>, <c>sports</c> (repeatable) must come
+    /// <b>before</b> the <c>file</c> part — the import starts as soon as the file part begins.
+    /// </summary>
     [HttpPost("upload")]
     [RequestSizeLimit(MaxUploadBytes)]
-    [RequestFormLimits(MultipartBodyLengthLimit = MaxUploadBytes)]
-    public async Task<ActionResult<StravaArchiveImportDto>> Upload(
-        IFormFile file,
-        [FromForm] DateOnly? fromDate,
-        [FromForm] DateOnly? toDate,
-        [FromForm] List<SportType>? sports,
-        CancellationToken cancellationToken)
+    [DisableFormValueModelBinding]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<StravaArchiveImportDto>> Upload(CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        var boundary = MediaTypeHeaderValue.TryParse(Request.ContentType, out var contentType)
+            ? HeaderUtilities.RemoveQuotes(contentType.Boundary).Value
+            : null;
+        if (string.IsNullOrWhiteSpace(boundary))
         {
-            return BadRequest("Soubor je prázdný.");
+            return BadRequest("Očekává se multipart/form-data s ZIP souborem.");
         }
 
-        await using var stream = file.OpenReadStream();
-        var result = await service.CreateFromUploadAsync(currentUser.UserId, file.FileName, stream, fromDate, toDate, sports, cancellationToken);
-        return Accepted(result);
+        DateOnly? fromDate = null, toDate = null;
+        var sports = new List<SportType>();
+        var reader = new MultipartReader(boundary, Request.Body);
+        while (await reader.ReadNextSectionAsync(cancellationToken) is { } section)
+        {
+            if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var disposition))
+            {
+                continue;
+            }
+            var name = HeaderUtilities.RemoveQuotes(disposition.Name).Value;
+
+            if (disposition.IsFileDisposition() && name == "file")
+            {
+                var fileName = HeaderUtilities.RemoveQuotes(disposition.FileName).Value
+                    ?? HeaderUtilities.RemoveQuotes(disposition.FileNameStar).Value
+                    ?? "archive.zip";
+                var result = await service.CreateFromUploadAsync(
+                    currentUser.UserId, fileName, section.Body, fromDate, toDate, sports.Count > 0 ? sports : null, cancellationToken);
+                return Accepted(result);
+            }
+
+            if (disposition.IsFormDisposition())
+            {
+                // Field values are tiny; cap the read so a malformed request can't buffer much.
+                using var fieldReader = new StreamReader(section.Body);
+                var buffer = new char[256];
+                var length = await fieldReader.ReadBlockAsync(buffer, cancellationToken);
+                var value = new string(buffer, 0, length).Trim();
+                switch (name)
+                {
+                    case "fromDate" when DateOnly.TryParse(value, CultureInfo.InvariantCulture, out var from):
+                        fromDate = from;
+                        break;
+                    case "toDate" when DateOnly.TryParse(value, CultureInfo.InvariantCulture, out var to):
+                        toDate = to;
+                        break;
+                    case "sports" when Enum.TryParse<SportType>(value, ignoreCase: true, out var sport):
+                        sports.Add(sport);
+                        break;
+                }
+            }
+        }
+
+        return BadRequest("V požadavku chybí soubor (pole „file“).");
     }
 
     [HttpPost("{importId:guid}/confirm")]
@@ -70,5 +121,22 @@ public class StravaArchiveImportsController(IStravaArchiveImportService service,
     public async Task<ActionResult<StravaArchiveImportDto>> Cancel(Guid importId, CancellationToken cancellationToken)
     {
         return Ok(await service.CancelAsync(currentUser.UserId, importId, cancellationToken));
+    }
+}
+
+/// <summary>Keeps MVC from reading the multipart body into form values before the action streams it.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class DisableFormValueModelBindingAttribute : Attribute, IResourceFilter
+{
+    public void OnResourceExecuting(ResourceExecutingContext context)
+    {
+        var factories = context.ValueProviderFactories;
+        factories.RemoveType<FormValueProviderFactory>();
+        factories.RemoveType<FormFileValueProviderFactory>();
+        factories.RemoveType<JQueryFormValueProviderFactory>();
+    }
+
+    public void OnResourceExecuted(ResourceExecutedContext context)
+    {
     }
 }

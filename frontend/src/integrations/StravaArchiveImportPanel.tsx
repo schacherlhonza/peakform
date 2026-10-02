@@ -73,11 +73,12 @@ function StartImportModal({ opened, onClose, onStarted }: { opened: boolean; onC
   const linkMutation = useMutation(getPostApiIntegrationsStravaArchiveImportsLinkMutationOptions());
   const uploadMutation = useMutation({
     mutationFn: async (archive: File) => {
+      // Fields before the file: the server streams the upload and starts the import at the file part.
       const form = new FormData();
-      form.append('file', archive);
       if (fromDate) form.append('fromDate', fromDate);
       if (toDate) form.append('toDate', toDate);
       sports.forEach((s) => form.append('sports', s));
+      form.append('file', archive);
       const response = await axiosInstance.post<StravaArchiveImportDto>('/api/integrations/strava/archive-imports/upload', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (e) => setUploadProgress(e.total ? Math.round((e.loaded / e.total) * 100) : null),

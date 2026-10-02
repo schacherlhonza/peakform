@@ -18,7 +18,7 @@ function readinessTone(score: number | null): 'positive' | 'warning' | 'danger' 
 export function AthleteStatusCard({ relationship }: { relationship: CoachAthleteRelationshipDto }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const status = useAthleteStatusData(relationship.athleteUserId!);
+  const status = useAthleteStatusData(relationship.athleteUserId!, relationship.grantedScopes);
 
   if (status.isLoading) {
     return (

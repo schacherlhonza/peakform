@@ -13,6 +13,7 @@ import { EveningCheckInPage } from './checkins/EveningCheckInPage';
 import { ReportsPage } from './reports/ReportsPage';
 import { AthleteListPage } from './athletes/AthleteListPage';
 import { AthleteDetailPage } from './athletes/AthleteDetailPage';
+import AthleteActivitiesPage from './athletes/AthleteActivitiesPage';
 import RacesPage from './races/RacesPage';
 import NutritionPage from './nutrition/NutritionPage';
 import WellnessTrendsPage from './wellness/WellnessTrendsPage';
@@ -177,6 +178,14 @@ function App() {
           element={
             <ProtectedRoute roles={[AppRole.Coach]}>
               <AthleteDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/athletes/:athleteId/activities"
+          element={
+            <ProtectedRoute roles={[AppRole.Coach]}>
+              <AthleteActivitiesPage />
             </ProtectedRoute>
           }
         />

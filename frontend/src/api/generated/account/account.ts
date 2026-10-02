@@ -134,6 +134,92 @@ export function useGetApiAccountExport<TData = Awaited<ReturnType<typeof getApiA
 
 
 
+export const getApiAccountExportStreams = (
+
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/api/account/export/streams`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiAccountExportStreamsQueryKey = () => {
+    return [
+    `/api/account/export/streams`
+    ] as const;
+    }
+
+
+export const getGetApiAccountExportStreamsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAccountExportStreamsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAccountExportStreams>>> = ({ signal }) => getApiAccountExportStreams(signal);
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAccountExportStreamsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAccountExportStreams>>>
+export type GetApiAccountExportStreamsQueryError = ErrorType<unknown>
+
+
+export function useGetApiAccountExportStreams<TData = Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAccountExportStreams>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAccountExportStreams>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAccountExportStreams<TData = Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAccountExportStreams>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAccountExportStreams>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAccountExportStreams<TData = Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAccountExportStreams<TData = Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAccountExportStreams>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAccountExportStreamsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export const postApiAccountDelete = (
 
  signal?: AbortSignal

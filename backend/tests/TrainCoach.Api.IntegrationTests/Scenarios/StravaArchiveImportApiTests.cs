@@ -84,11 +84,13 @@ public class StravaArchiveImportApiTests : IntegrationTestBase
     {
         var file = new ByteArrayContent(archive);
         file.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
-        var form = new MultipartFormDataContent { { file, "file", fileName } };
+        // Fields before the file — the server streams the upload (StravaArchiveImportsController.Upload).
+        var form = new MultipartFormDataContent();
         if (fromDate is not null)
         {
             form.Add(new StringContent(fromDate), "fromDate");
         }
+        form.Add(file, "file", fileName);
         return form;
     }
 
@@ -249,5 +251,33 @@ public class StravaArchiveImportApiTests : IntegrationTestBase
         {
             dto.ErrorMessage.Should().Contain("jinému účtu Strava");
         }
+    }
+
+    [Fact]
+    public async Task Streamed_upload_applies_fields_sent_before_the_file_and_rejects_bad_requests()
+    {
+        var client = AuthenticatedClient(await RegisterAsync($"{Guid.NewGuid():N}@test.cz", "Athlete"));
+
+        var noFile = new MultipartFormDataContent { { new StringContent("2024-01-01"), "fromDate" } };
+        (await client.PostAsync($"{Route}/upload", noFile)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var empty = new ByteArrayContent([]);
+        empty.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+        (await client.PostAsync($"{Route}/upload", new MultipartFormDataContent { { empty, "file", "export_42.zip" } })).StatusCode
+            .Should().Be(HttpStatusCode.Conflict, "an empty file is a business-rule error");
+
+        var form = new MultipartFormDataContent
+        {
+            { new StringContent("2024-01-01"), "fromDate" },
+            { new StringContent("Strength"), "sports" },
+        };
+        var file = new ByteArrayContent(BuildArchive());
+        file.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+        form.Add(file, "file", "export_42.zip");
+        var created = await client.PostAsync($"{Route}/upload", form);
+        created.StatusCode.Should().Be(HttpStatusCode.Accepted);
+
+        var preview = await WaitForAsync(client, (await created.Content.ReadFromJsonAsync<ImportDto>(JsonOptions))!.Id, "PreviewReady");
+        preview.PreviewInFilter.Should().Be(2, "only the two 2024 strength sessions match fromDate + sports");
     }
 }

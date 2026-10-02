@@ -4,12 +4,17 @@ import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import classes from './ActivityMap.module.css';
 
-// OpenStreetMap's own tile servers — fine for development and low traffic, but their usage policy
-// requires a different provider at scale (see docs/integrations/strava-archive-import.md). They
-// also reject tile requests without a Referer, while nginx sends `Referrer-Policy: no-referrer`
-// globally — hence the per-layer override below.
-const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+// Tile provider is build-time configuration (VITE_MAP_TILE_*, see .env.example). The default —
+// OpenStreetMap's own servers — is fine for development and low traffic, but OSM's usage policy
+// requires a different provider at scale (e.g. MapTiler: URL with ?key=…). OSM also rejects tile
+// requests without a Referer, while nginx sends `Referrer-Policy: no-referrer` globally — hence
+// the per-layer override below.
+const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const TILE_URL = import.meta.env.VITE_MAP_TILE_URL || OSM_TILE_URL;
+const ATTRIBUTION = import.meta.env.VITE_MAP_TILE_ATTRIBUTION || OSM_ATTRIBUTION;
+// Light tiles are inverted into a dark map by CSS; a provider's own dark style must not be.
+const TILES_ARE_DARK = import.meta.env.VITE_MAP_TILES_DARK === 'true';
 
 export interface ActivityMapProps {
   latitude: readonly (number | null | undefined)[];
@@ -72,7 +77,7 @@ export default function ActivityMap({ latitude, longitude, times, hoverTime, sta
   const finish = route.points[route.points.length - 1];
 
   return (
-    <div className={classes.map}>
+    <div className={`${classes.map} ${TILES_ARE_DARK ? '' : classes.invertTiles}`}>
       <MapContainer bounds={bounds} boundsOptions={{ padding: [24, 24] }} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer url={TILE_URL} attribution={ATTRIBUTION} maxZoom={19} referrerPolicy="strict-origin-when-cross-origin" />
         <Polyline positions={route.points} pathOptions={{ color: '#c7f34d', weight: 4, opacity: 0.9 }} />

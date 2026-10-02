@@ -34,6 +34,18 @@
         }
       }
     },
+    "/api/account/export/streams": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/account/delete": {
       "post": {
         "tags": [
@@ -4362,49 +4374,6 @@
         "tags": [
           "StravaArchiveImports"
         ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "fromDate": {
-                    "type": "string",
-                    "format": "date"
-                  },
-                  "toDate": {
-                    "type": "string",
-                    "format": "date"
-                  },
-                  "sports": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/SportType"
-                    }
-                  }
-                }
-              },
-              "encoding": {
-                "file": {
-                  "style": "form"
-                },
-                "fromDate": {
-                  "style": "form"
-                },
-                "toDate": {
-                  "style": "form"
-                },
-                "sports": {
-                  "style": "form"
-                }
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "OK",

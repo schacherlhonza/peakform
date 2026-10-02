@@ -33,8 +33,9 @@ export function ActivityDetailPage() {
   const { activityId } = useParams<{ activityId: string }>();
   const { t } = useTranslation();
   const { user } = useAuth();
-  // Set by ActivitiesPage so "back" restores the same filters/page; absent when opened from elsewhere.
-  const listSearch = (useLocation().state as { listSearch?: string } | null)?.listSearch;
+  // Set by ActivitiesBrowser so "back" restores the same list, filters and page (the athlete's own
+  // list or a coach's view of an athlete); absent when opened from elsewhere.
+  const listPath = (useLocation().state as { listPath?: string } | null)?.listPath;
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const handleHoverTime = useCallback((offset: number | null) => setHoverTime(offset), []);
 
@@ -83,8 +84,8 @@ export function ActivityDetailPage() {
   return (
     <Stack gap="lg">
       <div>
-        {user?.role === AppRole.Athlete && (
-          <Anchor component={Link} to={`/activities${listSearch ? `?${listSearch}` : ''}`} size="sm" mb={6} display="flex" w="fit-content" style={{ alignItems: 'center', gap: 4 }}>
+        {(listPath || user?.role === AppRole.Athlete) && (
+          <Anchor component={Link} to={listPath ?? '/activities'} size="sm" mb={6} display="flex" w="fit-content" style={{ alignItems: 'center', gap: 4 }}>
             <IconArrowLeft size={14} />
             {t('activities.backToList')}
           </Anchor>

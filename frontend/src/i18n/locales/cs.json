@@ -188,7 +188,14 @@
   },
   "athletes": {
     "notFoundTitle": "Sportovec nenalezen",
-    "notFoundDescription": "Tento vztah trenér–sportovec neexistuje nebo k němu nemáte přístup."
+    "notFoundDescription": "Tento vztah trenér–sportovec neexistuje nebo k němu nemáte přístup.",
+    "activitiesLink": "Aktivity a rekordy",
+    "backToAthlete": "Zpět na sportovce",
+    "views": {
+      "calendar": "Kalendář",
+      "activities": "Aktivity",
+      "records": "Rekordy"
+    }
   },
   "relationships": {
     "invite": "Pozvat sportovce",
@@ -555,7 +562,9 @@
     "deleteConfirmTitle": "Opravdu smazat účet?",
     "deleteConfirmBody": "Tato akce je nevratná. Budete okamžitě odhlášeni a přihlašovací údaje přestanou fungovat.",
     "deleteSuccess": "Účet byl smazán.",
-    "deleteError": "Účet se nepodařilo smazat."
+    "deleteError": "Účet se nepodařilo smazat.",
+    "exportStreamsButton": "Stáhnout trasy a průběhy (ZIP)",
+    "exportStreamsDescription": "Podrobná data aktivit: GPX pro aktivity s trasou (poloha, výška, tep, kadence, výkon), CSV pro ostatní. Soubory jdou nahrát do Stravy, Garminu i intervals.icu. U velké historie má ZIP desítky MB."
   },
   "integrations": {
     "provider": {

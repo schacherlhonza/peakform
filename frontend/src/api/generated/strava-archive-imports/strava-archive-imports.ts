@@ -25,7 +25,6 @@ import type {
 
 import type {
   CreateStravaArchiveImportFromLinkRequest,
-  PostApiIntegrationsStravaArchiveImportsUploadBody,
   StravaArchiveImportDto
 } from '../models';
 
@@ -284,28 +283,13 @@ const {mutation: mutationOptions} = options ?
       return useMutation(getPostApiIntegrationsStravaArchiveImportsLinkMutationOptions(options), queryClient);
     }
     export const postApiIntegrationsStravaArchiveImportsUpload = (
-    postApiIntegrationsStravaArchiveImportsUploadBody?: PostApiIntegrationsStravaArchiveImportsUploadBody,
+
  signal?: AbortSignal
 ) => {
 
-      const formData = new FormData();
-if(postApiIntegrationsStravaArchiveImportsUploadBody?.file !== undefined) {
- formData.append(`file`, postApiIntegrationsStravaArchiveImportsUploadBody.file);
- }
-if(postApiIntegrationsStravaArchiveImportsUploadBody?.fromDate !== undefined) {
- formData.append(`fromDate`, postApiIntegrationsStravaArchiveImportsUploadBody.fromDate);
- }
-if(postApiIntegrationsStravaArchiveImportsUploadBody?.toDate !== undefined) {
- formData.append(`toDate`, postApiIntegrationsStravaArchiveImportsUploadBody.toDate);
- }
-if(postApiIntegrationsStravaArchiveImportsUploadBody?.sports !== undefined) {
- postApiIntegrationsStravaArchiveImportsUploadBody?.sports.forEach(value => formData.append(`sports`, value));
- }
 
       return customInstance<StravaArchiveImportDto>(
-      {url: `/api/integrations/strava/archive-imports/upload`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData, signal
+      {url: `/api/integrations/strava/archive-imports/upload`, method: 'POST', signal
     },
       );
     }
@@ -316,8 +300,8 @@ if(postApiIntegrationsStravaArchiveImportsUploadBody?.sports !== undefined) {
 export const getPostApiIntegrationsStravaArchiveImportsUploadMutationKey = () => ['postApiIntegrationsStravaArchiveImportsUpload'] as const;
 
 export const getPostApiIntegrationsStravaArchiveImportsUploadMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, TError,PostApiIntegrationsStravaArchiveImportsUploadMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, TError,PostApiIntegrationsStravaArchiveImportsUploadMutationVariables, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, TError,void, TContext> => {
 
 const mutationKey = getPostApiIntegrationsStravaArchiveImportsUploadMutationKey();
 const {mutation: mutationOptions} = options ?
@@ -329,10 +313,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, PostApiIntegrationsStravaArchiveImportsUploadMutationVariables> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, void> = () => {
 
-          return  postApiIntegrationsStravaArchiveImportsUpload(data,)
+
+          return  postApiIntegrationsStravaArchiveImportsUpload()
         }
 
 
@@ -343,16 +327,16 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostApiIntegrationsStravaArchiveImportsUploadMutationResult = NonNullable<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>>
-    export type PostApiIntegrationsStravaArchiveImportsUploadMutationBody = PostApiIntegrationsStravaArchiveImportsUploadBody | undefined
+
     export type PostApiIntegrationsStravaArchiveImportsUploadMutationError = ErrorType<unknown>
-    export type PostApiIntegrationsStravaArchiveImportsUploadMutationVariables = {data?: PostApiIntegrationsStravaArchiveImportsUploadBody}
+
 
     export const usePostApiIntegrationsStravaArchiveImportsUpload = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, TError,PostApiIntegrationsStravaArchiveImportsUploadMutationVariables, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>, TError,void, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiIntegrationsStravaArchiveImportsUpload>>,
         TError,
-        PostApiIntegrationsStravaArchiveImportsUploadMutationVariables,
+        void,
         TContext
       > => {
       return useMutation(getPostApiIntegrationsStravaArchiveImportsUploadMutationOptions(options), queryClient);

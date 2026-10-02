@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, type ReactNode } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Anchor, Group, MultiSelect, Pagination, Stack, Table, Text, TextInput, Title } from '@mantine/core';
@@ -54,7 +54,7 @@ function TableSkeleton() {
   );
 }
 
-function ActivityRow({ activity, listSearch, onOpen }: { activity: CompletedActivityDto; listSearch: string; onOpen: () => void }) {
+function ActivityRow({ activity, listPath, onOpen }: { activity: CompletedActivityDto; listPath: string; onOpen: () => void }) {
   const { t } = useTranslation();
   const start = formatStart(activity.startedAtUtc!);
   return (
@@ -67,7 +67,7 @@ function ActivityRow({ activity, listSearch, onOpen }: { activity: CompletedActi
         <Badge tone="neutral">{t(`sport.${activity.sport}`)}</Badge>
       </Table.Td>
       <Table.Td>
-        <Anchor component={Link} to={`/activities/${activity.id}`} state={{ listSearch }} onClick={(e) => e.stopPropagation()} size="sm">
+        <Anchor component={Link} to={`/activities/${activity.id}`} state={{ listPath }} onClick={(e) => e.stopPropagation()} size="sm">
           {activity.title || t('activities.untitled')}
         </Anchor>
       </Table.Td>
@@ -84,16 +84,35 @@ function ActivityRow({ activity, listSearch, onOpen }: { activity: CompletedActi
   );
 }
 
-/**
- * Full activity history (the dashboard only shows the current week). Filters live in the URL so
- * going back from an activity detail restores the same list and page.
- */
+/** The athlete's own activities page. */
 export default function ActivitiesPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const athleteUserId = user!.userId;
+  return <ActivitiesBrowser athleteUserId={user!.userId} title={t('nav.activities')} />;
+}
+
+/**
+ * Full activity history of one athlete (the dashboard only shows the current week) — the athlete's
+ * own page and the coach's view of an athlete share it. Filters live in the URL, and the list's
+ * path rides along to the activity detail so "back" restores the same list and page.
+ */
+export function ActivitiesBrowser({
+  athleteUserId,
+  title,
+  subtitle,
+  viewSwitch: customViewSwitch,
+}: {
+  athleteUserId: string;
+  title: string;
+  subtitle?: ReactNode;
+  /** Replaces the list/records control (the coach's athlete pages use their own section switch). */
+  viewSwitch?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [params, setParams] = useSearchParams();
+  const listPath = params.toString() ? `${pathname}?${params.toString()}` : pathname;
 
   const search = params.get('q') ?? '';
   const from = params.get('from');
@@ -137,17 +156,22 @@ export default function ActivitiesPage() {
   const view = params.get('view') === 'records' ? 'records' : 'list';
   const viewSwitch = (
     <Group justify="space-between" align="center" wrap="wrap">
-      <Title className="ds-page-title" order={2}>
-        {t('nav.activities')}
-      </Title>
-      <SegmentedControl
-        value={view}
-        onChange={(v) => setParams(v === 'records' ? new URLSearchParams({ view: 'records' }) : new URLSearchParams(), { replace: true })}
-        data={[
-          { value: 'list', label: t('activities.views.list') },
-          { value: 'records', label: t('activities.views.records') },
-        ]}
-      />
+      <div>
+        <Title className="ds-page-title" order={2}>
+          {title}
+        </Title>
+        {subtitle}
+      </div>
+      {customViewSwitch ?? (
+        <SegmentedControl
+          value={view}
+          onChange={(v) => setParams(v === 'records' ? new URLSearchParams({ view: 'records' }) : new URLSearchParams(), { replace: true })}
+          data={[
+            { value: 'list', label: t('activities.views.list') },
+            { value: 'records', label: t('activities.views.records') },
+          ]}
+        />
+      )}
     </Group>
   );
 
@@ -271,8 +295,8 @@ export default function ActivitiesPage() {
                     <ActivityRow
                       key={activity.id}
                       activity={activity}
-                      listSearch={params.toString()}
-                      onOpen={() => navigate(`/activities/${activity.id}`, { state: { listSearch: params.toString() } })}
+                      listPath={listPath}
+                      onOpen={() => navigate(`/activities/${activity.id}`, { state: { listPath } })}
                     />
                   ))}
                 </Table.Tbody>

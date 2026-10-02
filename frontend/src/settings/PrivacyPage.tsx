@@ -6,9 +6,13 @@ import { IconDownload, IconTrash } from '@tabler/icons-react';
 import { Panel, Button, Modal, showToast } from '../design-system/components';
 import { getApiAccountExport, usePostApiAccountDelete } from '../api/generated/account/account';
 import { useAuth } from '../auth/AuthContext';
+import { axiosInstance } from '../api/mutator';
 
 function downloadJson(data: unknown, filename: string) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), filename);
+}
+
+function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -24,6 +28,7 @@ export default function PrivacyPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingStreams, setIsExportingStreams] = useState(false);
   const [deleteOpened, setDeleteOpened] = useState(false);
 
   const deleteMutation = usePostApiAccountDelete();
@@ -38,6 +43,20 @@ export default function PrivacyPage() {
       showToast({ tone: 'danger', title: t('common.error'), message: t('privacy.exportError') });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // A binary ZIP (GPX + CSV per activity) — fetched with the auth header via axios as a blob.
+  const handleStreamsExport = async () => {
+    setIsExportingStreams(true);
+    try {
+      const response = await axiosInstance.get<Blob>('/api/account/export/streams', { responseType: 'blob' });
+      downloadBlob(response.data, `peakform-trasy-${new Date().toISOString().slice(0, 10)}.zip`);
+      showToast({ tone: 'positive', message: t('privacy.exportSuccess') });
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('privacy.exportError') });
+    } finally {
+      setIsExportingStreams(false);
     }
   };
 
@@ -71,7 +90,11 @@ export default function PrivacyPage() {
             <Button leftSection={<IconDownload size={16} />} loading={isExporting} onClick={() => void handleExport()}>
               {t('privacy.exportButton')}
             </Button>
+            <Button variant="light" leftSection={<IconDownload size={16} />} loading={isExportingStreams} onClick={() => void handleStreamsExport()}>
+              {t('privacy.exportStreamsButton')}
+            </Button>
           </Group>
+          <Text className="ds-metadata">{t('privacy.exportStreamsDescription')}</Text>
         </Stack>
       </Panel>
 

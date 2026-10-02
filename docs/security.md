@@ -109,6 +109,10 @@ prohlížeč přímo z OpenStreetMap; kromě souřadnic dlaždic (tedy přibliž
 - Na žádost o **smazání účtu** dojde k soft delete uživatele; navázané citlivé záznamy jsou anonymizovány/omezeny v souladu s právními požadavky, přičemž agregovaná/anonymizovaná historie nezbytná pro integritu dat druhé strany (např. historie komentářů trenéra) může být zachována bez osobní identifikace.
 - Proces exportu/výmazu je auditovaný (`AuditLog`) a dostupný přes samoobslužné UI, ne jen ruční zásah administrátora.
 
+**Export tras a průběhů:** `GET /api/account/export/streams` vrací ZIP s uloženými streamy aktivit. Aktivity s trasou
+jsou v GPX 1.1 (s Garmin TrackPointExtension pro tep, kadenci a teplotu a s prvkem `power`), ostatní v CSV. Jde o
+zmenšená data (nejvýš 2 000 bodů na aktivitu). Soubor se skládá do dočasného souboru, který se po odeslání sám smaže.
+
 ## 12. Auditní log
 
 - `AuditLog` zaznamenává citlivé operace: přístup trenéra ke zdravotním datům sportovce, změny oprávnění, export/smazání dat, změny hesla, revokaci relací.

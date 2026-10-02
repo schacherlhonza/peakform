@@ -153,7 +153,9 @@ výšku, rychlost, **GPS** a teplotu. Detail aktivity z nich kreslí grafy a map
 - **Mapa:** Leaflet + dlaždice OpenStreetMap. Dlaždice jsou ztmavené CSS filtrem, protože aplikace je jen tmavá.
   OSM odmítá požadavky bez hlavičky Referer, zatímco nginx posílá `Referrer-Policy: no-referrer`, proto má
   vrstva dlaždic vlastní `referrerPolicy`. Pravidla používání OSM dlaždic nepovolují větší provoz; pro produkci
-  s více uživateli je potřeba jiný poskytovatel (URL dlaždic je konstanta v `ActivityMap.tsx`). Mapu vidí každý,
+  s více uživateli je potřeba jiný poskytovatel. Nastavuje se při buildu proměnnými `VITE_MAP_TILE_URL`,
+  `VITE_MAP_TILE_ATTRIBUTION` a `VITE_MAP_TILES_DARK` (příklad pro MapTiler je v `.env.example`; tmavý styl
+  poskytovatele vypne CSS inverzi). Mapu vidí každý,
   kdo smí vidět aktivitu (`ViewCompletedActivities`), tedy i trenér s tímto oprávněním.
 
 ### Streamy z intervals.icu
@@ -182,7 +184,8 @@ automaticky, bez archivu:
 ## Mimo rozsah (další kroky)
 
 - **Privátní zóny** (`privacy_zones.csv` v archivu): skrytí začátku a konce trasy.
-- Streamy nejsou součástí exportu dat účtu (GDPR). Mažou se kaskádově se zdrojovým záznamem.
+- Streamy jsou v samostatném GDPR exportu `GET /api/account/export/streams` (ZIP: GPX pro trasy, CSV pro
+  ostatní; Nastavení → Data a účet). Mažou se kaskádově se zdrojovým záznamem.
 - **Hmotnost sportovce** z CSV: sloupec existuje, na ověřeném archivu byl ale prázdný.
-- Nahrávání přes `IFormFile` ukládá soubor do mezisouboru ASP.NET a pak ho kopíruje do úložiště (u velkých archivů
-  dvojí zápis na disk). Stahování přes odkaz tímto netrpí a je doporučená cesta.
+- Nahrávání se čte proudově (`MultipartReader`, bez `IFormFile`) rovnou do úložiště archivů, bez mezisouboru
+  ASP.NET. Pole `fromDate`, `toDate` a `sports` proto musí v multipart přijít **před** částí `file`.

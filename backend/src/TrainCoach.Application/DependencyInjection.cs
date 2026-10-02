@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IAccountExportService, AccountExportService>();
+        services.AddScoped<IActivityStreamExportService, ActivityStreamExportService>();
         services.AddScoped<IRelationshipAccessGuard, RelationshipAccessGuard>();
         services.AddScoped<ICoachAthleteRelationshipService, CoachAthleteRelationshipService>();
         services.AddScoped<ITrainingPlanService, TrainingPlanService>();

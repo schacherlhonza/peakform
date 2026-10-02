@@ -54,6 +54,10 @@ public class StravaArchiveImportService(
                 await CopyWithLimitAsync(content, destination, options.Value.MaxArchiveBytes, cancellationToken);
             }
             import.SizeBytes = import.DownloadedBytes = new FileInfo(fileStore.GetPath(import.StorageKey)).Length;
+            if (import.SizeBytes == 0)
+            {
+                throw new BusinessRuleException("Soubor je prázdný.");
+            }
         }
         catch
         {

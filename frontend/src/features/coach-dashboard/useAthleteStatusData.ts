@@ -2,6 +2,7 @@ import { useGetApiAthletesAthleteUserIdRecovery } from '../../api/generated/reco
 import { useGetApiAthletesAthleteUserIdHealthFlags } from '../../api/generated/pain-or-health-flags/pain-or-health-flags';
 import { useGetApiAthletesAthleteUserIdPlans, useGetApiPlansId } from '../../api/generated/training-plans/training-plans';
 import { addDays, mondayOf, toIsoDate } from '../../calendar/dateUtils';
+import { PermissionScope } from '../../api/generated/models';
 
 function latestByDate<T extends { date?: string }>(items: T[] | undefined): T | undefined {
   if (!items || items.length === 0) return undefined;
@@ -10,14 +11,24 @@ function latestByDate<T extends { date?: string }>(items: T[] | undefined): T | 
 
 /** Per-athlete data for one AthleteStatusCard — kept in its own hook (not the parent) so each
  * card's queries mount/unmount cleanly as the coach's roster changes. */
-export function useAthleteStatusData(athleteUserId: string) {
+export function useAthleteStatusData(athleteUserId: string, grantedScopes: readonly PermissionScope[] | null | undefined) {
+  // Ask only for what the athlete granted this coach — the rest would just be 403s.
+  const can = (scope: PermissionScope) => !!grantedScopes?.includes(scope);
   const today = toIsoDate(new Date());
   const lookbackStart = toIsoDate(addDays(new Date(), -6));
   const weekStartIso = toIsoDate(mondayOf(new Date()));
 
-  const recoveryQuery = useGetApiAthletesAthleteUserIdRecovery(athleteUserId, { from: lookbackStart, to: today });
-  const healthFlagsQuery = useGetApiAthletesAthleteUserIdHealthFlags(athleteUserId, { activeOnly: true });
-  const plansQuery = useGetApiAthletesAthleteUserIdPlans(athleteUserId);
+  const recoveryQuery = useGetApiAthletesAthleteUserIdRecovery(
+    athleteUserId,
+    { from: lookbackStart, to: today },
+    { query: { enabled: can(PermissionScope.ViewWellness) } },
+  );
+  const healthFlagsQuery = useGetApiAthletesAthleteUserIdHealthFlags(
+    athleteUserId,
+    { activeOnly: true },
+    { query: { enabled: can(PermissionScope.ViewHealthFlags) } },
+  );
+  const plansQuery = useGetApiAthletesAthleteUserIdPlans(athleteUserId, { query: { enabled: can(PermissionScope.ViewTrainingPlan) } });
   const activePlan = (plansQuery.data ?? []).find((p) => p.isActive) ?? [...(plansQuery.data ?? [])].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? ''))[0];
   const planDetailQuery = useGetApiPlansId(activePlan?.id ?? '', { query: { enabled: !!activePlan?.id } });
   const week = planDetailQuery.data?.weeks?.find((w) => w.weekStartDate === weekStartIso);
