@@ -51,37 +51,48 @@ public class DuplicateReviewService(IApplicationDbContext db, IDateTimeProvider 
         var survivingActivity = await db.CompletedActivities.FirstAsync(a => a.Id == survivingActivityId, cancellationToken);
         var losingActivity = await db.CompletedActivities.Include(a => a.SourceRecords).FirstAsync(a => a.Id == losingActivityId, cancellationToken);
 
-        foreach (var sourceRecord in losingActivity.SourceRecords.ToList())
+        ApplyMerge(db, candidate, survivingActivity, losingActivity, MergeDecisionKind.ManualConfirmed, ActivityMatchStatus.Confirmed, callerUserId, clock.UtcNow);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Moves the losing activity's source records onto the survivor, audits each move, soft-deletes
+    /// the loser and resolves the candidate. Shared by the manual merge and the automatic
+    /// re-evaluation of pending candidates (PendingDuplicateReevaluationJob). Stages only.
+    /// </summary>
+    internal static void ApplyMerge(
+        IApplicationDbContext db, DuplicateCandidate candidate, CompletedActivity surviving, CompletedActivity losing,
+        MergeDecisionKind kind, ActivityMatchStatus survivorStatus, Guid? decidedByUserId, DateTime nowUtc)
+    {
+        foreach (var sourceRecord in losing.SourceRecords.ToList())
         {
-            sourceRecord.CompletedActivityId = survivingActivityId;
+            sourceRecord.CompletedActivityId = surviving.Id;
             db.MergeDecisions.Add(new MergeDecision
             {
                 AthleteUserId = candidate.AthleteUserId,
-                SurvivingActivityId = survivingActivityId,
+                SurvivingActivityId = surviving.Id,
                 AbsorbedSourceRecordId = sourceRecord.Id,
-                AbsorbedActivityIdBeforeMerge = losingActivityId,
+                AbsorbedActivityIdBeforeMerge = losing.Id,
                 ConfidenceScore = candidate.ConfidenceScore,
-                Kind = MergeDecisionKind.ManualConfirmed,
+                Kind = kind,
                 Outcome = MergeDecisionOutcome.Merged,
                 ScoringBreakdownJson = candidate.ScoringBreakdownJson,
-                DecidedByUserId = callerUserId,
-                DecidedAtUtc = clock.UtcNow,
-                CreatedAtUtc = clock.UtcNow,
+                DecidedByUserId = decidedByUserId,
+                DecidedAtUtc = nowUtc,
+                CreatedAtUtc = nowUtc,
             });
         }
 
-        survivingActivity.MatchStatus = ActivityMatchStatus.Confirmed;
-        survivingActivity.UpdatedAtUtc = clock.UtcNow;
+        surviving.MatchStatus = survivorStatus;
+        surviving.UpdatedAtUtc = nowUtc;
 
-        losingActivity.IsDeleted = true;
-        losingActivity.DeletedAtUtc = clock.UtcNow;
-        losingActivity.DeletedByUserId = callerUserId;
+        losing.IsDeleted = true;
+        losing.DeletedAtUtc = nowUtc;
+        losing.DeletedByUserId = decidedByUserId;
 
-        candidate.Status = survivingActivityId == candidate.ActivityAId ? DuplicateCandidateStatus.MergedIntoA : DuplicateCandidateStatus.MergedIntoB;
-        candidate.ResolvedByUserId = callerUserId;
-        candidate.ResolvedAtUtc = clock.UtcNow;
-
-        await db.SaveChangesAsync(cancellationToken);
+        candidate.Status = surviving.Id == candidate.ActivityAId ? DuplicateCandidateStatus.MergedIntoA : DuplicateCandidateStatus.MergedIntoB;
+        candidate.ResolvedByUserId = decidedByUserId;
+        candidate.ResolvedAtUtc = nowUtc;
     }
 
     public async Task DismissAsync(Guid callerUserId, Guid duplicateCandidateId, CancellationToken cancellationToken = default)

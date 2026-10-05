@@ -28,6 +28,8 @@ import type {
   CreatePlannedWorkoutRequest,
   CreateTrainingPlanRequest,
   CreateTrainingWeekRequest,
+  GetApiAthletesAthleteUserIdPlanVsActualParams,
+  PlanVsActualDto,
   PlannedWorkoutDto,
   TrainingPlanDetailDto,
   TrainingPlanDto,
@@ -56,6 +58,100 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getApiAthletesAthleteUserIdPlanVsActual = (
+    athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdPlanVsActualParams,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<PlanVsActualDto>(
+      {url: `/api/athletes/${athleteUserId}/plan-vs-actual`, method: 'GET',
+        params, signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiAthletesAthleteUserIdPlanVsActualQueryKey = (athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdPlanVsActualParams,) => {
+    return [
+    `/api/athletes/${athleteUserId}/plan-vs-actual`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetApiAthletesAthleteUserIdPlanVsActualQueryOptions = <TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError = ErrorType<unknown>>(athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdPlanVsActualParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAthletesAthleteUserIdPlanVsActualQueryKey(athleteUserId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>> = ({ signal }) => getApiAthletesAthleteUserIdPlanVsActual(athleteUserId,params, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteUserId !== null && athleteUserId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAthletesAthleteUserIdPlanVsActualQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>>
+export type GetApiAthletesAthleteUserIdPlanVsActualQueryError = ErrorType<unknown>
+
+
+export function useGetApiAthletesAthleteUserIdPlanVsActual<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params: undefined |  GetApiAthletesAthleteUserIdPlanVsActualParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdPlanVsActual<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdPlanVsActualParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdPlanVsActual<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdPlanVsActualParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAthletesAthleteUserIdPlanVsActual<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError = ErrorType<unknown>>(
+ athleteUserId: string,
+    params?: GetApiAthletesAthleteUserIdPlanVsActualParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdPlanVsActual>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAthletesAthleteUserIdPlanVsActualQueryOptions(athleteUserId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
 
 export const getApiAthletesAthleteUserIdPlans = (
     athleteUserId: string,

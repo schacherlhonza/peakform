@@ -47,6 +47,15 @@ public class ChannelBackgroundJobQueue : IBackgroundJobQueue
         }, cancellationToken);
     }
 
+    public ValueTask QueueDuplicateReevaluationAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<TrainCoach.Application.Integrations.Matching.IPendingDuplicateReevaluationJob>();
+            await job.RunAsync(athleteUserId, ct);
+        }, cancellationToken);
+    }
+
     public ValueTask QueueTrainingLoadRecomputeAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
     {
         return _channel.Writer.WriteAsync(async (services, ct) =>

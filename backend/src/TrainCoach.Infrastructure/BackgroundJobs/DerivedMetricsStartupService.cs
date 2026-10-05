@@ -21,6 +21,8 @@ public class DerivedMetricsStartupService(IServiceScopeFactory scopeFactory, ILo
         {
             await Task.Delay(StartupDelay, stoppingToken);
             using var scope = scopeFactory.CreateScope();
+            // Before the load: a merge removes duplicates the load would otherwise count twice.
+            await scope.ServiceProvider.GetRequiredService<TrainCoach.Application.Integrations.Matching.IPendingDuplicateReevaluationJob>().RunAsync(null, stoppingToken);
             await scope.ServiceProvider.GetRequiredService<IBestEffortRecomputeJob>().RunAsync(null, stoppingToken);
             await scope.ServiceProvider.GetRequiredService<TrainCoach.Application.Wellness.ITrainingLoadRecomputeJob>().RunAsync(null, stoppingToken);
         }

@@ -7,6 +7,13 @@ export function formatClock(totalSeconds: number): string {
     : `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/** Long totals: "12 h 35 min", under an hour "35 min". */
+export function formatTotalDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  return h > 0 ? `${h.toLocaleString('cs-CZ')} h ${m} min` : `${m} min`;
+}
+
 export function formatPace(secondsPerKm: number): string {
   const m = Math.floor(secondsPerKm / 60);
   const s = Math.round(secondsPerKm % 60);

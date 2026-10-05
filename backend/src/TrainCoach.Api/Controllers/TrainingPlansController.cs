@@ -8,8 +8,15 @@ namespace TrainCoach.Api.Controllers;
 [ApiController]
 [Route("api")]
 [Authorize]
-public class TrainingPlansController(ITrainingPlanService service, ICurrentUserService currentUser) : ControllerBase
+public class TrainingPlansController(ITrainingPlanService service, IPlanVsActualService planVsActual, ICurrentUserService currentUser) : ControllerBase
 {
+    /// <summary>Planned workouts next to what was actually done (duration, distance, time in zones), up to 62 days.</summary>
+    [HttpGet("athletes/{athleteUserId:guid}/plan-vs-actual")]
+    public async Task<ActionResult<PlanVsActualDto>> GetPlanVsActual(Guid athleteUserId, [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken cancellationToken)
+    {
+        return Ok(await planVsActual.GetAsync(athleteUserId, from, to, cancellationToken));
+    }
+
     [HttpGet("athletes/{athleteUserId:guid}/plans")]
     public async Task<ActionResult<IReadOnlyList<TrainingPlanDto>>> GetForAthlete(Guid athleteUserId, CancellationToken cancellationToken)
     {

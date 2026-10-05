@@ -4550,6 +4550,62 @@
         }
       }
     },
+    "/api/athletes/{athleteUserId}/plan-vs-actual": {
+      "get": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVsActualDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVsActualDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVsActualDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/athletes/{athleteUserId}/plans": {
       "get": {
         "tags": [
@@ -5590,6 +5646,53 @@
           },
           "isDownsampled": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ActualActivityDto": {
+        "type": "object",
+        "properties": {
+          "activityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "startedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "zoneSeconds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "belowZonesSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "trainingLoad": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -8170,6 +8273,111 @@
         },
         "additionalProperties": false
       },
+      "PlanVsActualDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "workouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutComparisonDto"
+            },
+            "nullable": true
+          },
+          "unplannedActivities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActualActivityDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlanVsActualDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualAvailable": {
+            "type": "boolean"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanVsActualDayDto"
+            },
+            "nullable": true
+          },
+          "totals": {
+            "$ref": "#/components/schemas/PlanVsActualTotalsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlanVsActualTotalsDto": {
+        "type": "object",
+        "properties": {
+          "plannedDurationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "plannedDistanceMeters": {
+            "type": "number",
+            "format": "double"
+          },
+          "actualDurationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "actualDistanceMeters": {
+            "type": "number",
+            "format": "double"
+          },
+          "plannedZoneSeconds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "plannedUnspecifiedSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "actualZoneSeconds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "actualBelowZonesSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "plannedWorkouts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completedWorkouts": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "PlannedWorkoutDto": {
         "type": "object",
         "properties": {
@@ -10107,6 +10315,64 @@
           "VeryGood"
         ],
         "type": "string"
+      },
+      "WorkoutComparisonDto": {
+        "type": "object",
+        "properties": {
+          "workoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "sport": {
+            "$ref": "#/components/schemas/SportType"
+          },
+          "isRestDay": {
+            "type": "boolean"
+          },
+          "plannedDurationSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "plannedDistanceMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "plannedZoneSeconds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "plannedUnspecifiedSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "actual": {
+            "$ref": "#/components/schemas/ActualActivityDto"
+          },
+          "sportMismatch": {
+            "type": "boolean"
+          },
+          "durationCompliancePercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "distanceCompliancePercent": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "WorkoutSegmentDto": {
         "type": "object",

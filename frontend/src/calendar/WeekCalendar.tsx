@@ -1,11 +1,16 @@
 import { useMemo, useState } from 'react';
+import { useGetApiAthletesAthleteUserIdPlanVsActual } from '../api/generated/training-plans/training-plans';
+import type { PlanVsActualDto } from '../api/generated/models';
+import type { BadgeTone } from '../design-system/components';
+import { ZoneCompareBars } from './ZoneCompareBars';
+import { formatClock, formatTotalDuration } from '../activities/activityFormat';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Checkbox, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
+import { Checkbox, Select, Stack, Text, Textarea, TextInput, Group } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
 import { IconCalendarOff, IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
@@ -61,6 +66,134 @@ function WeekCalendarSkeleton() {
  * view of one athlete (AthleteDetailPage). See docs/DESIGN_SYSTEM.md §7 "WeekTimeline" for the
  * visual spec (today gets an accent border, 730px+ horizontally-scrollable axis on mobile).
  */
+type DayComparison = NonNullable<PlanVsActualDto['days']>[number];
+
+function complianceTone(percent: number | null | undefined): BadgeTone {
+  if (percent == null) return 'neutral';
+  if (percent >= 80 && percent <= 120) return 'positive';
+  if (percent >= 50 && percent <= 150) return 'warning';
+  return 'danger';
+}
+
+function useOpenActivity() {
+  const navigate = useNavigate();
+  return (id?: string) => (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (id) navigate(`/activities/${id}`);
+  };
+}
+
+type WorkoutComparison = NonNullable<DayComparison['workouts']>[number];
+
+/** What was done for one planned workout: the paired activity with duration compliance and
+ * planned-vs-actual zones, or "missed" once the day is over. */
+function WorkoutActual({ comparison, isPast }: { comparison?: WorkoutComparison; isPast: boolean }) {
+  const { t } = useTranslation();
+  const open = useOpenActivity();
+  if (!comparison || comparison.isRestDay) return null;
+  const actual = comparison.actual;
+  if (!actual) return isPast ? <Badge tone="danger">{t('calendar.compare.missed')}</Badge> : null;
+  const hasPlannedZones = (comparison.plannedZoneSeconds ?? []).some((s) => s > 0);
+  return (
+    <Stack gap={4}>
+      <Group gap={6} wrap="nowrap" justify="space-between">
+        <Text
+          fz={12}
+          lineClamp={1}
+          role="link"
+          tabIndex={0}
+          title={actual.title ?? undefined}
+          onClick={open(actual.activityId)}
+          onKeyDown={(e) => (e.key === 'Enter' ? open(actual.activityId)(e) : undefined)}
+          style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(255,255,255,.25)' }}
+        >
+          ✓ {formatClock(actual.durationSeconds ?? 0)}
+        </Text>
+        {comparison.durationCompliancePercent != null && (
+          <Badge tone={complianceTone(comparison.durationCompliancePercent)}>{comparison.durationCompliancePercent} %</Badge>
+        )}
+      </Group>
+      {comparison.sportMismatch && (
+        <Text className="ds-metadata" lineClamp={1}>
+          {t('calendar.compare.otherSport', { sport: t(`sport.${actual.sport}`) })}
+        </Text>
+      )}
+      {hasPlannedZones && (
+        <ZoneCompareBars
+          plannedZones={comparison.plannedZoneSeconds ?? []}
+          plannedUnspecified={comparison.plannedUnspecifiedSeconds ?? 0}
+          actualZones={actual.zoneSeconds ?? []}
+          actualBelow={actual.belowZonesSeconds ?? 0}
+        />
+      )}
+    </Stack>
+  );
+}
+
+/** Activities of the day that no planned workout claimed. */
+function UnplannedActivities({ day }: { day?: DayComparison }) {
+  const { t } = useTranslation();
+  const open = useOpenActivity();
+  return (day?.unplannedActivities ?? []).map((a) => (
+    <Text
+      key={a.activityId}
+      className="ds-metadata"
+      lineClamp={1}
+      role="link"
+      tabIndex={0}
+      onClick={open(a.activityId)}
+      onKeyDown={(e) => (e.key === 'Enter' ? open(a.activityId)(e) : undefined)}
+      style={{ cursor: 'pointer' }}
+    >
+      + {a.title || t(`sport.${a.sport}`)} · {formatClock(a.durationSeconds ?? 0)}
+    </Text>
+  ));
+}
+
+/** Week totals: planned vs done (duration, distance, completed workouts) and zone distribution. */
+function WeekComparison({ data }: { data: PlanVsActualDto }) {
+  const { t } = useTranslation();
+  const totals = data.totals;
+  if (!totals || (totals.plannedWorkouts ?? 0) === 0 && (totals.actualDurationSeconds ?? 0) === 0) return null;
+  const km = (m?: number | null) => `${((m ?? 0) / 1000).toFixed(1)} km`;
+  const plannedDuration = totals.plannedDurationSeconds ?? 0;
+  const plannedDistance = totals.plannedDistanceMeters ?? 0;
+  const hasPlannedZones = (totals.plannedZoneSeconds ?? []).some((s) => s > 0);
+  const hasZones = hasPlannedZones || (totals.actualZoneSeconds ?? []).some((s) => s > 0);
+  return (
+    <Stack gap="xs" mt="md">
+      <Text className="ds-eyebrow">{t('calendar.compare.weekTitle')}</Text>
+      <Group gap="lg" wrap="wrap">
+        <Text className="ds-metadata">
+          {t('calendar.compare.duration')}: <b>{formatTotalDuration(totals.actualDurationSeconds ?? 0)}</b>
+          {plannedDuration > 0 && <> / {formatTotalDuration(plannedDuration)}</>}
+        </Text>
+        {((totals.actualDistanceMeters ?? 0) > 0 || plannedDistance > 0) && (
+          <Text className="ds-metadata">
+            {t('calendar.compare.distance')}: <b>{km(totals.actualDistanceMeters)}</b>
+            {plannedDistance > 0 && <> / {km(plannedDistance)}</>}
+          </Text>
+        )}
+        {data.actualAvailable && (
+          <Text className="ds-metadata">
+            {t('calendar.compare.completed')}: <b>{totals.completedWorkouts}</b> / {totals.plannedWorkouts}
+          </Text>
+        )}
+      </Group>
+      {hasZones && data.actualAvailable && (
+        <ZoneCompareBars
+          plannedZones={totals.plannedZoneSeconds ?? []}
+          plannedUnspecified={totals.plannedUnspecifiedSeconds ?? 0}
+          actualZones={totals.actualZoneSeconds ?? []}
+          actualBelow={totals.actualBelowZonesSeconds ?? 0}
+          height={12}
+          showPlan={hasPlannedZones}
+        />
+      )}
+    </Stack>
+  );
+}
+
 export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string; canEdit: boolean }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -89,9 +222,12 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
   const todayIso = toIsoDate(new Date());
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const workoutsByDate = new Map<string, PlannedWorkoutDto>();
+  const comparisonQuery = useGetApiAthletesAthleteUserIdPlanVsActual(athleteUserId, { from: weekIso, to: toIsoDate(addDays(weekStart, 6)) });
+  const comparison = comparisonQuery.data;
+  const comparisonByDate = new Map((comparison?.days ?? []).map((d) => [d.date!, d]));
+  const workoutsByDate = new Map<string, PlannedWorkoutDto[]>();
   for (const w of week?.workouts ?? []) {
-    if (w.date) workoutsByDate.set(w.date, w);
+    if (w.date) workoutsByDate.set(w.date, [...(workoutsByDate.get(w.date) ?? []), w]);
   }
 
   const createWeekMutation = useMutation(getPostApiPlansPlanIdWeeksMutationOptions());
@@ -239,38 +375,46 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
       <div className={classes.dayGrid}>
         {days.map((day) => {
           const iso = toIsoDate(day);
-          const workout = workoutsByDate.get(iso);
+          const dayWorkouts = workoutsByDate.get(iso) ?? [];
+          const dayComparison = comparison?.actualAvailable ? comparisonByDate.get(iso) : undefined;
           const isToday = iso === todayIso;
-          const clickable = !!workout?.id;
-          const dayClasses = [classes.day, isToday && classes.dayToday, clickable && classes.dayClickable].filter(Boolean).join(' ');
+          const dayClasses = [classes.day, isToday && classes.dayToday].filter(Boolean).join(' ');
           return (
-            <div
-              key={iso}
-              className={dayClasses}
-              role={clickable ? 'button' : undefined}
-              tabIndex={clickable ? 0 : undefined}
-              onClick={() => workout?.id && navigate(`/workouts/${workout.id}`)}
-              onKeyDown={(e) => {
-                if (clickable && (e.key === 'Enter' || e.key === ' ')) navigate(`/workouts/${workout!.id}`);
-              }}
-            >
+            <div key={iso} className={dayClasses}>
               <Text className="ds-eyebrow">
                 {t(`weekday.${day.getDay() === 0 ? 6 : day.getDay() - 1}`)} · {iso.slice(5)}
               </Text>
-              {workout ? (
-                <Stack gap={4}>
-                  <Badge tone={workout.isRestDay ? 'neutral' : 'info'}>{t(`sport.${workout.sport}`)}</Badge>
+              {dayWorkouts.map((workout) => (
+                <div
+                  key={workout.id}
+                  className={classes.workout}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => workout.id && navigate(`/workouts/${workout.id}`)}
+                  onKeyDown={(e) => {
+                    if (workout.id && (e.key === 'Enter' || e.key === ' ')) navigate(`/workouts/${workout.id}`);
+                  }}
+                >
+                  <div>
+                    <Badge tone={workout.isRestDay ? 'neutral' : 'info'}>{t(`sport.${workout.sport}`)}</Badge>
+                  </div>
                   <Text fz={13} fw={600} lineClamp={2}>
                     {workout.isRestDay ? t('calendar.restDay') : workout.title}
                   </Text>
-                </Stack>
-              ) : (
-                <Text className="ds-metadata">—</Text>
-              )}
+                  <WorkoutActual
+                    comparison={dayComparison?.workouts?.find((c) => c.workoutId === workout.id)}
+                    isPast={iso < todayIso}
+                  />
+                </div>
+              ))}
+              {dayWorkouts.length === 0 && !dayComparison?.unplannedActivities?.length && <Text className="ds-metadata">—</Text>}
+              <UnplannedActivities day={dayComparison} />
             </div>
           );
         })}
       </div>
+
+      {comparison && <WeekComparison data={comparison} />}
 
       <Modal
         opened={modalOpened}

@@ -1,13 +1,9 @@
 import { Group, Stack, Text, Tooltip } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import type { HeartRateZoneDto } from '../api/generated/models';
-import type { ZoneSeconds } from './hrZones';
+import { BELOW_COLOR, ZONE_COLORS, type ZoneSeconds } from './hrZones';
 import { formatClock } from './activityFormat';
 
-// Zones are an ordered scale, so one hue light→dark (here: dim→bright on the dark surface, Z1 → Z5),
-// never categorical hues. Validated with the dataviz validator: `--ordinal --mode dark --surface #111f1b`
-// (monotone lightness, visible step gaps, dimmest step 2.10:1 against the surface).
-const ZONE_COLORS = ['#184f95', '#256abf', '#3987e5', '#6da7ec', '#9ec5f4', '#b7d3f6', '#cde2fb'];
 
 /** The athlete's zone count: the highest zone that has a name set, at least 5. */
 function zoneCount(seconds: number[], zones: readonly HeartRateZoneDto[] | undefined): number {
@@ -16,10 +12,6 @@ function zoneCount(seconds: number[], zones: readonly HeartRateZoneDto[] | undef
   return Math.max(5, lastWithTime, configured);
 }
 
-// "Below zones" sits outside the ordered scale — neutral gray, not a ramp step. Validated against
-// the zone 1 blue (normal-vision ΔE 22.6, CVD ΔE 20.9); every row carries a text label and value,
-// which is the relief for the dim zone 1 step's < 3:1 contrast.
-const BELOW_COLOR = '#7d8984';
 
 function ZoneRow({ label, seconds, total, color }: { label: string; seconds: number; total: number; color: string }) {
   const share = total > 0 ? seconds / total : 0;

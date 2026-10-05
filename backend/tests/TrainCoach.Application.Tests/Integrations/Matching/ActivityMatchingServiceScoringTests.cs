@@ -128,9 +128,21 @@ public class ActivityMatchingServiceScoringTests
         breakdown["noDistanceExactMatch"].Should().Be(1);
     }
 
+    [Fact]
+    public void NoDistance_SameStart_ProvidersDisagreeOnMovingTime_AutoMerges()
+    {
+        // Real case: a workout started on the same second, 1 590 s via intervals.icu, 1 645 s via Strava (3.5 %).
+        var viaIntervalsIcu = Candidate(SportType.Strength, BaseStart, 1590, null);
+        var viaStrava = Incoming(SportType.Strength, BaseStart, 1645, 0);
+
+        var (score, _) = ActivityMatchingService.Score(viaIntervalsIcu, null, viaStrava, Options);
+
+        score.Should().BeGreaterThanOrEqualTo(Options.AutoMergeThreshold);
+    }
+
     [Theory]
     [InlineData(2, 1080)] // two minutes apart
-    [InlineData(0, 1200)] // same start, 10 % longer
+    [InlineData(0, 1250)] // same start, ~15 % longer
     public void NoDistance_OutsideExactBand_StaysCapped(int minutesApart, int incomingDuration)
     {
         var candidate = Candidate(SportType.Strength, BaseStart, 1080, null);

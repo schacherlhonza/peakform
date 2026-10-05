@@ -10,7 +10,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useGetApiAthletesAthleteUserIdActivitiesSearch } from '../api/generated/activities/activities';
 import { SportType, type CompletedActivityDto } from '../api/generated/models';
 import { Panel, Badge, Button, EmptyState, MetricStrip, SegmentedControl, Skeleton } from '../design-system/components';
-import { formatClock, formatDistanceKm, formatPace } from './activityFormat';
+import { formatClock, formatDistanceKm, formatPace, formatTotalDuration } from './activityFormat';
 import PersonalBestsView from './PersonalBestsView';
 
 const PAGE_SIZE = 25;
@@ -25,11 +25,6 @@ function isoDaysAgo(days: number): string {
 
 const PRESET_DAYS: Record<Exclude<Preset, 'all'>, number> = { month: 30, quarter: 91, year: 365 };
 
-function formatTotalDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  return h > 0 ? `${h.toLocaleString('cs-CZ')} h ${m} min` : `${m} min`;
-}
 
 function formatTotalDistance(meters: number): string {
   const km = meters / 1000;

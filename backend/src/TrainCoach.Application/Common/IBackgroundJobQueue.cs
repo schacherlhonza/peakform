@@ -25,4 +25,6 @@ public interface IBackgroundJobQueue
     ValueTask QueueHrZoneRecomputeAsync(Guid athleteUserId, bool onlyMissing, CancellationToken cancellationToken = default);
 
     ValueTask QueueTrainingLoadRecomputeAsync(Guid athleteUserId, CancellationToken cancellationToken = default);
+
+    ValueTask QueueDuplicateReevaluationAsync(Guid athleteUserId, CancellationToken cancellationToken = default);
 }

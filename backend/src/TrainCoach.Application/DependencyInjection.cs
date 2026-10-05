@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IRelationshipAccessGuard, RelationshipAccessGuard>();
         services.AddScoped<ICoachAthleteRelationshipService, CoachAthleteRelationshipService>();
         services.AddScoped<ITrainingPlanService, TrainingPlanService>();
+        services.AddScoped<IPlanVsActualService, PlanVsActualService>();
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IHrZoneRecomputeJob, HrZoneRecomputeJob>();
         services.AddScoped<IBestEffortRecomputeJob, BestEffortRecomputeJob>();

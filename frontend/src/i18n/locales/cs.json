@@ -309,7 +309,18 @@
     "isRestDay": "Den odpočinku",
     "title": "Název tréninku",
     "description": "Popis (volný text)",
-    "createWorkout": "Vytvořit trénink"
+    "createWorkout": "Vytvořit trénink",
+    "compare": {
+      "plan": "Plán",
+      "actual": "Skutečnost",
+      "noTarget": "Bez cílové zóny",
+      "missed": "Nesplněno",
+      "weekTitle": "Týden: skutečnost / plán",
+      "duration": "Čas",
+      "distance": "Vzdálenost",
+      "completed": "Splněno tréninků",
+      "otherSport": "Jiný sport: {{sport}}"
+    }
   },
   "workout": {
     "detail": "Detail tréninku",

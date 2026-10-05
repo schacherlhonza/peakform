@@ -51,6 +51,8 @@ public class ActivityMatchingOptions
     /// intervals.icu, which otherwise all landed in manual review).</summary>
     public int NoDistanceExactStartToleranceMinutes { get; set; } = 1;
 
-    /// <summary>See <see cref="NoDistanceExactStartToleranceMinutes"/>.</summary>
-    public decimal NoDistanceExactDurationTolerancePercent { get; set; } = 0.02m;
+    /// <summary>See <see cref="NoDistanceExactStartToleranceMinutes"/>. 10 %, not tighter: providers
+    /// compute "moving time" differently — a real pair started on the same second differed 3.3 %
+    /// (1 645 s Strava vs 1 590 s intervals.icu).</summary>
+    public decimal NoDistanceExactDurationTolerancePercent { get; set; } = 0.10m;
 }
