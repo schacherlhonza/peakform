@@ -33,6 +33,7 @@ public interface IApplicationDbContext
     DbSet<PlannedWorkout> PlannedWorkouts { get; }
     DbSet<WorkoutTemplate> WorkoutTemplates { get; }
     DbSet<WorkoutSegment> WorkoutSegments { get; }
+    DbSet<PlannedWorkoutPushRecord> PlannedWorkoutPushRecords { get; }
     DbSet<HeartRateZone> HeartRateZones { get; }
     DbSet<CustomAbbreviation> CustomAbbreviations { get; }
 

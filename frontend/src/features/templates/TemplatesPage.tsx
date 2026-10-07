@@ -6,8 +6,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Group, Select, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconClipboardList, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconClipboardList, IconCopy, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import { Panel, CardHeader, Button, IconButton, Modal, FormField, Skeleton, EmptyState, showToast } from '../../design-system/components';
+import { SegmentEditor } from '../../workouts/segments/SegmentEditor';
+import { SegmentList } from '../../workouts/segments/SegmentList';
+import { normalizeSegments } from '../../workouts/segments/segmentFormat';
 import {
   useGetApiWorkoutTemplates,
   getGetApiWorkoutTemplatesQueryKey,
@@ -16,7 +19,7 @@ import {
   getDeleteApiWorkoutTemplatesIdMutationOptions,
 } from '../../api/generated/workout-templates/workout-templates';
 import { SportType } from '../../api/generated/models';
-import type { WorkoutTemplateDto } from '../../api/generated/models';
+import type { WorkoutSegmentDto, WorkoutTemplateDto } from '../../api/generated/models';
 
 const schema = z.object({
   name: z.string().min(1),
@@ -41,6 +44,7 @@ export function TemplatesPage() {
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure();
   const [editingTemplate, setEditingTemplate] = useState<WorkoutTemplateDto | null>(null);
   const [pendingDelete, setPendingDelete] = useState<WorkoutTemplateDto | null>(null);
+  const [segments, setSegments] = useState<WorkoutSegmentDto[]>([]);
 
   const templatesQuery = useGetApiWorkoutTemplates();
   const templates = templatesQuery.data ?? [];
@@ -58,26 +62,33 @@ export function TemplatesPage() {
   const openCreate = () => {
     setEditingTemplate(null);
     form.reset({ name: '', sport: SportType.Running, description: '' });
+    setSegments([]);
     openModal();
   };
 
   const openEdit = (tpl: WorkoutTemplateDto) => {
     setEditingTemplate(tpl);
     form.reset({ name: tpl.name ?? '', sport: tpl.sport ?? SportType.Running, description: tpl.description ?? '' });
+    setSegments(tpl.segments ?? []);
+    openModal();
+  };
+
+  const openDuplicate = (tpl: WorkoutTemplateDto) => {
+    setEditingTemplate(null);
+    form.reset({ name: t('templates.copyName', { name: tpl.name ?? '' }), sport: tpl.sport ?? SportType.Running, description: tpl.description ?? '' });
+    setSegments((tpl.segments ?? []).map((s) => ({ ...s, id: null })));
     openModal();
   };
 
   const onSubmit = form.handleSubmit(async (values) => {
+    const data = { name: values.name, sport: values.sport, description: values.description ?? '', segments: normalizeSegments(segments) };
     try {
       if (editingTemplate?.id) {
-        await updateMutation.mutateAsync({
-          id: editingTemplate.id,
-          data: { name: values.name, sport: values.sport, description: values.description, segments: editingTemplate.segments ?? [] },
-        });
+        await updateMutation.mutateAsync({ id: editingTemplate.id, data });
       } else {
-        await createMutation.mutateAsync({ data: { name: values.name, sport: values.sport, description: values.description, segments: [] } });
+        await createMutation.mutateAsync({ data });
       }
-      showToast({ tone: 'positive', message: t('templates.created') });
+      showToast({ tone: 'positive', message: editingTemplate ? t('templates.saved') : t('templates.created') });
       closeModal();
       await invalidate();
     } catch {
@@ -137,6 +148,7 @@ export function TemplatesPage() {
                   right={
                     <Group gap={4}>
                       <IconButton icon={<IconPencil size={16} />} label={t('common.edit')} onClick={() => openEdit(tpl)} />
+                      <IconButton icon={<IconCopy size={16} />} label={t('templates.duplicate')} onClick={() => openDuplicate(tpl)} />
                       <IconButton
                         icon={<IconTrash size={16} />}
                         label={t('common.delete')}
@@ -147,30 +159,41 @@ export function TemplatesPage() {
                   }
                 />
                 {tpl.description && <Text className="ds-body">{tpl.description}</Text>}
+                {(tpl.segments?.length ?? 0) > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    <SegmentList segments={tpl.segments ?? []} compact />
+                  </div>
+                )}
               </div>
             ))}
           </Stack>
         )}
       </Panel>
 
-      <Modal opened={modalOpened} onClose={closeModal} title={editingTemplate ? t('common.edit') : t('templates.createTemplate')}>
+      <Modal opened={modalOpened} onClose={closeModal} size="xl" title={editingTemplate ? t('templates.editTemplate') : t('templates.createTemplate')}>
         <form onSubmit={onSubmit}>
           <Stack gap="sm">
-            <FormField label={t('templates.name')} error={form.formState.errors.name?.message}>
-              <TextInput {...form.register('name')} />
-            </FormField>
-            <Controller
-              control={form.control}
-              name="sport"
-              render={({ field }) => (
-                <FormField label={t('templates.sport')}>
-                  <Select data={Object.values(SportType).map((v) => ({ value: v, label: t(`sport.${v}`) }))} {...field} />
-                </FormField>
-              )}
-            />
+            <Group grow align="flex-start">
+              <FormField label={t('templates.name')} error={form.formState.errors.name?.message}>
+                <TextInput {...form.register('name')} />
+              </FormField>
+              <Controller
+                control={form.control}
+                name="sport"
+                render={({ field }) => (
+                  <FormField label={t('templates.sport')}>
+                    <Select data={Object.values(SportType).map((v) => ({ value: v, label: t(`sport.${v}`) }))} {...field} />
+                  </FormField>
+                )}
+              />
+            </Group>
             <FormField label={t('templates.description')}>
-              <Textarea minRows={2} {...form.register('description')} />
+              <Textarea autosize minRows={2} maxRows={6} {...form.register('description')} />
             </FormField>
+            <Text className="ds-eyebrow" mt="xs">
+              {t('workout.structure')}
+            </Text>
+            <SegmentEditor value={segments} onChange={setSegments} />
             <Button type="submit" loading={form.formState.isSubmitting || createMutation.isPending || updateMutation.isPending} fullWidth mt="sm">
               {t('common.save')}
             </Button>

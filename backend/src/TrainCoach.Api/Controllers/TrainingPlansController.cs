@@ -56,6 +56,13 @@ public class TrainingPlansController(ITrainingPlanService service, IPlanVsActual
         return Ok(await service.GetWorkoutAsync(id, cancellationToken));
     }
 
+    /// <summary>Whether the workout made it to the athlete's external calendar (intervals.icu → Garmin).</summary>
+    [HttpGet("workouts/{id:guid}/push-status")]
+    public async Task<ActionResult<IReadOnlyList<WorkoutPushStatusDto>>> GetWorkoutPushStatus(Guid id, CancellationToken cancellationToken)
+    {
+        return Ok(await service.GetWorkoutPushStatusAsync(id, cancellationToken));
+    }
+
     [HttpPost("workouts")]
     [Authorize(Roles = "Coach")]
     public async Task<ActionResult<PlannedWorkoutDto>> CreateWorkout(CreatePlannedWorkoutRequest request, CancellationToken cancellationToken)

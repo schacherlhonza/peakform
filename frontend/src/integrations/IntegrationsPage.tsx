@@ -9,6 +9,7 @@ import type { BadgeTone } from '../design-system/components';
 import { useAuth } from '../auth/AuthContext';
 import StravaArchiveImportPanel from './StravaArchiveImportPanel';
 import { HistoryBackfillButton } from './HistoryBackfillButton';
+import { WorkoutPushSetting } from './WorkoutPushSetting';
 import { StravaDisconnectModal } from './StravaDisconnectModal';
 import {
   useGetApiIntegrations,
@@ -222,6 +223,31 @@ function ProviderCard({
           {connection?.lastSyncedAtUtc ? new Date(connection.lastSyncedAtUtc).toLocaleString('cs-CZ') : t('integrations.neverSynced')}
         </Text>
       )}
+
+      {/* PeakForm's zones are written to intervals.icu so workouts pushed as "Z2" match them on the watch. */}
+      {connected && provider === IntegrationProviderType.IntervalsIcu && (
+        <Group gap="xs" mb="sm" wrap="nowrap" align="flex-start">
+          {connection?.heartRateZonesSyncError ? (
+            <>
+              <Text fz={12} c="var(--color-warning)">
+                {t('integrations.hrZonesSyncFailed', { reason: connection.heartRateZonesSyncError })}
+              </Text>
+              {!isDemo && (
+                <Button size="compact-xs" variant="light" onClick={() => void handleConnectOAuth()} loading={authorizing}>
+                  {t('integrations.reconnect')}
+                </Button>
+              )}
+            </>
+          ) : (
+            <Text className="ds-metadata">
+              {connection?.heartRateZonesSyncedAtUtc
+                ? t('integrations.hrZonesSynced', { date: new Date(connection.heartRateZonesSyncedAtUtc).toLocaleString('cs-CZ') })
+                : t('integrations.hrZonesNotSynced')}
+            </Text>
+          )}
+        </Group>
+      )}
+      {connected && provider === IntegrationProviderType.IntervalsIcu && <WorkoutPushSetting provider={provider} connection={connection} />}
 
       <Group gap="xs" mb={connected ? 'md' : 0}>
         {!connected && isDemo && (

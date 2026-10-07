@@ -51,6 +51,15 @@ public class IntegrationConnectionsController(IIntegrationConnectionService serv
         return NoContent();
     }
 
+    public record PushPlannedWorkoutsRequest(bool Enabled);
+
+    /// <summary>The athlete's consent to put coach-planned workouts on this provider's calendar (and their watch).</summary>
+    [HttpPut("{provider}/push-planned-workouts")]
+    public async Task<ActionResult<IntegrationConnectionDto>> SetPushPlannedWorkouts(IntegrationProviderType provider, PushPlannedWorkoutsRequest request, CancellationToken cancellationToken)
+    {
+        return Ok(await service.SetPushPlannedWorkoutsAsync(currentUser.UserId, provider, request.Enabled, cancellationToken));
+    }
+
     [HttpPost("{provider}/sync")]
     public async Task<IActionResult> TriggerSync(IntegrationProviderType provider, CancellationToken cancellationToken)
     {

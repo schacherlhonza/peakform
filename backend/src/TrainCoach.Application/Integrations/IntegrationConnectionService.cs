@@ -137,6 +137,26 @@ public class IntegrationConnectionService(
         await EnqueueSyncAsync(connection, SyncTrigger.Manual, cancellationToken);
     }
 
+    public async Task<IntegrationConnectionDto> SetPushPlannedWorkoutsAsync(Guid callerUserId, IntegrationProviderType provider, bool enabled, CancellationToken cancellationToken = default)
+    {
+        if (ResolveProvider(provider) is not IPlannedWorkoutPushProvider)
+        {
+            throw new BusinessRuleException("Tento poskytovatel neumí přijímat naplánované tréninky.");
+        }
+        var connection = await db.IntegrationConnections
+            .FirstOrDefaultAsync(c => c.AthleteUserId == callerUserId && c.Provider == provider, cancellationToken)
+            ?? throw new NotFoundException("IntegrationConnection", provider);
+        if (connection.Status != IntegrationConnectionStatus.Connected)
+        {
+            throw new BusinessRuleException("Propojení není aktivní.");
+        }
+
+        connection.PushPlannedWorkouts = enabled;
+        await db.SaveChangesAsync(cancellationToken);
+        await jobQueue.QueuePlannedWorkoutPushForAthleteAsync(callerUserId, cancellationToken);
+        return ToDto(connection);
+    }
+
     public async Task TriggerHistoryBackfillAsync(Guid callerUserId, IntegrationProviderType provider, DateOnly fromDate, CancellationToken cancellationToken = default)
     {
         if (provider != IntegrationProviderType.IntervalsIcu)
@@ -331,6 +351,9 @@ public class IntegrationConnectionService(
         await policyService.EnsureDefaultsAsync(athleteUserId, cancellationToken);
 
         await EnqueueSyncAsync(connection, SyncTrigger.OnConnect, cancellationToken);
+        // A (re)connect may have just granted the scopes zone writing and workout pushing need.
+        await jobQueue.QueueTrainingSettingsSyncAsync(athleteUserId, cancellationToken);
+        await jobQueue.QueuePlannedWorkoutPushForAthleteAsync(athleteUserId, cancellationToken);
 
         return ToDto(connection);
     }
@@ -375,5 +398,6 @@ public class IntegrationConnectionService(
     }
 
     private static IntegrationConnectionDto ToDto(IntegrationConnection c) => new(
-        c.Id, c.AthleteUserId, c.Provider, c.Status, c.ExternalAccountId, c.ConnectedAtUtc, c.LastSyncedAtUtc);
+        c.Id, c.AthleteUserId, c.Provider, c.Status, c.ExternalAccountId, c.ConnectedAtUtc, c.LastSyncedAtUtc,
+        c.HeartRateZonesSyncedAtUtc, c.HeartRateZonesSyncError, c.PushPlannedWorkouts);
 }

@@ -56,6 +56,33 @@ public class ChannelBackgroundJobQueue : IBackgroundJobQueue
         }, cancellationToken);
     }
 
+    public ValueTask QueueTrainingSettingsSyncAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<ITrainingSettingsSyncJob>();
+            await job.RunAsync(athleteUserId, ct);
+        }, cancellationToken);
+    }
+
+    public ValueTask QueuePlannedWorkoutPushAsync(Guid plannedWorkoutId, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<IPlannedWorkoutPushJob>();
+            await job.RunAsync(plannedWorkoutId, ct);
+        }, cancellationToken);
+    }
+
+    public ValueTask QueuePlannedWorkoutPushForAthleteAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
+    {
+        return _channel.Writer.WriteAsync(async (services, ct) =>
+        {
+            var job = services.GetRequiredService<IPlannedWorkoutPushJob>();
+            await job.RunForAthleteAsync(athleteUserId, ct);
+        }, cancellationToken);
+    }
+
     public ValueTask QueueTrainingLoadRecomputeAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
     {
         return _channel.Writer.WriteAsync(async (services, ct) =>

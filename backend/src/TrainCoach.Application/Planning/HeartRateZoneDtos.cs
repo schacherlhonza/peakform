@@ -19,6 +19,9 @@ public record HeartRateZoneInput(
     int? MinPaceSecondsPerKm,
     int? MaxPaceSecondsPerKm);
 
+/// <summary>Threshold values that go with the zones; null = not set.</summary>
+public record AthleteThresholdsDto(int? ThresholdPaceSecondsPerKm);
+
 /// <summary>Replace-all semantics: every existing zone for this athlete with the same
 /// <see cref="EffectiveFromDate"/> is removed and replaced by <see cref="Zones"/>.</summary>
 public record SetHeartRateZonesRequest(

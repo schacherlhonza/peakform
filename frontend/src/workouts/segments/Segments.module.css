@@ -1,0 +1,49 @@
+.editorRow {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.editorFields {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.editorNotes {
+  flex: 1;
+  min-width: 180px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.listItems {
+  margin: 0;
+  padding-left: 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.listItem::marker {
+  color: var(--color-text-subtle);
+  font-size: 12px;
+}
+
+.editorBlock {
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface-inset);
+}
+
+.listBlock {
+  margin-top: 4px;
+  list-style-type: lower-alpha;
+}

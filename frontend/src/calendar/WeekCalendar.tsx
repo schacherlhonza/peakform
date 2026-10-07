@@ -24,6 +24,8 @@ import {
   getPostApiWorkoutsMutationOptions,
 } from '../api/generated/training-plans/training-plans';
 import { useGetApiWorkoutTemplates } from '../api/generated/workout-templates/workout-templates';
+import { SegmentList } from '../workouts/segments/SegmentList';
+import { segmentTotals } from '../workouts/segments/segmentFormat';
 import { SportType, type PlannedWorkoutDto } from '../api/generated/models';
 import { Panel, CardHeader, Badge, Button, Modal, FormField, EmptyState, Skeleton, showToast } from '../design-system/components';
 import { addDays, mondayOf, toIsoDate } from './dateUtils';
@@ -275,6 +277,8 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
 
   const onSubmit = handleSubmit(async (values) => {
     if (!activePlan?.id) return;
+    const templateSegments = values.isRestDay ? [] : (selectedTemplate?.segments ?? []);
+    const templateTotals = segmentTotals(templateSegments);
     try {
       let targetWeekId = week?.id;
       if (!targetWeekId) {
@@ -293,7 +297,9 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
           title: values.isRestDay ? t('calendar.restDay') : values.title,
           coachDescription: values.coachDescription ?? '',
           isRestDay: values.isRestDay,
-          segments: values.isRestDay ? [] : (selectedTemplate?.segments ?? []),
+          segments: templateSegments,
+          plannedDurationSeconds: templateTotals.durationSeconds,
+          plannedDistanceMeters: templateTotals.distanceMeters,
         },
       });
 
@@ -463,6 +469,7 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
                     />
                   </FormField>
                 )}
+                {(selectedTemplate?.segments?.length ?? 0) > 0 && <SegmentList segments={selectedTemplate?.segments ?? []} compact />}
                 <Controller
                   name="sport"
                   control={control}

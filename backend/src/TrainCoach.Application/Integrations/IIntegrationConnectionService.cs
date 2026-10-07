@@ -21,6 +21,10 @@ public interface IIntegrationConnectionService
 
     Task TriggerSyncAsync(Guid callerUserId, IntegrationProviderType provider, CancellationToken cancellationToken = default);
 
+    /// <summary>The athlete's consent to put coach-planned workouts on this provider's calendar. Turning it
+    /// on pushes the upcoming workouts, turning it off removes the pushed ones.</summary>
+    Task<IntegrationConnectionDto> SetPushPlannedWorkoutsAsync(Guid callerUserId, IntegrationProviderType provider, bool enabled, CancellationToken cancellationToken = default);
+
     /// <summary>Queues a one-off sync of older history from <paramref name="fromDate"/> (activities,
     /// wellness, and then detail streams). intervals.icu only — Strava history comes from the
     /// data archive import, the Strava API's limits and terms rule out a bulk pull.</summary>

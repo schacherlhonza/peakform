@@ -17,4 +17,5 @@ export const WorkoutSegmentType = {
   Repeat: 'Repeat',
   Drill: 'Drill',
   Strides: 'Strides',
+  Recovery: 'Recovery',
 } as const;

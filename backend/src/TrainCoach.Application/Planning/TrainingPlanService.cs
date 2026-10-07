@@ -8,6 +8,7 @@ namespace TrainCoach.Application.Planning;
 public class TrainingPlanService(
     IApplicationDbContext db,
     IRelationshipAccessGuard accessGuard,
+    IBackgroundJobQueue jobQueue,
     IDateTimeProvider clock) : ITrainingPlanService
 {
     public async Task<IReadOnlyList<TrainingPlanDto>> GetPlansForAthleteAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
@@ -115,6 +116,20 @@ public class TrainingPlanService(
         return ToWorkoutDto(workout);
     }
 
+    public async Task<IReadOnlyList<WorkoutPushStatusDto>> GetWorkoutPushStatusAsync(Guid workoutId, CancellationToken cancellationToken = default)
+    {
+        var workout = await db.PlannedWorkouts.Include(w => w.PushRecords)
+            .FirstOrDefaultAsync(w => w.Id == workoutId, cancellationToken)
+            ?? throw new NotFoundException("PlannedWorkout", workoutId);
+
+        var athleteUserId = await ResolveAthleteForWorkoutAsync(workout, cancellationToken);
+        await accessGuard.EnsureAthleteAccessAsync(athleteUserId, PermissionScope.ViewTrainingPlan, cancellationToken);
+
+        return workout.PushRecords.OrderBy(r => r.Provider).Select(r => new WorkoutPushStatusDto(
+            r.Provider, r.Status, r.PushedAtUtc, r.UpdatedAtUtc, r.Error,
+            r.Warnings?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? [])).ToList();
+    }
+
     public async Task<PlannedWorkoutDto> CreateWorkoutAsync(CreatePlannedWorkoutRequest request, CancellationToken cancellationToken = default)
     {
         var week = await db.TrainingWeeks.FirstOrDefaultAsync(w => w.Id == request.TrainingWeekId, cancellationToken)
@@ -134,10 +149,11 @@ public class TrainingPlanService(
             PlannedDurationSeconds = request.PlannedDurationSeconds,
             PlannedElevationGainMeters = request.PlannedElevationGainMeters,
             CreatedAtUtc = clock.UtcNow,
-            Segments = MapSegments(request.Segments),
+            Segments = WorkoutSegmentMapping.ToEntities(request.Segments),
         };
         db.PlannedWorkouts.Add(workout);
         await db.SaveChangesAsync(cancellationToken);
+        await jobQueue.QueuePlannedWorkoutPushAsync(workout.Id, cancellationToken);
         return ToWorkoutDto(workout);
     }
 
@@ -161,7 +177,7 @@ public class TrainingPlanService(
         workout.UpdatedAtUtc = clock.UtcNow;
 
         db.WorkoutSegments.RemoveRange(workout.Segments);
-        var newSegments = MapSegments(request.Segments);
+        var newSegments = WorkoutSegmentMapping.ToEntities(request.Segments);
         workout.Segments = newSegments;
         // WorkoutSegment.Id is assigned client-side at construction (see Entity base type), so
         // EF's change tracker can't tell these are new from the key alone — without an explicit
@@ -170,6 +186,7 @@ public class TrainingPlanService(
         db.WorkoutSegments.AddRange(newSegments);
 
         await db.SaveChangesAsync(cancellationToken);
+        await jobQueue.QueuePlannedWorkoutPushAsync(workout.Id, cancellationToken);
         return ToWorkoutDto(workout);
     }
 
@@ -184,6 +201,7 @@ public class TrainingPlanService(
         workout.IsDeleted = true;
         workout.DeletedAtUtc = clock.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+        await jobQueue.QueuePlannedWorkoutPushAsync(workout.Id, cancellationToken);
     }
 
     public async Task<PlannedWorkoutDto> CopyWorkoutAsync(Guid workoutId, CopyWorkoutRequest request, CancellationToken cancellationToken = default)
@@ -210,25 +228,12 @@ public class TrainingPlanService(
             PlannedElevationGainMeters = source.PlannedElevationGainMeters,
             CopiedFromWorkoutId = source.Id,
             CreatedAtUtc = clock.UtcNow,
-            Segments = source.Segments.Select(s => new WorkoutSegment
-            {
-                Order = s.Order,
-                Type = s.Type,
-                RepeatCount = s.RepeatCount,
-                DistanceMeters = s.DistanceMeters,
-                DurationSeconds = s.DurationSeconds,
-                IntensityTargetType = s.IntensityTargetType,
-                TargetHeartRateZoneId = s.TargetHeartRateZoneId,
-                TargetPaceSecondsPerKmMin = s.TargetPaceSecondsPerKmMin,
-                TargetPaceSecondsPerKmMax = s.TargetPaceSecondsPerKmMax,
-                TargetRpe = s.TargetRpe,
-                TargetPowerWatts = s.TargetPowerWatts,
-                Notes = s.Notes,
-            }).ToList(),
+            Segments = WorkoutSegmentMapping.Copy(source.Segments),
         };
 
         db.PlannedWorkouts.Add(copy);
         await db.SaveChangesAsync(cancellationToken);
+        await jobQueue.QueuePlannedWorkoutPushAsync(copy.Id, cancellationToken);
         return ToWorkoutDto(copy);
     }
 
@@ -238,30 +243,6 @@ public class TrainingPlanService(
             .Where(w => w.Id == workout.TrainingWeekId)
             .Join(db.TrainingPlans, w => w.TrainingPlanId, p => p.Id, (w, p) => p.AthleteUserId)
             .FirstAsync(cancellationToken);
-    }
-
-    private static List<WorkoutSegment> MapSegments(IReadOnlyList<WorkoutSegmentDto>? segments)
-    {
-        if (segments is null)
-        {
-            return [];
-        }
-
-        return segments.Select(s => new WorkoutSegment
-        {
-            Order = s.Order,
-            Type = s.Type,
-            RepeatCount = s.RepeatCount,
-            DistanceMeters = s.DistanceMeters,
-            DurationSeconds = s.DurationSeconds,
-            IntensityTargetType = s.IntensityTargetType,
-            TargetHeartRateZoneId = s.TargetHeartRateZoneId,
-            TargetPaceSecondsPerKmMin = s.TargetPaceSecondsPerKmMin,
-            TargetPaceSecondsPerKmMax = s.TargetPaceSecondsPerKmMax,
-            TargetRpe = s.TargetRpe,
-            TargetPowerWatts = s.TargetPowerWatts,
-            Notes = s.Notes,
-        }).ToList();
     }
 
     private static TrainingPlanDto ToDto(TrainingPlan plan) => new(
@@ -275,7 +256,5 @@ public class TrainingPlanService(
     private static PlannedWorkoutDto ToWorkoutDto(PlannedWorkout workout) => new(
         workout.Id, workout.TrainingWeekId, workout.Date, workout.Sport, workout.Title, workout.CoachDescription, workout.IsRestDay,
         workout.PlannedDistanceMeters, workout.PlannedDurationSeconds, workout.PlannedElevationGainMeters,
-        workout.Segments.OrderBy(s => s.Order).Select(s => new WorkoutSegmentDto(
-            s.Id, s.Order, s.Type, s.RepeatCount, s.DistanceMeters, s.DurationSeconds, s.IntensityTargetType,
-            s.TargetHeartRateZoneId, s.TargetPaceSecondsPerKmMin, s.TargetPaceSecondsPerKmMax, s.TargetRpe, s.TargetPowerWatts, s.Notes)).ToList());
+        WorkoutSegmentMapping.ToDtos(workout.Segments));
 }

@@ -31,6 +31,7 @@ import type {
   OAuthCallbackRequest,
   PostApiIntegrationsSyncAllParams,
   ProviderSyncStatusDto,
+  PushPlannedWorkoutsRequest,
   StravaDisconnectImpactDto,
   SynchronizationRunDto
 } from '../models';
@@ -493,6 +494,68 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteApiIntegrationsProviderMutationOptions(options), queryClient);
+    }
+    export const putApiIntegrationsProviderPushPlannedWorkouts = (
+    provider: IntegrationProviderType,
+    pushPlannedWorkoutsRequest?: PushPlannedWorkoutsRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<IntegrationConnectionDto>(
+      {url: `/api/integrations/${provider}/push-planned-workouts`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: pushPlannedWorkoutsRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getPutApiIntegrationsProviderPushPlannedWorkoutsMutationKey = () => ['putApiIntegrationsProviderPushPlannedWorkouts'] as const;
+
+export const getPutApiIntegrationsProviderPushPlannedWorkoutsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiIntegrationsProviderPushPlannedWorkouts>>, TError,PutApiIntegrationsProviderPushPlannedWorkoutsMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiIntegrationsProviderPushPlannedWorkouts>>, TError,PutApiIntegrationsProviderPushPlannedWorkoutsMutationVariables, TContext> => {
+
+const mutationKey = getPutApiIntegrationsProviderPushPlannedWorkoutsMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiIntegrationsProviderPushPlannedWorkouts>>, PutApiIntegrationsProviderPushPlannedWorkoutsMutationVariables> = (props) => {
+          const {provider,data} = props ?? {};
+
+          return  putApiIntegrationsProviderPushPlannedWorkouts(provider,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiIntegrationsProviderPushPlannedWorkoutsMutationResult = NonNullable<Awaited<ReturnType<typeof putApiIntegrationsProviderPushPlannedWorkouts>>>
+    export type PutApiIntegrationsProviderPushPlannedWorkoutsMutationBody = PushPlannedWorkoutsRequest | undefined
+    export type PutApiIntegrationsProviderPushPlannedWorkoutsMutationError = ErrorType<unknown>
+    export type PutApiIntegrationsProviderPushPlannedWorkoutsMutationVariables = {provider: IntegrationProviderType;data?: PushPlannedWorkoutsRequest}
+
+    export const usePutApiIntegrationsProviderPushPlannedWorkouts = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiIntegrationsProviderPushPlannedWorkouts>>, TError,PutApiIntegrationsProviderPushPlannedWorkoutsMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiIntegrationsProviderPushPlannedWorkouts>>,
+        TError,
+        PutApiIntegrationsProviderPushPlannedWorkoutsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiIntegrationsProviderPushPlannedWorkoutsMutationOptions(options), queryClient);
     }
     export const postApiIntegrationsProviderSync = (
     provider: IntegrationProviderType,

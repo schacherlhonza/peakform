@@ -228,6 +228,27 @@ public class IntervalsIcuWellnessEntry
     public bool? Injury { get; set; }
 }
 
+/// <summary>One planned workout in <c>POST /athlete/0/events/bulk?upsert=true</c> — matched on <c>external_id</c>.</summary>
+public record IntervalsIcuWorkoutEventUpsert(
+    [property: JsonPropertyName("category")] string Category,
+    [property: JsonPropertyName("start_date_local")] string StartDateLocal,
+    [property: JsonPropertyName("type")] string Type,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("target")] string Target,
+    [property: JsonPropertyName("external_id")] string ExternalId,
+    [property: JsonPropertyName("moving_time"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? MovingTime);
+
+/// <summary>An entry of <c>PUT /athlete/0/events/bulk-delete</c>.</summary>
+public record IntervalsIcuEventReference([property: JsonPropertyName("external_id")] string ExternalId);
+
+/// <summary>Body of the partial <c>PUT /athlete/0/sport-settings/{type}</c>; null fields aren't sent, so stay as they are.</summary>
+public record IntervalsIcuSportSettingsUpdate(
+    [property: JsonPropertyName("hr_zones"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<int>? HrZones,
+    [property: JsonPropertyName("hr_zone_names"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] IReadOnlyList<string>? HrZoneNames,
+    [property: JsonPropertyName("max_hr"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int? MaxHr,
+    [property: JsonPropertyName("threshold_pace"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] double? ThresholdPaceMetersPerSecond);
+
 /// <summary>
 /// Reads an "id"-like field as a string regardless of whether the API sent it as a JSON string
 /// or a JSON number — intervals.icu's exact numbering scheme for activity/athlete ids could not

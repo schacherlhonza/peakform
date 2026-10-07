@@ -34,7 +34,7 @@ public class WorkoutTemplateService(
             Description = request.Description,
             CreatedAtUtc = clock.UtcNow,
             CreatedByUserId = coachUserId,
-            Segments = MapSegments(request.Segments),
+            Segments = WorkoutSegmentMapping.ToEntities(request.Segments),
         };
         db.WorkoutTemplates.Add(template);
         await db.SaveChangesAsync(cancellationToken);
@@ -58,7 +58,7 @@ public class WorkoutTemplateService(
         template.UpdatedAtUtc = clock.UtcNow;
 
         db.WorkoutSegments.RemoveRange(template.Segments);
-        var newSegments = MapSegments(request.Segments);
+        var newSegments = WorkoutSegmentMapping.ToEntities(request.Segments);
         template.Segments = newSegments;
         // See TrainingPlanService.UpdateWorkoutAsync for why this explicit AddRange is required.
         db.WorkoutSegments.AddRange(newSegments);
@@ -81,33 +81,7 @@ public class WorkoutTemplateService(
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private static List<WorkoutSegment> MapSegments(IReadOnlyList<WorkoutSegmentDto>? segments)
-    {
-        if (segments is null)
-        {
-            return [];
-        }
-
-        return segments.Select(s => new WorkoutSegment
-        {
-            Order = s.Order,
-            Type = s.Type,
-            RepeatCount = s.RepeatCount,
-            DistanceMeters = s.DistanceMeters,
-            DurationSeconds = s.DurationSeconds,
-            IntensityTargetType = s.IntensityTargetType,
-            TargetHeartRateZoneId = s.TargetHeartRateZoneId,
-            TargetPaceSecondsPerKmMin = s.TargetPaceSecondsPerKmMin,
-            TargetPaceSecondsPerKmMax = s.TargetPaceSecondsPerKmMax,
-            TargetRpe = s.TargetRpe,
-            TargetPowerWatts = s.TargetPowerWatts,
-            Notes = s.Notes,
-        }).ToList();
-    }
-
     private static WorkoutTemplateDto ToDto(WorkoutTemplate t) => new(
         t.Id, t.CoachUserId, t.Name, t.Sport, t.Description,
-        t.Segments.OrderBy(s => s.Order).Select(s => new WorkoutSegmentDto(
-            s.Id, s.Order, s.Type, s.RepeatCount, s.DistanceMeters, s.DurationSeconds, s.IntensityTargetType,
-            s.TargetHeartRateZoneId, s.TargetPaceSecondsPerKmMin, s.TargetPaceSecondsPerKmMax, s.TargetRpe, s.TargetPowerWatts, s.Notes)).ToList());
+        WorkoutSegmentMapping.ToDtos(t.Segments));
 }

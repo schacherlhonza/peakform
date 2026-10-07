@@ -29,4 +29,17 @@ public class HeartRateZonesController(IHeartRateZoneService service, ICurrentUse
 
         return Ok(await service.SetZonesAsync(currentUser.UserId, request, cancellationToken));
     }
+
+    [HttpGet("athletes/{athleteUserId:guid}/thresholds")]
+    public async Task<ActionResult<AthleteThresholdsDto>> GetThresholds(Guid athleteUserId, CancellationToken cancellationToken)
+    {
+        return Ok(await service.GetThresholdsAsync(athleteUserId, cancellationToken));
+    }
+
+    /// <summary>Same access as the zones: the athlete, or a coach with EditTrainingPlan.</summary>
+    [HttpPut("athletes/{athleteUserId:guid}/thresholds")]
+    public async Task<ActionResult<AthleteThresholdsDto>> SetThresholds(Guid athleteUserId, AthleteThresholdsDto request, CancellationToken cancellationToken)
+    {
+        return Ok(await service.SetThresholdsAsync(athleteUserId, request, cancellationToken));
+    }
 }

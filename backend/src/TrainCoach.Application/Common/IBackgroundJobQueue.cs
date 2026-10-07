@@ -27,4 +27,13 @@ public interface IBackgroundJobQueue
     ValueTask QueueTrainingLoadRecomputeAsync(Guid athleteUserId, CancellationToken cancellationToken = default);
 
     ValueTask QueueDuplicateReevaluationAsync(Guid athleteUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>Writes the athlete's current heart rate zones to every connected provider that stores them.</summary>
+    ValueTask QueueTrainingSettingsSyncAsync(Guid athleteUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>Pushes, updates or removes one planned workout on the athlete's push-enabled calendars.</summary>
+    ValueTask QueuePlannedWorkoutPushAsync(Guid plannedWorkoutId, CancellationToken cancellationToken = default);
+
+    /// <summary>The same for all of the athlete's upcoming workouts (pushing switched on/off, account reconnected).</summary>
+    ValueTask QueuePlannedWorkoutPushForAthleteAsync(Guid athleteUserId, CancellationToken cancellationToken = default);
 }

@@ -35,6 +35,7 @@ public class TrainCoachDbContext(DbContextOptions<TrainCoachDbContext> options)
     public DbSet<PlannedWorkout> PlannedWorkouts => Set<PlannedWorkout>();
     public DbSet<WorkoutTemplate> WorkoutTemplates => Set<WorkoutTemplate>();
     public DbSet<WorkoutSegment> WorkoutSegments => Set<WorkoutSegment>();
+    public DbSet<PlannedWorkoutPushRecord> PlannedWorkoutPushRecords => Set<PlannedWorkoutPushRecord>();
     public DbSet<HeartRateZone> HeartRateZones => Set<HeartRateZone>();
     public DbSet<CustomAbbreviation> CustomAbbreviations => Set<CustomAbbreviation>();
 

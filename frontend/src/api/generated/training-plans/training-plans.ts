@@ -35,7 +35,8 @@ import type {
   TrainingPlanDto,
   TrainingWeekDto,
   UpdatePlannedWorkoutRequest,
-  UpdateTrainingWeekRequest
+  UpdateTrainingWeekRequest,
+  WorkoutPushStatusDto
 } from '../models';
 
 import { customInstance } from '../../mutator';
@@ -717,7 +718,93 @@ const {mutation: mutationOptions} = options ?
       > => {
       return useMutation(getDeleteApiWorkoutsIdMutationOptions(options), queryClient);
     }
-    export const postApiWorkouts = (
+    export const getApiWorkoutsIdPushStatus = (
+    id: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<WorkoutPushStatusDto[]>(
+      {url: `/api/workouts/${id}/push-status`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiWorkoutsIdPushStatusQueryKey = (id: string,) => {
+    return [
+    `/api/workouts/${id}/push-status`
+    ] as const;
+    }
+
+
+export const getGetApiWorkoutsIdPushStatusQueryOptions = <TData = Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiWorkoutsIdPushStatusQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>> = ({ signal }) => getApiWorkoutsIdPushStatus(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiWorkoutsIdPushStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>>
+export type GetApiWorkoutsIdPushStatusQueryError = ErrorType<unknown>
+
+
+export function useGetApiWorkoutsIdPushStatus<TData = Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError = ErrorType<unknown>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkoutsIdPushStatus<TData = Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiWorkoutsIdPushStatus<TData = Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiWorkoutsIdPushStatus<TData = Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiWorkoutsIdPushStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiWorkoutsIdPushStatusQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const postApiWorkouts = (
     createPlannedWorkoutRequest?: CreatePlannedWorkoutRequest,
  signal?: AbortSignal
 ) => {

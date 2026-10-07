@@ -180,15 +180,18 @@ public class PlanVsActualService(IApplicationDbContext db, IRelationshipAccessGu
     {
         var zones = new int[ZoneCount];
         var unspecified = 0;
+        var blockRepeats = w.Segments.Where(s => s.Type == WorkoutSegmentType.Repeat).ToDictionary(s => s.Id, s => Math.Max(1, s.RepeatCount ?? 1));
         foreach (var s in w.Segments)
         {
             if (s.DurationSeconds is not { } seconds || seconds <= 0)
             {
-                continue; // distance-only segments have no planned time to compare
+                continue; // distance-only segments (and repeat blocks themselves) have no planned time to compare
             }
-            var total = seconds * Math.Max(1, s.RepeatCount ?? 1);
-            if (s.IntensityTargetType == IntensityTargetType.HeartRateZone
-                && s.TargetHeartRateZoneId is { } zoneId && zoneNumberById.TryGetValue(zoneId, out var number) && number is >= 1 and <= ZoneCount)
+            var parentRepeats = s.ParentSegmentId is { } parentId ? blockRepeats.GetValueOrDefault(parentId, 1) : 1;
+            var total = seconds * Math.Max(1, s.RepeatCount ?? 1) * parentRepeats;
+            var number = s.TargetHeartRateZoneNumber
+                ?? (s.TargetHeartRateZoneId is { } zoneId ? zoneNumberById.GetValueOrDefault(zoneId) : 0);
+            if (s.IntensityTargetType == IntensityTargetType.HeartRateZone && number is >= 1 and <= ZoneCount)
             {
                 zones[number - 1] += total;
             }

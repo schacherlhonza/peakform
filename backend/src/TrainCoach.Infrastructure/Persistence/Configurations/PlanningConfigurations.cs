@@ -84,6 +84,23 @@ public class WorkoutSegmentConfiguration : IEntityTypeConfiguration<WorkoutSegme
     {
         builder.HasIndex(x => new { x.PlannedWorkoutId, x.Order });
         builder.HasIndex(x => new { x.WorkoutTemplateId, x.Order });
+        builder.HasOne(x => x.ParentSegment)
+            .WithMany(x => x.Steps)
+            .HasForeignKey(x => x.ParentSegmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class PlannedWorkoutPushRecordConfiguration : IEntityTypeConfiguration<PlannedWorkoutPushRecord>
+{
+    public void Configure(EntityTypeBuilder<PlannedWorkoutPushRecord> builder)
+    {
+        builder.HasOne(x => x.PlannedWorkout).WithMany(x => x.PushRecords)
+            .HasForeignKey(x => x.PlannedWorkoutId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => new { x.PlannedWorkoutId, x.Provider }).IsUnique();
+        builder.Property(x => x.ExternalEventId).HasMaxLength(100);
+        builder.Property(x => x.Error).HasMaxLength(1000);
+        builder.Property(x => x.Warnings).HasMaxLength(500);
     }
 }
 

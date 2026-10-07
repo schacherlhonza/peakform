@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { Checkbox, Group, NumberInput, Select, Stack, Table, Text, TextInput, Textarea, Title } from '@mantine/core';
+import { Checkbox, Group, NumberInput, Select, Stack, Text, TextInput, Textarea, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { IconClipboardX, IconClipboardPlus, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconClipboardX, IconClipboardPlus } from '@tabler/icons-react';
 import {
   useGetApiWorkoutsId,
   getGetApiWorkoutsIdQueryKey,
@@ -20,19 +20,18 @@ import {
   getPostApiCommentsMutationOptions,
 } from '../api/generated/comments/comments';
 import { getGetApiWorkoutTemplatesQueryKey, getPostApiWorkoutTemplatesMutationOptions } from '../api/generated/workout-templates/workout-templates';
-import { IntensityTargetType, SportType, WorkoutSegmentType, type WorkoutSegmentDto } from '../api/generated/models';
+import { SportType, type WorkoutSegmentDto } from '../api/generated/models';
 import { useAuth } from '../auth/AuthContext';
 import { AppRole } from '../api/generated/models';
-import { Panel, CardHeader, Badge, Button, IconButton, Modal, FormField, MetricStrip, EmptyState, Skeleton, showToast } from '../design-system/components';
+import { Panel, CardHeader, Badge, Button, Modal, FormField, MetricStrip, EmptyState, Skeleton, showToast } from '../design-system/components';
 import { toIsoDate } from '../calendar/dateUtils';
+import { SegmentEditor } from './segments/SegmentEditor';
+import { SegmentList } from './segments/SegmentList';
+import { normalizeSegments } from './segments/segmentFormat';
+import { WorkoutPushStatusLine } from './WorkoutPushStatus';
 import classes from './WorkoutDetailPage.module.css';
 
-const segmentTypeOptions = Object.values(WorkoutSegmentType).map((v) => ({ value: v, label: v }));
 const sportOptions = Object.values(SportType).map((value) => ({ value, label: value }));
-
-interface SegmentFormValues {
-  segments: WorkoutSegmentDto[];
-}
 
 const saveAsTemplateSchema = z.object({
   name: z.string().min(1),
@@ -55,15 +54,6 @@ const editWorkoutSchema = z
   .refine((v) => v.isRestDay || !!v.title?.trim(), { path: ['title'], message: 'Required' });
 type EditWorkoutValues = z.infer<typeof editWorkoutSchema>;
 
-function targetLabel(s: WorkoutSegmentDto): string {
-  if (s.intensityTargetType === IntensityTargetType.Rpe && s.targetRpe) return `RPE ${s.targetRpe}`;
-  if (s.intensityTargetType === IntensityTargetType.Pace && s.targetPaceSecondsPerKmMin) {
-    return `${s.targetPaceSecondsPerKmMin}–${s.targetPaceSecondsPerKmMax ?? ''} s/km`;
-  }
-  if (s.intensityTargetType === IntensityTargetType.Power && s.targetPowerWatts) return `${s.targetPowerWatts} W`;
-  return '—';
-}
-
 function WorkoutDetailSkeleton() {
   return (
     <Stack gap="lg">
@@ -84,6 +74,8 @@ export function WorkoutDetailPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [editingStructure, setEditingStructure] = useState(false);
+  const [draftSegments, setDraftSegments] = useState<WorkoutSegmentDto[]>([]);
+  const [isSavingStructure, setIsSavingStructure] = useState(false);
   const [editingSummary, setEditingSummary] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [saveTemplateOpened, { open: openSaveTemplate, close: closeSaveTemplate }] = useDisclosure();
@@ -94,11 +86,6 @@ export function WorkoutDetailPage() {
   const updateMutation = useMutation(getPutApiWorkoutsIdMutationOptions());
   const commentMutation = useMutation(getPostApiCommentsMutationOptions());
   const createTemplateMutation = useMutation(getPostApiWorkoutTemplatesMutationOptions());
-
-  const { control, register, handleSubmit, reset } = useForm<SegmentFormValues>({
-    values: { segments: workoutQuery.data?.segments ?? [] },
-  });
-  const { fields, append, remove } = useFieldArray({ control, name: 'segments' });
 
   const {
     control: summaryControl,
@@ -131,7 +118,8 @@ export function WorkoutDetailPage() {
   const workout = workoutQuery.data;
   const isCoach = user?.role === AppRole.Coach;
 
-  const saveStructure = handleSubmit(async (values) => {
+  const saveStructure = async () => {
+    setIsSavingStructure(true);
     try {
       await updateMutation.mutateAsync({
         id: workoutId,
@@ -144,7 +132,7 @@ export function WorkoutDetailPage() {
           plannedDistanceMeters: workout.plannedDistanceMeters,
           plannedDurationSeconds: workout.plannedDurationSeconds,
           plannedElevationGainMeters: workout.plannedElevationGainMeters,
-          segments: values.segments,
+          segments: normalizeSegments(draftSegments),
         },
       });
       showToast({ tone: 'positive', message: t('workout.structure') + ' ✓' });
@@ -152,8 +140,10 @@ export function WorkoutDetailPage() {
       await queryClient.invalidateQueries({ queryKey: getGetApiWorkoutsIdQueryKey(workoutId) });
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    } finally {
+      setIsSavingStructure(false);
     }
-  });
+  };
 
   const startEditSummary = () => {
     resetSummary({
@@ -240,6 +230,7 @@ export function WorkoutDetailPage() {
                 {workout.isRestDay ? t('calendar.restDay') : workout.title}
               </Title>
               <Text className="ds-metadata">{workout.date}</Text>
+              <WorkoutPushStatusLine workoutId={workoutId} />
             </div>
             {isCoach && (
               <Group gap="xs">
@@ -357,7 +348,7 @@ export function WorkoutDetailPage() {
                   variant="default"
                   size="compact-sm"
                   onClick={() => {
-                    reset({ segments: workout.segments ?? [] });
+                    setDraftSegments(workout.segments ?? []);
                     setEditingStructure(true);
                   }}
                 >
@@ -373,94 +364,21 @@ export function WorkoutDetailPage() {
             {(workout.segments?.length ?? 0) === 0 ? (
               <EmptyState icon={<IconClipboardX size={24} stroke={1.6} />} title={t('workout.noSegments')} />
             ) : (
-              <Table>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th className="ds-eyebrow">{t('workout.segmentOrder')}</Table.Th>
-                    <Table.Th className="ds-eyebrow">{t('workout.segmentType')}</Table.Th>
-                    <Table.Th className="ds-eyebrow">{t('workout.distance')}</Table.Th>
-                    <Table.Th className="ds-eyebrow">{t('workout.duration')}</Table.Th>
-                    <Table.Th className="ds-eyebrow">{t('workout.target')}</Table.Th>
-                    <Table.Th className="ds-eyebrow">{t('common.notes')}</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {[...(workout.segments ?? [])]
-                    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-                    .map((s) => (
-                      <Table.Tr key={s.id ?? s.order}>
-                        <Table.Td>{s.order}</Table.Td>
-                        <Table.Td>{t(`segmentType.${s.type}`)}</Table.Td>
-                        <Table.Td>{s.distanceMeters ? `${s.distanceMeters} m` : '—'}</Table.Td>
-                        <Table.Td>{s.durationSeconds ? `${s.durationSeconds} s` : '—'}</Table.Td>
-                        <Table.Td>{s.intensityTargetType === IntensityTargetType.Free ? '—' : targetLabel(s)}</Table.Td>
-                        <Table.Td>{s.notes}</Table.Td>
-                      </Table.Tr>
-                    ))}
-                </Table.Tbody>
-              </Table>
+              <SegmentList segments={workout.segments ?? []} />
             )}
           </div>
         ) : (
           <>
-            <Stack gap="xs" p="24px">
-              {fields.map((field, index) => (
-                <div key={field.id} className={classes.segmentRow}>
-                  <Controller
-                    control={control}
-                    name={`segments.${index}.order`}
-                    render={({ field: f }) => (
-                      <FormField label={t('workout.segmentOrder')}>
-                        <NumberInput w={90} value={f.value ?? undefined} onChange={(v) => f.onChange(Number(v))} />
-                      </FormField>
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name={`segments.${index}.type`}
-                    render={({ field: f }) => (
-                      <FormField label={t('workout.segmentType')}>
-                        <Select data={segmentTypeOptions} w={160} {...f} />
-                      </FormField>
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name={`segments.${index}.distanceMeters`}
-                    render={({ field: f }) => (
-                      <FormField label={t('workout.distance')} unit="m">
-                        <NumberInput w={130} value={f.value ?? undefined} onChange={(v) => f.onChange(v === '' ? null : Number(v))} />
-                      </FormField>
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name={`segments.${index}.durationSeconds`}
-                    render={({ field: f }) => (
-                      <FormField label={t('workout.duration')} unit="s">
-                        <NumberInput w={110} value={f.value ?? undefined} onChange={(v) => f.onChange(v === '' ? null : Number(v))} />
-                      </FormField>
-                    )}
-                  />
-                  <FormField label={t('common.notes')}>
-                    <Textarea w={200} {...register(`segments.${index}.notes`)} />
-                  </FormField>
-                  <IconButton icon={<IconTrash size={16} />} label={t('common.delete')} color="red" onClick={() => remove(index)} />
-                </div>
-              ))}
-              <Button
-                variant="default"
-                leftSection={<IconPlus size={16} />}
-                onClick={() => append({ order: fields.length + 1, type: WorkoutSegmentType.Main, intensityTargetType: IntensityTargetType.Free })}
-              >
-                {t('workout.addSegment')}
-              </Button>
-            </Stack>
+            <div style={{ padding: '0 24px' }}>
+              <SegmentEditor value={draftSegments} onChange={setDraftSegments} />
+            </div>
             <div className={classes.actionBar}>
               <Button variant="default" onClick={() => setEditingStructure(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button onClick={() => void saveStructure()}>{t('common.save')}</Button>
+              <Button loading={isSavingStructure} onClick={() => void saveStructure()}>
+                {t('common.save')}
+              </Button>
             </div>
           </>
         )}

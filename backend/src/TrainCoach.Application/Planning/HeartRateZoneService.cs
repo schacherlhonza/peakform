@@ -53,8 +53,34 @@ public class HeartRateZoneService(
         await jobQueue.QueueHrZoneRecomputeAsync(request.AthleteUserId, onlyMissing: false, cancellationToken);
         // The load's threshold heart rate is zone 4's lower bound.
         await jobQueue.QueueTrainingLoadRecomputeAsync(request.AthleteUserId, cancellationToken);
+        // Workouts pushed with "Z2 HR" resolve against the provider's zones — keep them equal to ours.
+        await jobQueue.QueueTrainingSettingsSyncAsync(request.AthleteUserId, cancellationToken);
 
         return zones.OrderBy(z => z.ZoneNumber).Select(ToDto).ToList();
+    }
+
+    public async Task<AthleteThresholdsDto> GetThresholdsAsync(Guid athleteUserId, CancellationToken cancellationToken = default)
+    {
+        await accessGuard.EnsureAthleteAccessAsync(athleteUserId, PermissionScope.ViewTrainingPlan, cancellationToken);
+
+        var pace = await db.AthleteProfiles.Where(p => p.UserProfileId == athleteUserId)
+            .Select(p => p.ThresholdPaceSecondsPerKm).FirstOrDefaultAsync(cancellationToken);
+        return new AthleteThresholdsDto(pace);
+    }
+
+    public async Task<AthleteThresholdsDto> SetThresholdsAsync(Guid athleteUserId, AthleteThresholdsDto thresholds, CancellationToken cancellationToken = default)
+    {
+        await accessGuard.EnsureAthleteAccessAsync(athleteUserId, PermissionScope.EditTrainingPlan, cancellationToken);
+
+        var profile = await db.AthleteProfiles.FirstOrDefaultAsync(p => p.UserProfileId == athleteUserId, cancellationToken)
+            ?? throw new NotFoundException("AthleteProfile", athleteUserId);
+        profile.ThresholdPaceSecondsPerKm = thresholds.ThresholdPaceSecondsPerKm;
+        profile.UpdatedAtUtc = clock.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Run workouts with pace targets only reach Garmin when the provider knows the threshold pace.
+        await jobQueue.QueueTrainingSettingsSyncAsync(athleteUserId, cancellationToken);
+        return new AthleteThresholdsDto(profile.ThresholdPaceSecondsPerKm);
     }
 
     private static HeartRateZoneDto ToDto(HeartRateZone z) => new(

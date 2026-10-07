@@ -1802,6 +1802,103 @@
         }
       }
     },
+    "/api/athletes/{athleteUserId}/thresholds": {
+      "get": {
+        "tags": [
+          "HeartRateZones"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteThresholdsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteThresholdsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteThresholdsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "HeartRateZones"
+        ],
+        "parameters": [
+          {
+            "name": "athleteUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AthleteThresholdsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AthleteThresholdsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AthleteThresholdsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteThresholdsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteThresholdsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AthleteThresholdsDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/athletes/{athleteUserId}/hrv": {
       "get": {
         "tags": [
@@ -2574,6 +2671,64 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/{provider}/push-planned-workouts": {
+      "put": {
+        "tags": [
+          "IntegrationConnections"
+        ],
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IntegrationProviderType"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushPlannedWorkoutsRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushPlannedWorkoutsRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushPlannedWorkoutsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationConnectionDto"
+                }
+              }
+            }
           }
         }
       }
@@ -4979,6 +5134,55 @@
         }
       }
     },
+    "/api/workouts/{id}/push-status": {
+      "get": {
+        "tags": [
+          "TrainingPlans"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutPushStatusDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutPushStatusDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkoutPushStatusDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workouts": {
       "post": {
         "tags": [
@@ -5853,6 +6057,17 @@
           },
           "notes": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AthleteThresholdsDto": {
+        "type": "object",
+        "properties": {
+          "thresholdPaceSecondsPerKm": {
+            "type": "integer",
+            "format": "int32",
             "nullable": true
           }
         },
@@ -7775,6 +7990,18 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "heartRateZonesSyncedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "heartRateZonesSyncError": {
+            "type": "string",
+            "nullable": true
+          },
+          "pushPlannedWorkouts": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -8536,6 +8763,15 @@
           },
           "latestRun": {
             "$ref": "#/components/schemas/SynchronizationRunDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PushPlannedWorkoutsRequest": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -10374,6 +10610,46 @@
         },
         "additionalProperties": false
       },
+      "WorkoutPushStatus": {
+        "enum": [
+          "Pushed",
+          "Removed",
+          "Failed"
+        ],
+        "type": "string"
+      },
+      "WorkoutPushStatusDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/IntegrationProviderType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkoutPushStatus"
+          },
+          "pushedAtUtc": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updatedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "WorkoutSegmentDto": {
         "type": "object",
         "properties": {
@@ -10412,6 +10688,11 @@
             "format": "uuid",
             "nullable": true
           },
+          "targetHeartRateZoneNumber": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
           "targetPaceSecondsPerKmMin": {
             "type": "integer",
             "format": "int32",
@@ -10435,6 +10716,13 @@
           "notes": {
             "type": "string",
             "nullable": true
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -10448,7 +10736,8 @@
           "CoolDown",
           "Repeat",
           "Drill",
-          "Strides"
+          "Strides",
+          "Recovery"
         ],
         "type": "string"
       },

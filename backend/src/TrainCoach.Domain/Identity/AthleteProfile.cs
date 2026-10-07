@@ -14,6 +14,10 @@ public class AthleteProfile : AuditableEntity
     public decimal? CurrentWeightKg { get; set; }
     public int? RestingHeartRateBpm { get; set; }
     public int? MaxHeartRateBpm { get; set; }
+
+    /// <summary>Running threshold pace (≈ the pace one can hold for about an hour). Written to intervals.icu,
+    /// which needs it to export run workouts with pace targets to Garmin.</summary>
+    public int? ThresholdPaceSecondsPerKm { get; set; }
     public string? PrimarySport { get; set; }
     public string? Notes { get; set; }
 }

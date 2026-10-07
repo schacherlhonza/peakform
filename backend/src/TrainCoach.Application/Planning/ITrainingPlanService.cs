@@ -12,6 +12,7 @@ public interface ITrainingPlanService
     Task<TrainingWeekDto> UpdateWeekAsync(Guid weekId, AppRole callerRole, UpdateTrainingWeekRequest request, CancellationToken cancellationToken = default);
 
     Task<PlannedWorkoutDto> GetWorkoutAsync(Guid workoutId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<WorkoutPushStatusDto>> GetWorkoutPushStatusAsync(Guid workoutId, CancellationToken cancellationToken = default);
     Task<PlannedWorkoutDto> CreateWorkoutAsync(CreatePlannedWorkoutRequest request, CancellationToken cancellationToken = default);
     Task<PlannedWorkoutDto> UpdateWorkoutAsync(Guid workoutId, UpdatePlannedWorkoutRequest request, CancellationToken cancellationToken = default);
     Task DeleteWorkoutAsync(Guid workoutId, CancellationToken cancellationToken = default);

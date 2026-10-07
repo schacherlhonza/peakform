@@ -100,9 +100,18 @@ public static class DemoDataSeeder
             var tueWorkout = NewWorkout(week, weekStart.AddDays(1), SportType.Strength, "Posilovna", "Kruhový trénink na core a stabilitu, 40 min.", null, 2400, now);
             var wedWorkout = NewWorkout(week, weekStart.AddDays(2), SportType.Running, "Intervaly 6x1000m", "WU 15 min, 6x1000m v Z4 tempu s P 2 min klus, CD 10 min.", 12000, 3600, now);
             wedWorkout.Segments.Add(new WorkoutSegment { Order = 1, Type = WorkoutSegmentType.WarmUp, DurationSeconds = 900, IntensityTargetType = IntensityTargetType.Free, Notes = "WU + ABC" });
-            wedWorkout.Segments.Add(new WorkoutSegment { Order = 2, Type = WorkoutSegmentType.Interval, RepeatCount = 6, DistanceMeters = 1000, IntensityTargetType = IntensityTargetType.HeartRateZone, Notes = "Z4 tempo" });
-            wedWorkout.Segments.Add(new WorkoutSegment { Order = 3, Type = WorkoutSegmentType.Rest, RepeatCount = 6, DurationSeconds = 120, IntensityTargetType = IntensityTargetType.Free, Notes = "Klusem" });
-            wedWorkout.Segments.Add(new WorkoutSegment { Order = 4, Type = WorkoutSegmentType.CoolDown, DurationSeconds = 600, IntensityTargetType = IntensityTargetType.Free });
+            var intervalBlock = new WorkoutSegment { Order = 2, Type = WorkoutSegmentType.Repeat, RepeatCount = 6, IntensityTargetType = IntensityTargetType.Free };
+            wedWorkout.Segments.Add(intervalBlock);
+            foreach (var step in new[]
+            {
+                new WorkoutSegment { Order = 1, Type = WorkoutSegmentType.Interval, DistanceMeters = 1000, IntensityTargetType = IntensityTargetType.HeartRateZone, TargetHeartRateZoneNumber = 4, Notes = "Z4 tempo" },
+                new WorkoutSegment { Order = 2, Type = WorkoutSegmentType.Recovery, DurationSeconds = 120, IntensityTargetType = IntensityTargetType.Free, Notes = "Klusem" },
+            })
+            {
+                step.ParentSegment = intervalBlock;
+                wedWorkout.Segments.Add(step);
+            }
+            wedWorkout.Segments.Add(new WorkoutSegment { Order = 3, Type = WorkoutSegmentType.CoolDown, DurationSeconds = 600, IntensityTargetType = IntensityTargetType.Free });
             var thuWorkout = NewWorkout(week, weekStart.AddDays(3), SportType.Rest, "Odpočinek", string.Empty, null, null, now, isRest: true);
             var friWorkout = NewWorkout(week, weekStart.AddDays(4), SportType.CrossTraining, "OCR trénink", "Překážkový trénink: lezení, přenášení břemen, 50 min.", null, 3000, now);
             var satWorkout = NewWorkout(week, weekStart.AddDays(5), SportType.Running, "Dlouhý běh", "90 min v Z2, poslední 15 min v Z3.", 18000, 5400, now);

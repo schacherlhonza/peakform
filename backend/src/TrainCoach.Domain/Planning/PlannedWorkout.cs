@@ -31,4 +31,5 @@ public class PlannedWorkout : AuditableEntity, ISoftDeletable
     public Guid? DeletedByUserId { get; set; }
 
     public ICollection<WorkoutSegment> Segments { get; set; } = new List<WorkoutSegment>();
+    public ICollection<PlannedWorkoutPushRecord> PushRecords { get; set; } = new List<PlannedWorkoutPushRecord>();
 }

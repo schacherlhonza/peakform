@@ -48,6 +48,18 @@ public enum ConnectorMode
     Disabled = 5,
 }
 
+public enum WorkoutPushStatus
+{
+    /// <summary>On the provider's calendar.</summary>
+    Pushed = 1,
+
+    /// <summary>Removed from the provider's calendar (workout deleted, turned into a rest day, or pushing switched off).</summary>
+    Removed = 2,
+
+    /// <summary>The last push or removal failed — see the record's error.</summary>
+    Failed = 3,
+}
+
 public enum IntegrationConnectionStatus
 {
     NotConnected = 1,

@@ -2,6 +2,7 @@ using TrainCoach.Domain.Enums;
 
 namespace TrainCoach.Application.Planning;
 
+/// <param name="Steps">Only on a <see cref="WorkoutSegmentType.Repeat"/> block: the steps it repeats (one level).</param>
 public record WorkoutSegmentDto(
     Guid? Id,
     int Order,
@@ -11,11 +12,13 @@ public record WorkoutSegmentDto(
     int? DurationSeconds,
     IntensityTargetType IntensityTargetType,
     Guid? TargetHeartRateZoneId,
+    int? TargetHeartRateZoneNumber,
     int? TargetPaceSecondsPerKmMin,
     int? TargetPaceSecondsPerKmMax,
     int? TargetRpe,
     int? TargetPowerWatts,
-    string? Notes);
+    string? Notes,
+    IReadOnlyList<WorkoutSegmentDto>? Steps = null);
 
 public record PlannedWorkoutDto(
     Guid Id,
@@ -52,6 +55,16 @@ public record UpdatePlannedWorkoutRequest(
     int? PlannedDurationSeconds,
     decimal? PlannedElevationGainMeters,
     IReadOnlyList<WorkoutSegmentDto>? Segments);
+
+/// <summary>Where a planned workout stands on one external calendar (intervals.icu → Garmin).</summary>
+/// <param name="Warnings">Codes of what won't reach the watch as planned, e.g. <c>RpeSentAsText</c>.</param>
+public record WorkoutPushStatusDto(
+    IntegrationProviderType Provider,
+    WorkoutPushStatus Status,
+    DateTime? PushedAtUtc,
+    DateTime UpdatedAtUtc,
+    string? Error,
+    IReadOnlyList<string> Warnings);
 
 public record CopyWorkoutRequest(Guid TargetTrainingWeekId, DateOnly TargetDate);
 

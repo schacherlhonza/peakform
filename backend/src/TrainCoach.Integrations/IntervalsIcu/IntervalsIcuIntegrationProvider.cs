@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using TrainCoach.Application.Common;
 using TrainCoach.Application.Integrations;
 using TrainCoach.Domain.Enums;
+using TrainCoach.Domain.Planning;
 
 namespace TrainCoach.Integrations.IntervalsIcu;
 
@@ -28,7 +29,7 @@ namespace TrainCoach.Integrations.IntervalsIcu;
 ///   letting it fail the whole sync run.
 /// </summary>
 public class IntervalsIcuIntegrationProvider(IHttpClientFactory httpClientFactory, IOptions<IntervalsIcuOptions> options, ILogger<IntervalsIcuIntegrationProvider> logger)
-    : IIntegrationProvider, IActivityStreamProvider, IActivityFileProvider, IWellnessDataProvider, IRevocableIntegrationProvider
+    : IIntegrationProvider, IActivityStreamProvider, IActivityFileProvider, IWellnessDataProvider, IRevocableIntegrationProvider, ITrainingSettingsSyncProvider, IPlannedWorkoutPushProvider
 {
     private const string AuthorizeUrl = "https://intervals.icu/oauth/authorize";
 
@@ -44,7 +45,12 @@ public class IntervalsIcuIntegrationProvider(IHttpClientFactory httpClientFactor
     // connected Garmin device — see docs/integrations-research.md §6. Athletes who already
     // authorized the app with the old scope list must reconnect for this to take effect
     // (intervals.icu replaces the whole granted-scope set on each new authorization).
-    private const string Scopes = "ACTIVITY:READ,WELLNESS:READ,CALENDAR:WRITE";
+    // SETTINGS:WRITE added 2026-10-05: PeakForm writes the athlete's heart rate zones into the Run
+    // sport settings so pushed "Z2 HR" steps resolve against PeakForm's zones — same reconnect caveat.
+    private const string Scopes = "ACTIVITY:READ,WELLNESS:READ,CALENDAR:WRITE,SETTINGS:WRITE";
+
+    /// <summary>The sport settings PeakForm's (sport-independent) zones are written to.</summary>
+    private const string ZoneSportType = "Run";
     private const string StreamTypes = "time,heartrate,watts,cadence,distance,altitude,velocity_smooth,grade_smooth";
 
     private readonly IntervalsIcuOptions _options = options.Value;
@@ -345,6 +351,106 @@ public class IntervalsIcuIntegrationProvider(IHttpClientFactory httpClientFactor
         {
             logger.LogWarning("intervals.icu disconnect-app vrátilo {StatusCode} — token možná zůstává platný na straně intervals.icu.", (int)response.StatusCode);
         }
+    }
+
+    public string SettingsSyncScope => "SETTINGS:WRITE";
+
+    /// <summary>
+    /// <c>PUT /athlete/0/sport-settings/Run?recalcHrZones=false</c> — a partial update: only the fields
+    /// sent change. <c>hr_zones</c> are the zones' upper bounds; intervals.icu requires one name per bound
+    /// and silently overwrites <c>max_hr</c> unless it equals the last bound. recalcHrZones=false keeps them
+    /// from being rebuilt from its %LTHR model (verified live by the intervals-icu-mcp project,
+    /// github.com/hhopke/intervals-icu-mcp PR #139, and on our account 2026-10-06). <c>threshold_pace</c>
+    /// is a speed in m/s, like <c>workout_doc.threshold_pace</c>. See docs/integrations/garmin-workout-model.md §5.
+    /// </summary>
+    public async Task PushTrainingSettingsAsync(string accessToken, TrainingSettingsUpdate update, CancellationToken cancellationToken = default)
+    {
+        var client = CreateAuthorizedClient(accessToken);
+        var zones = update.HeartRateZones;
+        var body = new IntervalsIcuSportSettingsUpdate(
+            zones.Count > 0 ? zones.Select(z => z.MaxBpm).ToList() : null,
+            zones.Count > 0 ? zones.Select(z => string.IsNullOrWhiteSpace(z.Name) ? $"Z{z.ZoneNumber}" : z.Name).ToList() : null,
+            zones.Count > 0 ? zones[^1].MaxBpm : null,
+            update.ThresholdPaceSecondsPerKm is > 0 and var pace ? Math.Round(1000.0 / pace, 4) : null);
+        var response = await client.PutAsJsonAsync($"{ApiBaseUrl}/athlete/0/sport-settings/{ZoneSportType}?recalcHrZones=false", body, cancellationToken);
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var detail = await response.Content.ReadAsStringAsync(cancellationToken);
+        logger.LogWarning("intervals.icu sport-settings PUT vrátilo {StatusCode}: {Body}", (int)response.StatusCode, detail.Length > 300 ? detail[..300] : detail);
+        throw new TrainingSettingsSyncException(response.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden => "intervals.icu odmítlo zápis — athlete musí znovu připojit účet.",
+            HttpStatusCode.NotFound => "Athlete nemá v intervals.icu nastavení pro běh.",
+            _ => $"intervals.icu nastavení nepřijalo (HTTP {(int)response.StatusCode}).",
+        });
+    }
+
+    public string WorkoutPushScope => "CALENDAR:WRITE";
+
+    /// <summary>
+    /// <c>POST /athlete/0/events/bulk?upsert=true</c> with one WORKOUT event whose <c>external_id</c> is the
+    /// PeakForm workout id: creates it, or updates the entry our app created earlier (date, sport and
+    /// structure included). intervals.icu parses the description into steps and uploads it to Garmin
+    /// Connect within its ~7-day window if the athlete enabled "Upload planned workouts" there.
+    /// </summary>
+    public async Task<PlannedWorkoutPushResult?> UpsertWorkoutAsync(string accessToken, PlannedWorkout workout, CancellationToken cancellationToken = default)
+    {
+        if (IntervalsIcuWorkoutDescriptionBuilder.Build(workout) is not { } ev)
+        {
+            return null;
+        }
+
+        var client = CreateAuthorizedClient(accessToken);
+        var body = new[]
+        {
+            new IntervalsIcuWorkoutEventUpsert("WORKOUT", $"{workout.Date:yyyy-MM-dd}T00:00:00", ev.Type, ev.Name, ev.Description, ev.Target,
+                workout.Id.ToString(), ev.MovingTimeSeconds),
+        };
+        var response = await client.PostAsJsonAsync($"{ApiBaseUrl}/athlete/0/events/bulk?upsert=true&upsertOnUid=false&updatePlanApplied=false", body, cancellationToken);
+        await EnsureCalendarWriteSucceededAsync(response, cancellationToken);
+
+        string? eventId = null;
+        try
+        {
+            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            if (json.RootElement.ValueKind == JsonValueKind.Array && json.RootElement.GetArrayLength() > 0
+                && json.RootElement[0].TryGetProperty("id", out var id))
+            {
+                eventId = id.ToString(); // a number today; read as text either way
+            }
+        }
+        catch (JsonException)
+        {
+            // The write succeeded; only the id for reference is missing — matching uses external_id anyway.
+        }
+        return new PlannedWorkoutPushResult(eventId, ev.Warnings.Select(w => w.ToString()).ToList());
+    }
+
+    /// <summary><c>PUT /athlete/0/events/bulk-delete</c> by <c>external_id</c>; entries that don't exist are ignored.</summary>
+    public async Task RemoveWorkoutAsync(string accessToken, Guid plannedWorkoutId, CancellationToken cancellationToken = default)
+    {
+        var client = CreateAuthorizedClient(accessToken);
+        var response = await client.PutAsJsonAsync($"{ApiBaseUrl}/athlete/0/events/bulk-delete",
+            new[] { new IntervalsIcuEventReference(plannedWorkoutId.ToString()) }, cancellationToken);
+        await EnsureCalendarWriteSucceededAsync(response, cancellationToken);
+    }
+
+    private async Task EnsureCalendarWriteSucceededAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+        var detail = await response.Content.ReadAsStringAsync(cancellationToken);
+        logger.LogWarning("intervals.icu events vrátilo {StatusCode}: {Body}", (int)response.StatusCode, detail.Length > 300 ? detail[..300] : detail);
+        throw new WorkoutPushException(response.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden => "intervals.icu odmítlo zápis do kalendáře — athlete musí znovu připojit účet.",
+            _ => $"intervals.icu trénink nepřijalo (HTTP {(int)response.StatusCode}).",
+        });
     }
 
     private HttpClient CreateAuthorizedClient(string accessToken)

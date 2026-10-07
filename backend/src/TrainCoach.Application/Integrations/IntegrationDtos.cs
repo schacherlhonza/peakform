@@ -9,7 +9,10 @@ public record IntegrationConnectionDto(
     IntegrationConnectionStatus Status,
     string? ExternalAccountId,
     DateTime? ConnectedAtUtc,
-    DateTime? LastSyncedAtUtc);
+    DateTime? LastSyncedAtUtc,
+    DateTime? HeartRateZonesSyncedAtUtc = null,
+    string? HeartRateZonesSyncError = null,
+    bool PushPlannedWorkouts = false);
 
 public record AuthorizationUrlDto(string Url, string State);
 

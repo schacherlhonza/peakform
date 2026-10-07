@@ -28,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IPlanVsActualService, PlanVsActualService>();
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IHrZoneRecomputeJob, HrZoneRecomputeJob>();
+        services.AddScoped<ITrainingSettingsSyncJob, TrainingSettingsSyncJob>();
+        services.AddScoped<IPlannedWorkoutPushJob, PlannedWorkoutPushJob>();
         services.AddScoped<IBestEffortRecomputeJob, BestEffortRecomputeJob>();
         services.AddScoped<IPersonalBestService, PersonalBestService>();
         services.AddScoped<IDuplicateReviewService, DuplicateReviewService>();

@@ -18,4 +18,9 @@ export interface IntegrationConnectionDto {
   connectedAtUtc?: string | null;
   /** @nullable */
   lastSyncedAtUtc?: string | null;
+  /** @nullable */
+  heartRateZonesSyncedAtUtc?: string | null;
+  /** @nullable */
+  heartRateZonesSyncError?: string | null;
+  pushPlannedWorkouts?: boolean;
 }

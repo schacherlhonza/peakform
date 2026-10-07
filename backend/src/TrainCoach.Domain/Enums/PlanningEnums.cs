@@ -23,11 +23,17 @@ public enum WorkoutSegmentType
     WarmUp = 1,
     Main = 2,
     Interval = 3,
+    /// <summary>Standing/walking rest. For an easy jog between intervals use <see cref="Recovery"/>.</summary>
     Rest = 4,
     CoolDown = 5,
+
+    /// <summary>A repeat block: no length or target of its own, its steps run <c>RepeatCount</c> times.</summary>
     Repeat = 6,
     Drill = 7,
     Strides = 8,
+
+    /// <summary>Active recovery (easy jog/spin) — Garmin's "recovery" step, distinct from rest.</summary>
+    Recovery = 9,
 }
 
 public enum IntensityTargetType

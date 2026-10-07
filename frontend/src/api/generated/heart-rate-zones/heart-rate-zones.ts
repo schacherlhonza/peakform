@@ -24,6 +24,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AthleteThresholdsDto,
   HeartRateZoneDto,
   SetHeartRateZonesRequest
 } from '../models';
@@ -196,4 +197,152 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPutApiAthletesAthleteUserIdHeartRateZonesMutationOptions(options), queryClient);
+    }
+    export const getApiAthletesAthleteUserIdThresholds = (
+    athleteUserId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<AthleteThresholdsDto>(
+      {url: `/api/athletes/${athleteUserId}/thresholds`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiAthletesAthleteUserIdThresholdsQueryKey = (athleteUserId: string,) => {
+    return [
+    `/api/athletes/${athleteUserId}/thresholds`
+    ] as const;
+    }
+
+
+export const getGetApiAthletesAthleteUserIdThresholdsQueryOptions = <TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError = ErrorType<unknown>>(athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiAthletesAthleteUserIdThresholdsQueryKey(athleteUserId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>> = ({ signal }) => getApiAthletesAthleteUserIdThresholds(athleteUserId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: athleteUserId !== null && athleteUserId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiAthletesAthleteUserIdThresholdsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>>
+export type GetApiAthletesAthleteUserIdThresholdsQueryError = ErrorType<unknown>
+
+
+export function useGetApiAthletesAthleteUserIdThresholds<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdThresholds<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>,
+          TError,
+          Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiAthletesAthleteUserIdThresholds<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiAthletesAthleteUserIdThresholds<TData = Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError = ErrorType<unknown>>(
+ athleteUserId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiAthletesAthleteUserIdThresholds>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiAthletesAthleteUserIdThresholdsQueryOptions(athleteUserId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const putApiAthletesAthleteUserIdThresholds = (
+    athleteUserId: string,
+    athleteThresholdsDto?: AthleteThresholdsDto,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<AthleteThresholdsDto>(
+      {url: `/api/athletes/${athleteUserId}/thresholds`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: athleteThresholdsDto, signal
+    },
+      );
+    }
+
+
+
+
+export const getPutApiAthletesAthleteUserIdThresholdsMutationKey = () => ['putApiAthletesAthleteUserIdThresholds'] as const;
+
+export const getPutApiAthletesAthleteUserIdThresholdsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAthletesAthleteUserIdThresholds>>, TError,PutApiAthletesAthleteUserIdThresholdsMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putApiAthletesAthleteUserIdThresholds>>, TError,PutApiAthletesAthleteUserIdThresholdsMutationVariables, TContext> => {
+
+const mutationKey = getPutApiAthletesAthleteUserIdThresholdsMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiAthletesAthleteUserIdThresholds>>, PutApiAthletesAthleteUserIdThresholdsMutationVariables> = (props) => {
+          const {athleteUserId,data} = props ?? {};
+
+          return  putApiAthletesAthleteUserIdThresholds(athleteUserId,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutApiAthletesAthleteUserIdThresholdsMutationResult = NonNullable<Awaited<ReturnType<typeof putApiAthletesAthleteUserIdThresholds>>>
+    export type PutApiAthletesAthleteUserIdThresholdsMutationBody = AthleteThresholdsDto | undefined
+    export type PutApiAthletesAthleteUserIdThresholdsMutationError = ErrorType<unknown>
+    export type PutApiAthletesAthleteUserIdThresholdsMutationVariables = {athleteUserId: string;data?: AthleteThresholdsDto}
+
+    export const usePutApiAthletesAthleteUserIdThresholds = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiAthletesAthleteUserIdThresholds>>, TError,PutApiAthletesAthleteUserIdThresholdsMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putApiAthletesAthleteUserIdThresholds>>,
+        TError,
+        PutApiAthletesAthleteUserIdThresholdsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutApiAthletesAthleteUserIdThresholdsMutationOptions(options), queryClient);
     }

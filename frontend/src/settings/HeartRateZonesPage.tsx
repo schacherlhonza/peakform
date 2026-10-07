@@ -15,6 +15,7 @@ import {
 } from '../api/generated/heart-rate-zones/heart-rate-zones';
 import { useAuth } from '../auth/AuthContext';
 import { AppRole } from '../api/generated/models';
+import { ThresholdPacePanel } from './ThresholdPacePanel';
 
 const zoneSchema = z.object({
   zoneNumber: z.number(),
@@ -198,6 +199,7 @@ export default function HeartRateZonesPage() {
           </form>
         )}
       </Panel>
+      <ThresholdPacePanel athleteUserId={athleteUserId} />
     </Stack>
   );
 }

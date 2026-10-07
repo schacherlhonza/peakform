@@ -336,6 +336,28 @@
     "startFromTemplate": "Začít ze šablony",
     "startFromTemplatePlaceholder": "Vybrat šablonu (nepovinné)",
     "addSegment": "Přidat úsek",
+    "moveUp": "Posunout nahoru",
+    "moveDown": "Posunout dolů",
+    "duplicateSegment": "Duplikovat úsek",
+    "repeat": "Opakování",
+    "durationFormat": "min:s",
+    "hrZone": "Tepová zóna",
+    "paceFrom": "Tempo od",
+    "paceTo": "Tempo do",
+    "power": "Výkon",
+    "structureTotal": "Celkem",
+    "endsBy": "Konec úseku",
+    "endsByTime": "Čas",
+    "endsByDistance": "Vzdálenost",
+    "endsByLap": "Tlačítko Lap",
+    "untilLap": "do stisku Lap",
+    "addBlock": "Blok opakování",
+    "blockTitle": "Blok opakování",
+    "blockRepeat": "Opakovat blok",
+    "blockStep": "Krok {{n}}",
+    "blockEmpty": "Blok zatím nemá žádný krok.",
+    "blockLabel": "{{count}}× blok",
+    "tooManySteps": "{{count}} kroků — Garmin přijme nejvýš {{max}}",
     "noSegments": "Trénink zatím nemá strukturované úseky.",
     "segmentOrder": "Pořadí",
     "segmentType": "Typ",
@@ -383,6 +405,20 @@
       "Telegram": "Telegram"
     }
   },
+  "workoutPush": {
+    "status": {
+      "Pushed": "Odesláno na Garmin",
+      "Removed": "Odebráno z Garminu",
+      "Failed": "Odeslání na Garmin selhalo"
+    },
+    "warning": {
+      "RpeSentAsText": "RPE Garmin jako cíl nezná — na hodinkách bude jen jako text kroku.",
+      "TooManySteps": "Víc než 50 kroků — Garmin Connect trénink nepřijme.",
+      "SwimPoolLengthMissing": "Plavání: chybí délka bazénu, struktura na hodinky nemusí dorazit správně.",
+      "OnlyTimedStepsSurvive": "Na hodinky dorazí jen kroky na čas (bez cviků a opakování).",
+      "RunPowerMayNotShow": "Výkon při běhu zobrazí jen hodinky, které běžecký výkon měří — jinak krok poběží bez cíle."
+    }
+  },
   "segmentType": {
     "WarmUp": "Rozklus",
     "Main": "Hlavní část",
@@ -391,7 +427,15 @@
     "CoolDown": "Výklus",
     "Repeat": "Opakování",
     "Drill": "Abeceda",
-    "Strides": "Stupňované úseky"
+    "Strides": "Stupňované úseky",
+    "Recovery": "Aktivní pauza"
+  },
+  "intensityTarget": {
+    "Free": "Volně / na pocit",
+    "HeartRateZone": "Tepová zóna",
+    "Pace": "Tempo",
+    "Rpe": "RPE",
+    "Power": "Výkon"
   },
   "races": {
     "title": "Závody a cíle",
@@ -548,6 +592,10 @@
     "heartRateZones": "Tepové zóny",
     "heartRateZonesCoachNotice": "Tepové zóny se spravují na stránce konkrétního sportovce.",
     "heartRateZonesSaved": "Tepové zóny byly uloženy.",
+    "thresholdPace": "Prahové tempo (běh)",
+    "thresholdPaceHint": "Tempo, které udržíte zhruba hodinu (blízko závodnímu tempu na 10–15 km). Propisuje se do intervals.icu spolu se zónami — bez něj intervals.icu neposílá na Garmin běžecké tréninky s cílem v tempu.",
+    "thresholdPaceSaved": "Prahové tempo bylo uloženo.",
+    "thresholdPaceInvalid": "Zadejte tempo ve tvaru min:s, např. 4:30 (2:00–15:00).",
     "effectiveFromDate": "Platné od",
     "zone": "Zóna",
     "zoneName": "Název",
@@ -590,6 +638,14 @@
     "notConnected": "Nepřipojeno",
     "lastSynced": "Poslední synchronizace",
     "neverSynced": "Zatím nikdy",
+    "hrZonesSynced": "Tepové zóny a prahové tempo z PeakForm propsány do intervals.icu: {{date}}",
+    "hrZonesNotSynced": "Tepové zóny zatím nebyly do intervals.icu propsány — propíšou se při příštím uložení zón.",
+    "hrZonesSyncFailed": "Tepové zóny a prahové tempo se nepropsaly do intervals.icu: {{reason}}",
+    "reconnect": "Znovu připojit",
+    "workoutPushLabel": "Posílat naplánované tréninky na Garmin",
+    "workoutPushHint": "Tréninky od trenéra se propíšou do vašeho kalendáře v intervals.icu a odtud na hodinky. V intervals.icu musíte mít propojený Garmin Connect a zapnuté „Upload planned workouts“. Na hodinky se dostanou tréninky na nejbližších ~7 dní.",
+    "workoutPushOn": "Naplánované tréninky se začnou posílat na Garmin.",
+    "workoutPushOff": "Posílání vypnuto, už odeslané tréninky se z kalendáře odeberou.",
     "connectDemo": "Připojit (demo)",
     "connectAccount": "Připojit účet {{provider}}",
     "syncNow": "Synchronizovat nyní",
@@ -816,6 +872,10 @@
     "title": "Šablony tréninků",
     "subtitle": "Znovupoužitelné tréninky, které můžete rychle přiřadit do plánu.",
     "createTemplate": "Nová šablona",
+    "editTemplate": "Upravit šablonu",
+    "duplicate": "Duplikovat šablonu",
+    "copyName": "{{name}} (kopie)",
+    "saved": "Šablona byla uložena.",
     "name": "Název",
     "sport": "Sport",
     "description": "Popis",

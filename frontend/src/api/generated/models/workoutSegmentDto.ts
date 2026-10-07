@@ -22,6 +22,8 @@ export interface WorkoutSegmentDto {
   /** @nullable */
   targetHeartRateZoneId?: string | null;
   /** @nullable */
+  targetHeartRateZoneNumber?: number | null;
+  /** @nullable */
   targetPaceSecondsPerKmMin?: number | null;
   /** @nullable */
   targetPaceSecondsPerKmMax?: number | null;
@@ -31,4 +33,6 @@ export interface WorkoutSegmentDto {
   targetPowerWatts?: number | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  steps?: WorkoutSegmentDto[] | null;
 }

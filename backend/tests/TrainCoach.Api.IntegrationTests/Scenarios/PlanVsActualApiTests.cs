@@ -40,7 +40,7 @@ public class PlanVsActualApiTests : IntegrationTestBase
                 Segments =
                 {
                     new WorkoutSegment { Order = 1, Type = WorkoutSegmentType.WarmUp, DurationSeconds = 900, IntensityTargetType = IntensityTargetType.HeartRateZone, TargetHeartRateZoneId = z2.Id },
-                    new WorkoutSegment { Order = 2, Type = WorkoutSegmentType.Interval, DurationSeconds = 300, RepeatCount = 6, IntensityTargetType = IntensityTargetType.HeartRateZone, TargetHeartRateZoneId = z4.Id },
+                    new WorkoutSegment { Order = 2, Type = WorkoutSegmentType.Interval, DurationSeconds = 300, RepeatCount = 6, IntensityTargetType = IntensityTargetType.HeartRateZone, TargetHeartRateZoneNumber = 4 },
                     new WorkoutSegment { Order = 3, Type = WorkoutSegmentType.CoolDown, DurationSeconds = 900, IntensityTargetType = IntensityTargetType.Free },
                 },
             };

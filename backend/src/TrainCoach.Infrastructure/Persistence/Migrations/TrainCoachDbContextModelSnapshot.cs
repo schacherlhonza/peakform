@@ -740,6 +740,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<string>("Sex")
                         .HasColumnType("text");
 
+                    b.Property<int?>("ThresholdPaceSecondsPerKm")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -1172,11 +1175,20 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<string>("ExternalAccountId")
                         .HasColumnType("text");
 
+                    b.Property<string>("HeartRateZonesSyncError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("HeartRateZonesSyncedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("LastSyncedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Provider")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("PushPlannedWorkouts")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1712,6 +1724,47 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.ToTable("PlannedWorkouts");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Planning.PlannedWorkoutPushRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ExternalEventId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("PlannedWorkoutId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Provider")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("PushedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Warnings")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlannedWorkoutId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("PlannedWorkoutPushRecords");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Planning.Race", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1956,6 +2009,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("ParentSegmentId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("PlannedWorkoutId")
                         .HasColumnType("uuid");
 
@@ -1964,6 +2020,9 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("TargetHeartRateZoneId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("TargetHeartRateZoneNumber")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("TargetPaceSecondsPerKmMax")
                         .HasColumnType("integer");
@@ -1984,6 +2043,8 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentSegmentId");
 
                     b.HasIndex("PlannedWorkoutId", "Order");
 
@@ -2950,6 +3011,17 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Navigation("TrainingWeek");
                 });
 
+            modelBuilder.Entity("TrainCoach.Domain.Planning.PlannedWorkoutPushRecord", b =>
+                {
+                    b.HasOne("TrainCoach.Domain.Planning.PlannedWorkout", "PlannedWorkout")
+                        .WithMany("PushRecords")
+                        .HasForeignKey("PlannedWorkoutId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PlannedWorkout");
+                });
+
             modelBuilder.Entity("TrainCoach.Domain.Planning.TrainingWeek", b =>
                 {
                     b.HasOne("TrainCoach.Domain.Planning.TrainingPlan", "TrainingPlan")
@@ -2963,6 +3035,11 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TrainCoach.Domain.Planning.WorkoutSegment", b =>
                 {
+                    b.HasOne("TrainCoach.Domain.Planning.WorkoutSegment", "ParentSegment")
+                        .WithMany("Steps")
+                        .HasForeignKey("ParentSegmentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("TrainCoach.Domain.Planning.PlannedWorkout", "PlannedWorkout")
                         .WithMany("Segments")
                         .HasForeignKey("PlannedWorkoutId")
@@ -2972,6 +3049,8 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                         .WithMany("Segments")
                         .HasForeignKey("WorkoutTemplateId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("ParentSegment");
 
                     b.Navigation("PlannedWorkout");
 
@@ -3024,6 +3103,8 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("TrainCoach.Domain.Planning.PlannedWorkout", b =>
                 {
+                    b.Navigation("PushRecords");
+
                     b.Navigation("Segments");
                 });
 
@@ -3035,6 +3116,11 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("TrainCoach.Domain.Planning.TrainingWeek", b =>
                 {
                     b.Navigation("Workouts");
+                });
+
+            modelBuilder.Entity("TrainCoach.Domain.Planning.WorkoutSegment", b =>
+                {
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("TrainCoach.Domain.Planning.WorkoutTemplate", b =>

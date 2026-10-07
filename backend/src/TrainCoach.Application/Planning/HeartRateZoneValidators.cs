@@ -16,6 +16,15 @@ public class HeartRateZoneInputValidator : AbstractValidator<HeartRateZoneInput>
     }
 }
 
+public class AthleteThresholdsDtoValidator : AbstractValidator<AthleteThresholdsDto>
+{
+    public AthleteThresholdsDtoValidator()
+    {
+        // 2:00–15:00 /km — anything outside is a typo, not a threshold.
+        RuleFor(x => x.ThresholdPaceSecondsPerKm).InclusiveBetween(120, 900).When(x => x.ThresholdPaceSecondsPerKm.HasValue);
+    }
+}
+
 public class SetHeartRateZonesRequestValidator : AbstractValidator<SetHeartRateZonesRequest>
 {
     public SetHeartRateZonesRequestValidator()
