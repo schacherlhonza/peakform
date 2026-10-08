@@ -4,21 +4,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Checkbox, Group, NumberInput, Select, Stack, Text, TextInput, Textarea, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { IconClipboardX, IconClipboardPlus } from '@tabler/icons-react';
+import { IconClipboardX, IconClipboardPlus, IconTrash } from '@tabler/icons-react';
 import {
   useGetApiWorkoutsId,
   getGetApiWorkoutsIdQueryKey,
   getPutApiWorkoutsIdMutationOptions,
+  getDeleteApiWorkoutsIdMutationOptions,
 } from '../api/generated/training-plans/training-plans';
-import {
-  useGetApiWorkoutsWorkoutIdComments,
-  getGetApiWorkoutsWorkoutIdCommentsQueryKey,
-  getPostApiCommentsMutationOptions,
-} from '../api/generated/comments/comments';
+import { CommentThread } from '../comments/CommentThread';
 import { getGetApiWorkoutTemplatesQueryKey, getPostApiWorkoutTemplatesMutationOptions } from '../api/generated/workout-templates/workout-templates';
 import { SportType, type WorkoutSegmentDto } from '../api/generated/models';
 import { useAuth } from '../auth/AuthContext';
@@ -77,14 +74,14 @@ export function WorkoutDetailPage() {
   const [draftSegments, setDraftSegments] = useState<WorkoutSegmentDto[]>([]);
   const [isSavingStructure, setIsSavingStructure] = useState(false);
   const [editingSummary, setEditingSummary] = useState(false);
-  const [commentText, setCommentText] = useState('');
   const [saveTemplateOpened, { open: openSaveTemplate, close: closeSaveTemplate }] = useDisclosure();
 
   const workoutQuery = useGetApiWorkoutsId(workoutId ?? '', { query: { enabled: !!workoutId } });
-  const commentsQuery = useGetApiWorkoutsWorkoutIdComments(workoutId ?? '', { query: { enabled: !!workoutId } });
 
   const updateMutation = useMutation(getPutApiWorkoutsIdMutationOptions());
-  const commentMutation = useMutation(getPostApiCommentsMutationOptions());
+  const deleteMutation = useMutation(getDeleteApiWorkoutsIdMutationOptions());
+  const navigate = useNavigate();
+  const [deleteOpened, { open: openDelete, close: closeDelete }] = useDisclosure();
   const createTemplateMutation = useMutation(getPostApiWorkoutTemplatesMutationOptions());
 
   const {
@@ -205,12 +202,12 @@ export function WorkoutDetailPage() {
     }
   });
 
-  const submitComment = async () => {
-    if (!commentText.trim()) return;
+  const deleteWorkout = async () => {
     try {
-      await commentMutation.mutateAsync({ data: { plannedWorkoutId: workoutId, text: commentText } });
-      setCommentText('');
-      await queryClient.invalidateQueries({ queryKey: getGetApiWorkoutsWorkoutIdCommentsQueryKey(workoutId) });
+      await deleteMutation.mutateAsync({ id: workoutId });
+      showToast({ tone: 'positive', message: t('calendar.workoutDeleted') });
+      closeDelete();
+      navigate(-1);
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
@@ -239,6 +236,9 @@ export function WorkoutDetailPage() {
                 </Button>
                 <Button variant="default" size="compact-sm" onClick={startEditSummary}>
                   {t('common.edit')}
+                </Button>
+                <Button variant="default" size="compact-sm" color="red" leftSection={<IconTrash size={14} />} onClick={openDelete}>
+                  {t('common.delete')}
                 </Button>
               </Group>
             )}
@@ -384,38 +384,7 @@ export function WorkoutDetailPage() {
         )}
       </Panel>
 
-      <Panel>
-        <CardHeader kicker={t('workout.comments')} />
-        <Stack gap={0}>
-          {(commentsQuery.data?.length ?? 0) === 0 ? (
-            <EmptyState icon={<IconClipboardX size={24} stroke={1.6} />} title={t('workout.noComments')} />
-          ) : (
-            commentsQuery.data?.map((c) => (
-              <div key={c.id} className="ds-list-row">
-                <Group gap="xs" mb={4}>
-                  <Text fz={13} fw={600}>
-                    {c.authorName}
-                  </Text>
-                  <Badge tone="neutral">{c.authorRole === 'Coach' ? t('auth.roleCoach') : t('auth.roleAthlete')}</Badge>
-                  <Text className="ds-metadata">{c.createdAtUtc && new Date(c.createdAtUtc).toLocaleString('cs-CZ')}</Text>
-                </Group>
-                <Text className="ds-body">{c.text}</Text>
-              </div>
-            ))
-          )}
-          <Group align="end" mt="sm">
-            <Textarea
-              flex={1}
-              placeholder={t('workout.addComment')}
-              value={commentText}
-              onChange={(e) => setCommentText(e.currentTarget.value)}
-            />
-            <Button onClick={submitComment} loading={commentMutation.isPending}>
-              {t('workout.addComment')}
-            </Button>
-          </Group>
-        </Stack>
-      </Panel>
+      <CommentThread workoutId={workoutId} />
 
       {isCoach && (
         <Modal opened={saveTemplateOpened} onClose={closeSaveTemplate} title={t('workout.saveAsTemplate')}>
@@ -444,6 +413,24 @@ export function WorkoutDetailPage() {
               </Button>
             </Stack>
           </form>
+        </Modal>
+      )}
+
+      {isCoach && (
+        <Modal opened={deleteOpened} onClose={closeDelete} title={t('calendar.deleteWorkoutTitle')}>
+          <Stack gap="md">
+            <Text className="ds-body">
+              {t('calendar.deleteWorkoutBody', { title: workout.isRestDay ? t('calendar.restDay') : workout.title, date: workout.date })}
+            </Text>
+            <Group justify="flex-end">
+              <Button variant="default" onClick={closeDelete}>
+                {t('common.cancel')}
+              </Button>
+              <Button color="red" loading={deleteMutation.isPending} onClick={() => void deleteWorkout()}>
+                {t('common.delete')}
+              </Button>
+            </Group>
+          </Stack>
         </Modal>
       )}
     </Stack>

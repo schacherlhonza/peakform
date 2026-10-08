@@ -1,5 +1,4 @@
 import {
-  IconBell,
   IconCalendar,
   IconClipboardList,
   IconFileText,
@@ -30,7 +29,6 @@ export function getPrimaryNavLinks(role: AppRole | undefined): NavLinkDef[] {
       { to: '/dashboard', labelKey: 'nav.dashboard', icon: IconLayoutDashboard },
       { to: '/athletes', labelKey: 'nav.athletes', icon: IconUsers },
       { to: '/templates', labelKey: 'nav.templates', icon: IconClipboardList },
-      { to: '/notifications', labelKey: 'nav.notifications', icon: IconBell },
       { to: '/reports', labelKey: 'nav.reports', icon: IconFileText },
     ];
   }

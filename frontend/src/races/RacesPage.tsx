@@ -4,28 +4,30 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Group, NumberInput, Select, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
+import { Anchor, Group, NumberInput, Select, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
+import { Link } from 'react-router-dom';
 import { DateInput, DateTimePicker } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { IconFlag, IconPlus, IconTarget, IconTrophy } from '@tabler/icons-react';
-import { Panel, CardHeader, Button, Modal, FormField, Skeleton, EmptyState, Badge, showToast, type BadgeTone } from '../design-system/components';
+import { IconFlag, IconPencil, IconPlus, IconTarget, IconTrash, IconTrophy } from '@tabler/icons-react';
+import { Panel, CardHeader, Button, IconButton, Modal, FormField, Skeleton, EmptyState, Badge, showToast, type BadgeTone } from '../design-system/components';
 import {
   useGetApiAthletesAthleteUserIdGoals,
   getGetApiAthletesAthleteUserIdGoalsQueryKey,
   getPostApiGoalsMutationOptions,
   getPutApiGoalsIdMutationOptions,
+  getDeleteApiGoalsIdMutationOptions,
 } from '../api/generated/goals/goals';
 import {
   useGetApiAthletesAthleteUserIdRaces,
   getGetApiAthletesAthleteUserIdRacesQueryKey,
   getPostApiRacesMutationOptions,
   getPutApiRacesIdMutationOptions,
+  getDeleteApiRacesIdMutationOptions,
 } from '../api/generated/races/races';
 import { GoalPriority, SportType, type GoalDto, type RaceDto } from '../api/generated/models';
 import { useAuth } from '../auth/AuthContext';
 import { toIsoDate } from '../calendar/dateUtils';
 
-const sportOptions = Object.values(SportType).map((value) => ({ value, label: value }));
 const priorityOptions = Object.values(GoalPriority).map((value) => ({ value, label: value }));
 
 // Priority pill mapping, reused wherever a goal/race priority is shown: A (highest priority,
@@ -80,6 +82,33 @@ const resultSchema = z.object({
 });
 type ResultFormValues = z.infer<typeof resultSchema>;
 
+/** Delete confirmation shared by goals and races. */
+function ConfirmDelete({ opened, title, body, loading, onCancel, onConfirm }: {
+  opened: boolean;
+  title: string;
+  body: string;
+  loading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Modal opened={opened} onClose={onCancel} title={title}>
+      <Stack gap="md">
+        <Text className="ds-body">{body}</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={onCancel}>
+            {t('common.cancel')}
+          </Button>
+          <Button color="red" loading={loading} onClick={onConfirm}>
+            {t('common.delete')}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
+
 function ListSkeleton() {
   return (
     <Stack gap="sm">
@@ -94,6 +123,8 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure();
+  const [editingGoal, setEditingGoal] = useState<GoalDto | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<GoalDto | null>(null);
 
   const goalsQuery = useGetApiAthletesAthleteUserIdGoals(athleteUserId);
   const goals = useMemo(
@@ -103,6 +134,9 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
 
   const createMutation = useMutation(getPostApiGoalsMutationOptions());
   const achieveMutation = useMutation(getPutApiGoalsIdMutationOptions());
+  const updateMutation = useMutation(getPutApiGoalsIdMutationOptions());
+  const deleteMutation = useMutation(getDeleteApiGoalsIdMutationOptions());
+  const invalidateGoals = () => queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdGoalsQueryKey(athleteUserId) });
 
   const {
     register,
@@ -115,21 +149,44 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
     defaultValues: { title: '', description: '', priority: GoalPriority.B },
   });
 
+  const openCreateGoal = () => {
+    setEditingGoal(null);
+    reset({ title: '', description: '', targetDate: null, priority: GoalPriority.B });
+    open();
+  };
+
+  const openEditGoal = (goal: GoalDto) => {
+    setEditingGoal(goal);
+    reset({
+      title: goal.title ?? '',
+      description: goal.description ?? '',
+      targetDate: goal.targetDate ? new Date(goal.targetDate) : null,
+      priority: goal.priority ?? GoalPriority.B,
+    });
+    open();
+  };
+
   const onSubmit = handleSubmit(async (values) => {
+    const fields = {
+      title: values.title,
+      description: values.description || undefined,
+      targetDate: values.targetDate ? toIsoDate(values.targetDate) : undefined,
+      priority: values.priority,
+    };
     try {
-      await createMutation.mutateAsync({
-        data: {
-          athleteUserId,
-          title: values.title,
-          description: values.description || undefined,
-          targetDate: values.targetDate ? toIsoDate(values.targetDate) : undefined,
-          priority: values.priority,
-        },
-      });
-      showToast({ tone: 'positive', message: t('races.goalCreated') });
+      if (editingGoal?.id) {
+        await updateMutation.mutateAsync({
+          id: editingGoal.id,
+          data: { ...fields, seasonId: editingGoal.seasonId, isAchieved: editingGoal.isAchieved ?? false, achievedNotes: editingGoal.achievedNotes },
+        });
+        showToast({ tone: 'positive', message: t('races.goalSaved') });
+      } else {
+        await createMutation.mutateAsync({ data: { athleteUserId, ...fields } });
+        showToast({ tone: 'positive', message: t('races.goalCreated') });
+      }
       reset();
       close();
-      await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdGoalsQueryKey(athleteUserId) });
+      await invalidateGoals();
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
@@ -147,10 +204,23 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
           targetDate: goal.targetDate,
           priority: goal.priority,
           isAchieved: true,
+          achievedNotes: goal.achievedNotes,
         },
       });
       showToast({ tone: 'positive', message: t('races.goalAchieved') });
       await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdGoalsQueryKey(athleteUserId) });
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    }
+  };
+
+  const confirmDeleteGoal = async () => {
+    if (!pendingDelete?.id) return;
+    try {
+      await deleteMutation.mutateAsync({ id: pendingDelete.id });
+      showToast({ tone: 'positive', message: t('races.goalDeleted') });
+      setPendingDelete(null);
+      await invalidateGoals();
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
@@ -161,7 +231,7 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
       <CardHeader
         kicker={t('races.goalsSection')}
         right={
-          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={open}>
+          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={openCreateGoal}>
             {t('races.addGoal')}
           </Button>
         }
@@ -174,7 +244,7 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
           icon={<IconTarget size={28} stroke={1.6} />}
           title={t('races.noGoals')}
           action={
-            <Button size="xs" variant="light" leftSection={<IconPlus size={16} />} onClick={open}>
+            <Button size="xs" variant="light" leftSection={<IconPlus size={16} />} onClick={openCreateGoal}>
               {t('races.addGoal')}
             </Button>
           }
@@ -203,18 +273,22 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
                     </Text>
                   )}
                 </div>
-                {!goal.isAchieved && (
-                  <Button size="xs" variant="light" onClick={() => markAchieved(goal)} loading={achieveMutation.isPending}>
-                    {t('races.markAchieved')}
-                  </Button>
-                )}
+                <Group gap={4} wrap="nowrap">
+                  {!goal.isAchieved && (
+                    <Button size="xs" variant="light" onClick={() => markAchieved(goal)} loading={achieveMutation.isPending}>
+                      {t('races.markAchieved')}
+                    </Button>
+                  )}
+                  <IconButton icon={<IconPencil size={16} />} label={t('common.edit')} onClick={() => openEditGoal(goal)} />
+                  <IconButton icon={<IconTrash size={16} />} label={t('common.delete')} color="red" onClick={() => setPendingDelete(goal)} />
+                </Group>
               </Group>
             </div>
           ))}
         </Stack>
       )}
 
-      <Modal opened={opened} onClose={close} title={t('races.addGoal')}>
+      <Modal opened={opened} onClose={close} title={editingGoal ? t('races.editGoal') : t('races.addGoal')}>
         <form onSubmit={onSubmit}>
           <Stack gap="sm">
             <FormField label={t('races.goalTitle')} error={errors.title?.message}>
@@ -242,11 +316,20 @@ function GoalsSection({ athleteUserId }: { athleteUserId: string }) {
               )}
             />
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
-              {t('races.createGoal')}
+              {editingGoal ? t('common.save') : t('races.createGoal')}
             </Button>
           </Stack>
         </form>
       </Modal>
+
+      <ConfirmDelete
+        opened={pendingDelete !== null}
+        title={t('races.deleteGoalTitle')}
+        body={t('races.deleteGoalBody', { title: pendingDelete?.title ?? '' })}
+        loading={deleteMutation.isPending}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => void confirmDeleteGoal()}
+      />
     </Panel>
   );
 }
@@ -257,6 +340,9 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
   const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure();
   const [resultOpened, { open: openResult, close: closeResult }] = useDisclosure();
   const [selectedRace, setSelectedRace] = useState<RaceDto | null>(null);
+  const [editingRace, setEditingRace] = useState<RaceDto | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<RaceDto | null>(null);
+  const sportOptions = Object.values(SportType).map((value) => ({ value, label: t(`sport.${value}`) }));
 
   const racesQuery = useGetApiAthletesAthleteUserIdRaces(athleteUserId);
   const races = useMemo(
@@ -266,6 +352,8 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
 
   const createMutation = useMutation(getPostApiRacesMutationOptions());
   const updateMutation = useMutation(getPutApiRacesIdMutationOptions());
+  const deleteMutation = useMutation(getDeleteApiRacesIdMutationOptions());
+  const invalidateRaces = () => queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdRacesQueryKey(athleteUserId) });
 
   const {
     register,
@@ -278,25 +366,61 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
     defaultValues: { name: '', sport: SportType.Running, startsAt: new Date(), priority: GoalPriority.B },
   });
 
+  const openCreateRace = () => {
+    setEditingRace(null);
+    reset({ name: '', sport: SportType.Running, startsAt: new Date(), location: '', priority: GoalPriority.B, targetTime: '' });
+    openCreate();
+  };
+
+  const openEditRace = (race: RaceDto) => {
+    setEditingRace(race);
+    reset({
+      name: race.name ?? '',
+      sport: race.sport ?? SportType.Running,
+      startsAt: race.startsAtUtc ? new Date(race.startsAtUtc) : new Date(),
+      location: race.location ?? '',
+      distanceMeters: race.distanceMeters ?? undefined,
+      elevationGainMeters: race.elevationGainMeters ?? undefined,
+      priority: race.priority ?? GoalPriority.B,
+      targetTime: formatDuration(race.targetTimeSeconds),
+    });
+    openCreate();
+  };
+
   const onSubmit = handleSubmit(async (values) => {
+    const fields = {
+      name: values.name,
+      sport: values.sport,
+      startsAtUtc: values.startsAt.toISOString(),
+      location: values.location || undefined,
+      distanceMeters: values.distanceMeters,
+      elevationGainMeters: values.elevationGainMeters,
+      priority: values.priority,
+      targetTimeSeconds: parseDuration(values.targetTime),
+    };
     try {
-      await createMutation.mutateAsync({
-        data: {
-          athleteUserId,
-          name: values.name,
-          sport: values.sport,
-          startsAtUtc: values.startsAt.toISOString(),
-          location: values.location || undefined,
-          distanceMeters: values.distanceMeters,
-          elevationGainMeters: values.elevationGainMeters,
-          priority: values.priority,
-          targetTimeSeconds: parseDuration(values.targetTime),
-        },
-      });
-      showToast({ tone: 'positive', message: t('races.raceCreated') });
+      if (editingRace?.id) {
+        // The result is recorded separately — keep it as it is.
+        await updateMutation.mutateAsync({
+          id: editingRace.id,
+          data: {
+            ...fields,
+            seasonId: editingRace.seasonId,
+            goalId: editingRace.goalId,
+            targetResultNote: editingRace.targetResultNote,
+            actualTimeSeconds: editingRace.actualTimeSeconds,
+            actualResultNote: editingRace.actualResultNote,
+            resultNotes: editingRace.resultNotes,
+          },
+        });
+        showToast({ tone: 'positive', message: t('races.raceSaved') });
+      } else {
+        await createMutation.mutateAsync({ data: { athleteUserId, ...fields } });
+        showToast({ tone: 'positive', message: t('races.raceCreated') });
+      }
       reset();
       closeCreate();
-      await queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdRacesQueryKey(athleteUserId) });
+      await invalidateRaces();
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
@@ -350,14 +474,27 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
     }
   });
 
-  const now = Date.now();
+  const confirmDeleteRace = async () => {
+    if (!pendingDelete?.id) return;
+    try {
+      await deleteMutation.mutateAsync({ id: pendingDelete.id });
+      showToast({ tone: 'positive', message: t('races.raceDeleted') });
+      setPendingDelete(null);
+      await invalidateRaces();
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    }
+  };
+
+  // Fixed for the page's lifetime: "past race" mustn't flip between renders.
+  const [now] = useState(() => Date.now());
 
   return (
     <Panel>
       <CardHeader
         kicker={t('races.racesSection')}
         right={
-          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={openCreate}>
+          <Button size="xs" leftSection={<IconPlus size={16} />} onClick={openCreateRace}>
             {t('races.addRace')}
           </Button>
         }
@@ -370,7 +507,7 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
           icon={<IconFlag size={28} stroke={1.6} />}
           title={t('races.noRaces')}
           action={
-            <Button size="xs" variant="light" leftSection={<IconPlus size={16} />} onClick={openCreate}>
+            <Button size="xs" variant="light" leftSection={<IconPlus size={16} />} onClick={openCreateRace}>
               {t('races.addRace')}
             </Button>
           }
@@ -393,9 +530,9 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
                   <div style={{ minWidth: 0 }}>
                     <Group gap="xs" mb={4}>
                       <IconFlag size={16} color="var(--color-text-subtle)" />
-                      <Text fw={600} size="sm">
+                      <Anchor component={Link} to={`/races/${race.id}`} fw={600} size="sm" c="var(--color-text)">
                         {race.name}
-                      </Text>
+                      </Anchor>
                       <Badge tone="info">{t(`sport.${race.sport}`)}</Badge>
                       <Badge tone={priorityTone[race.priority ?? GoalPriority.C]}>{race.priority}</Badge>
                     </Group>
@@ -426,11 +563,15 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
                       </Text>
                     ) : null}
                   </div>
-                  {isPast && (
-                    <Button size="xs" variant="light" onClick={() => openResultModal(race)}>
-                      {t('races.recordResult')}
-                    </Button>
-                  )}
+                  <Group gap={4} wrap="nowrap">
+                    {isPast && (
+                      <Button size="xs" variant="light" onClick={() => openResultModal(race)}>
+                        {t('races.recordResult')}
+                      </Button>
+                    )}
+                    <IconButton icon={<IconPencil size={16} />} label={t('common.edit')} onClick={() => openEditRace(race)} />
+                    <IconButton icon={<IconTrash size={16} />} label={t('common.delete')} color="red" onClick={() => setPendingDelete(race)} />
+                  </Group>
                 </Group>
               </div>
             );
@@ -438,7 +579,7 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
         </Stack>
       )}
 
-      <Modal opened={createOpened} onClose={closeCreate} title={t('races.addRace')}>
+      <Modal opened={createOpened} onClose={closeCreate} title={editingRace ? t('races.editRace') : t('races.addRace')}>
         <form onSubmit={onSubmit}>
           <Stack gap="sm">
             <FormField label={t('races.raceName')} error={errors.name?.message}>
@@ -496,7 +637,7 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
               <TextInput placeholder="hh:mm:ss" {...register('targetTime')} />
             </FormField>
             <Button type="submit" loading={isSubmitting} fullWidth mt="sm">
-              {t('races.createRace')}
+              {editingRace ? t('common.save') : t('races.createRace')}
             </Button>
           </Stack>
         </form>
@@ -520,6 +661,15 @@ function RacesSection({ athleteUserId }: { athleteUserId: string }) {
           </Stack>
         </form>
       </Modal>
+
+      <ConfirmDelete
+        opened={pendingDelete !== null}
+        title={t('races.deleteRaceTitle')}
+        body={t('races.deleteRaceBody', { name: pendingDelete?.name ?? '' })}
+        loading={deleteMutation.isPending}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => void confirmDeleteRace()}
+      />
     </Panel>
   );
 }

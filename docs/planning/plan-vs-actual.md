@@ -38,3 +38,15 @@ tepových zón v plánu a ve skutečnosti. Pod týdnem je souhrn.
   plán nemá žádné cílové zóny.
 - **Trenér:** plán vidí s oprávněním `ViewTrainingPlan`. Skutečnost jen navíc s `ViewCompletedActivities`, jinak
   API vrátí `ActualAvailable = false` a kalendář skutečnost neukáže.
+
+## Další místa, která srovnání používají
+
+- **Dashboard sportovce** (`TodayWorkoutCard.tsx`): dnešní trénink se strukturou na jednom řádku
+  (`WorkoutComparisonDto.Segments`), kroužky splnění času a vzdálenosti (90–120 % zelená, jinak oranžová), srovnání
+  zón a seznam dnešních aktivit se štítkem „plní plán“ / „mimo plán“.
+- **Dashboard trenéra** (`GET /api/coach/today?date`, `CoachTodayService`): pro každého aktivního svěřence jedním
+  dotazem readiness, dnešní tréninky se skutečností, aktivity mimo plán, splněné/plánované tréninky týdne
+  (Po–Ne) a aktivní zdravotní problémy. Služba jen skládá existující služby (readiness, plan-vs-actual, zdravotní
+  problémy), každá si dál hlídá přístup sama. Část se načte jen tehdy, když ji sportovec sdílí; příznaky
+  `WellnessShared`, `PlanShared`, `ActivitiesShared`, `HealthFlagsShared` odliší „nesdílí“ od „nic tam není“.
+  Svěřenci se zdravotním problémem nebo nízkou readiness jsou v UI první.

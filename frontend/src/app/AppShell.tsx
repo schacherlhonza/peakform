@@ -3,10 +3,9 @@ import { useDisclosure } from '@mantine/hooks';
 import { Burger } from '@mantine/core';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { IconBell, IconChevronDown, IconLogout, IconSettings } from '@tabler/icons-react';
+import { IconChevronDown, IconLogout, IconSettings } from '@tabler/icons-react';
 import { useAuth } from '../auth/AuthContext';
 import { AppRole } from '../api/generated/models';
-import { IconButton } from '../design-system/components';
 import { SyncCenter } from '../integrations/sync/SyncCenter';
 import { getPrimaryNavLinks, isNavLinkActive } from './RoleNavigation';
 import classes from './AppShell.module.css';
@@ -46,7 +45,7 @@ export function AppShell() {
           </Group>
           <Group gap={6} wrap="nowrap">
             {user?.role === AppRole.Athlete && <SyncCenter userId={user.userId} />}
-            <IconButton icon={<IconBell size={18} stroke={1.8} />} label={t('nav.notifications')} onClick={() => go('/notifications')} />
+            {/* Notifications are hidden until something creates them — see docs/product-requirements.md (backlog). */}
             <Menu shadow="md" width={200} position="bottom-end">
               <Menu.Target>
                 <UnstyledButton className={classes.userButton}>

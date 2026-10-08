@@ -6,6 +6,8 @@ import {
   NumberInput,
   PasswordInput,
   Select,
+  InputBase,
+  MultiSelect,
   SegmentedControl,
   Skeleton,
   Textarea,
@@ -14,6 +16,7 @@ import {
   type MantineThemeComponents,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
+import classes from './theme.module.css';
 
 /**
  * Mantine `.extend()` theming — see docs/DESIGN_SYSTEM.md §6. Where a component exposes
@@ -52,17 +55,20 @@ export const themeComponents: MantineThemeComponents = {
     defaultProps: { radius: 'md' },
     vars: (_theme, props) => {
       const isPrimary = (props.variant ?? 'filled') === 'filled';
+      // color="red" marks a destructive action (delete confirmations): danger fill, or danger text on secondary buttons.
+      const isDanger = props.color === 'red';
       const compact = isCompactSize(props.size);
+      const primaryBg = isDanger ? 'var(--color-danger)' : 'var(--color-accent)';
       return {
         root: {
           '--button-height': compact ? '38px' : '44px',
           '--button-padding-x': '19px',
           '--button-radius': '12px',
           '--button-fz': '13px',
-          '--button-bg': isPrimary ? 'var(--color-accent)' : 'var(--color-surface-2)',
-          '--button-hover': isPrimary ? 'var(--color-accent-hover)' : 'var(--color-surface-3)',
-          '--button-color': isPrimary ? 'var(--color-bg)' : 'var(--color-text)',
-          '--button-hover-color': isPrimary ? 'var(--color-bg)' : 'var(--color-accent)',
+          '--button-bg': isPrimary ? primaryBg : 'var(--color-surface-2)',
+          '--button-hover': isPrimary ? (isDanger ? 'var(--color-danger)' : 'var(--color-accent-hover)') : 'var(--color-surface-3)',
+          '--button-color': isPrimary ? 'var(--color-bg)' : isDanger ? 'var(--color-danger)' : 'var(--color-text)',
+          '--button-hover-color': isPrimary ? 'var(--color-bg)' : isDanger ? 'var(--color-danger)' : 'var(--color-accent)',
           '--button-bd': isPrimary ? '1px solid transparent' : '1px solid var(--color-border)',
         },
       };
@@ -142,10 +148,15 @@ export const themeComponents: MantineThemeComponents = {
   PasswordInput: PasswordInput.extend({ styles: { input: formInputBase, label: formLabelBase, error: formErrorBase } }),
   Textarea: Textarea.extend({ styles: { input: { ...formInputBase, height: 'auto', minHeight: '84px' }, label: formLabelBase, error: formErrorBase } }),
   Select: Select.extend({ styles: { input: formInputBase, label: formLabelBase, error: formErrorBase } }),
+  // InputBase backs FilterMultiSelect (a button rendered as an input) — same box as every other input.
+  InputBase: InputBase.extend({ styles: { input: { ...formInputBase, display: 'flex', alignItems: 'center' }, label: formLabelBase, error: formErrorBase } }),
+  // Grows with its pills, so only the minimum height is fixed.
+  MultiSelect: MultiSelect.extend({ styles: { input: { ...formInputBase, height: 'auto', display: 'flex', alignItems: 'center' }, label: formLabelBase, error: formErrorBase } }),
   DateInput: DateInput.extend({ styles: { input: formInputBase, label: formLabelBase, error: formErrorBase } }),
   Checkbox: Checkbox.extend({
+    // Colours live in a class, not inline styles: an inline background would also win over the checked state.
+    classNames: { input: classes.checkboxInput, icon: classes.checkboxIcon },
     styles: {
-      input: { backgroundColor: 'var(--color-surface-input)', borderColor: 'var(--color-border)' },
       label: { fontSize: '13px', color: 'var(--color-text)' },
     },
   }),

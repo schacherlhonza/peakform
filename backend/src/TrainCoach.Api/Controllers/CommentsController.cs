@@ -17,6 +17,12 @@ public class CommentsController(ICommentService service, ICurrentUserService cur
         return Ok(await service.GetForWorkoutAsync(workoutId, cancellationToken));
     }
 
+    [HttpGet("races/{raceId:guid}/comments")]
+    public async Task<ActionResult<IReadOnlyList<CommentDto>>> GetForRace(Guid raceId, CancellationToken cancellationToken)
+    {
+        return Ok(await service.GetForRaceAsync(raceId, cancellationToken));
+    }
+
     [HttpPost("comments")]
     public async Task<ActionResult<CommentDto>> Add(CreateCommentRequest request, CancellationToken cancellationToken)
     {

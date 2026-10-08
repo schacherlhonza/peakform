@@ -1,6 +1,7 @@
 export * from './account/account';
 export * from './activities/activities';
 export * from './auth/auth';
+export * from './coach/coach';
 export * from './comments/comments';
 export * from './connector-policy/connector-policy';
 export * from './custom-abbreviations/custom-abbreviations';

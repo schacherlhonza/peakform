@@ -1,0 +1,16 @@
+/* Component styles that need states (e.g. :checked), which the inline `styles` objects in theme-extend.ts can't express. */
+
+.checkboxInput {
+  background-color: var(--color-surface-input);
+  border-color: var(--color-border);
+  cursor: pointer;
+}
+
+.checkboxInput:checked {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.checkboxIcon {
+  color: var(--color-bg);
+}

@@ -28,7 +28,8 @@ public class CreateCommentRequestValidator : AbstractValidator<CreateCommentRequ
 {
     public CreateCommentRequestValidator()
     {
-        RuleFor(x => x.PlannedWorkoutId).NotEmpty();
+        RuleFor(x => x).Must(x => (x.PlannedWorkoutId is not null) != (x.RaceId is not null))
+            .WithMessage("Komentář patří buď k tréninku, nebo k závodu.");
         RuleFor(x => x.Text).NotEmpty().MaximumLength(2000);
     }
 }

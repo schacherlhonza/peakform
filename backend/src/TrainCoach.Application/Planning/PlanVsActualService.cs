@@ -16,11 +16,13 @@ public record ActualActivityDto(
 /// <param name="PlannedZoneSeconds">From the workout's segments that target a heart rate zone (duration × repeats); index 0 = zone 1.</param>
 /// <param name="PlannedUnspecifiedSeconds">Planned time with no zone target (free, pace, RPE, power targets).</param>
 /// <param name="SportMismatch">The paired activity is another sport (no same-sport activity that day).</param>
+/// <param name="Segments">The planned structure, for a compact summary next to the comparison.</param>
 public record WorkoutComparisonDto(
     Guid WorkoutId, string Title, SportType Sport, bool IsRestDay,
     int? PlannedDurationSeconds, decimal? PlannedDistanceMeters,
     IReadOnlyList<int> PlannedZoneSeconds, int PlannedUnspecifiedSeconds,
-    ActualActivityDto? Actual, bool SportMismatch, int? DurationCompliancePercent, int? DistanceCompliancePercent);
+    ActualActivityDto? Actual, bool SportMismatch, int? DurationCompliancePercent, int? DistanceCompliancePercent,
+    IReadOnlyList<WorkoutSegmentDto>? Segments = null);
 
 public record PlanVsActualDayDto(DateOnly Date, IReadOnlyList<WorkoutComparisonDto> Workouts, IReadOnlyList<ActualActivityDto> UnplannedActivities);
 
@@ -125,7 +127,8 @@ public class PlanVsActualService(IApplicationDbContext db, IRelationshipAccessGu
                     w.Id, w.Title, w.Sport, w.IsRestDay, w.PlannedDurationSeconds, w.PlannedDistanceMeters, plannedZones, unspecified,
                     match?.Dto, mismatched.Contains(w.Id),
                     Percent(match?.Dto.DurationSeconds, w.PlannedDurationSeconds),
-                    Percent(match?.Dto.DistanceMeters, w.PlannedDistanceMeters)));
+                    Percent(match?.Dto.DistanceMeters, w.PlannedDistanceMeters),
+                    WorkoutSegmentMapping.ToDtos(w.Segments)));
             }
             var unplanned = dayActivities.Where(a => !taken.Contains(a.Dto.ActivityId)).Select(a => a.Dto).ToList();
             days.Add(new PlanVsActualDayDto(date, comparisons, unplanned));

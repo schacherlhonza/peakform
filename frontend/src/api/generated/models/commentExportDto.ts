@@ -8,7 +8,10 @@ import type { CommentAuthorRole } from './commentAuthorRole';
 
 export interface CommentExportDto {
   id?: string;
-  plannedWorkoutId?: string;
+  /** @nullable */
+  plannedWorkoutId?: string | null;
+  /** @nullable */
+  raceId?: string | null;
   authorRole?: CommentAuthorRole;
   /** @nullable */
   text?: string | null;

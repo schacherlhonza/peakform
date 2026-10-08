@@ -7,6 +7,7 @@ export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { FormField, type FormFieldProps } from './FormField';
 export { Button, type ButtonProps } from './Button';
 export { SegmentedControl, type SegmentedControlProps } from './SegmentedControl';
+export { FilterMultiSelect, type FilterMultiSelectProps } from './FilterMultiSelect';
 export { Modal, type ModalProps } from './Modal';
 export { Skeleton, type SkeletonProps } from './Skeleton';
 export { showToast, type ShowToastOptions, type ToastTone } from './Toast';

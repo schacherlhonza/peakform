@@ -48,6 +48,14 @@ public class RaceService(
         return ToDto(race);
     }
 
+    public async Task<RaceDto> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var race = await db.Races.FirstOrDefaultAsync(r => r.Id == id, cancellationToken)
+            ?? throw new NotFoundException("Race", id);
+        await accessGuard.EnsureAthleteAccessAsync(race.AthleteUserId, PermissionScope.ViewTrainingPlan, cancellationToken);
+        return ToDto(race);
+    }
+
     public async Task<RaceDto> UpdateAsync(Guid id, UpdateRaceRequest request, CancellationToken cancellationToken = default)
     {
         var race = await db.Races.FirstOrDefaultAsync(r => r.Id == id, cancellationToken)
@@ -83,6 +91,8 @@ public class RaceService(
         await accessGuard.EnsureAthleteAccessAsync(race.AthleteUserId, PermissionScope.EditTrainingPlan, cancellationToken);
 
         db.Races.Remove(race);
+        // The race's thread has nothing left to belong to.
+        db.Comments.RemoveRange(await db.Comments.IgnoreQueryFilters().Where(c => c.RaceId == id).ToListAsync(cancellationToken));
         await db.SaveChangesAsync(cancellationToken);
     }
 

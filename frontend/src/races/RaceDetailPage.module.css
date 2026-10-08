@@ -1,0 +1,53 @@
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 26px 28px;
+  border-radius: var(--radius-panel);
+  border: 1px solid color-mix(in srgb, var(--race-color) 40%, var(--color-border));
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--race-color) 22%, transparent), transparent 55%),
+    linear-gradient(150deg, rgba(23, 43, 36, 0.96), rgba(13, 28, 23, 0.94));
+  box-shadow: var(--shadow-panel);
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--race-color) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--race-color) 35%, transparent);
+  color: var(--race-color);
+  text-align: center;
+}
+
+.countdownNumber {
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.countdownLabel {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 700px) {
+  .hero {
+    flex-wrap: wrap;
+  }
+}

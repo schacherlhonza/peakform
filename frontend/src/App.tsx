@@ -15,6 +15,7 @@ import { AthleteListPage } from './athletes/AthleteListPage';
 import { AthleteDetailPage } from './athletes/AthleteDetailPage';
 import AthleteActivitiesPage from './athletes/AthleteActivitiesPage';
 import RacesPage from './races/RacesPage';
+import RaceDetailPage from './races/RaceDetailPage';
 import NutritionPage from './nutrition/NutritionPage';
 import WellnessTrendsPage from './wellness/WellnessTrendsPage';
 import SettingsPage from './settings/SettingsPage';
@@ -28,7 +29,6 @@ import StravaCallbackPage from './integrations/StravaCallbackPage';
 import IntervalsIcuCallbackPage from './integrations/IntervalsIcuCallbackPage';
 import ImportPage from './import/ImportPage';
 import TemplatesPage from './features/templates/TemplatesPage';
-import NotificationsPage from './features/notifications/NotificationsPage';
 import { AppRole } from './api/generated/models';
 
 function App() {
@@ -54,6 +54,8 @@ function App() {
           }
         />
         <Route path="/workouts/:workoutId" element={<WorkoutDetailPage />} />
+        {/* Both roles: the athlete's race, and the coach looking at their athlete's race. */}
+        <Route path="/races/:raceId" element={<RaceDetailPage />} />
         <Route
           path="/activities"
           element={
@@ -67,7 +69,6 @@ function App() {
         <Route path="/checkins/evening" element={<EveningCheckInPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
         <Route
           path="/templates"
           element={

@@ -6,6 +6,7 @@
  */
 import type { ActualActivityDto } from './actualActivityDto';
 import type { SportType } from './sportType';
+import type { WorkoutSegmentDto } from './workoutSegmentDto';
 
 export interface WorkoutComparisonDto {
   workoutId?: string;
@@ -26,4 +27,6 @@ export interface WorkoutComparisonDto {
   durationCompliancePercent?: number | null;
   /** @nullable */
   distanceCompliancePercent?: number | null;
+  /** @nullable */
+  segments?: WorkoutSegmentDto[] | null;
 }

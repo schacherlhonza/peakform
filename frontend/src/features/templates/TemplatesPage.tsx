@@ -6,10 +6,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Group, Select, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconClipboardList, IconCopy, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
-import { Panel, CardHeader, Button, IconButton, Modal, FormField, Skeleton, EmptyState, showToast } from '../../design-system/components';
+import { IconClipboardList, IconPlus } from '@tabler/icons-react';
+import { Panel, Button, Modal, FormField, Skeleton, EmptyState, showToast } from '../../design-system/components';
 import { SegmentEditor } from '../../workouts/segments/SegmentEditor';
-import { SegmentList } from '../../workouts/segments/SegmentList';
+import { TemplatesTable } from './TemplatesTable';
 import { normalizeSegments } from '../../workouts/segments/segmentFormat';
 import {
   useGetApiWorkoutTemplates,
@@ -139,34 +139,7 @@ export function TemplatesPage() {
         ) : templates.length === 0 ? (
           <EmptyState icon={<IconClipboardList size={28} stroke={1.6} />} title={t('templates.empty')} description={t('templates.emptyAction')} />
         ) : (
-          <Stack gap="sm">
-            {templates.map((tpl) => (
-              <div key={tpl.id} className="ds-list-row">
-                <CardHeader
-                  kicker={tpl.sport ? t(`sport.${tpl.sport}`) : ''}
-                  title={tpl.name}
-                  right={
-                    <Group gap={4}>
-                      <IconButton icon={<IconPencil size={16} />} label={t('common.edit')} onClick={() => openEdit(tpl)} />
-                      <IconButton icon={<IconCopy size={16} />} label={t('templates.duplicate')} onClick={() => openDuplicate(tpl)} />
-                      <IconButton
-                        icon={<IconTrash size={16} />}
-                        label={t('common.delete')}
-                        color="red"
-                        onClick={() => setPendingDelete(tpl)}
-                      />
-                    </Group>
-                  }
-                />
-                {tpl.description && <Text className="ds-body">{tpl.description}</Text>}
-                {(tpl.segments?.length ?? 0) > 0 && (
-                  <div style={{ marginTop: 8 }}>
-                    <SegmentList segments={tpl.segments ?? []} compact />
-                  </div>
-                )}
-              </div>
-            ))}
-          </Stack>
+          <TemplatesTable templates={templates} onEdit={openEdit} onDuplicate={openDuplicate} onDelete={setPendingDelete} />
         )}
       </Panel>
 

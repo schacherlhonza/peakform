@@ -128,7 +128,7 @@ public record GeneratedReportExportDto(Guid Id, DateOnly Date, ReportType Type, 
 
 public record IntegrationConnectionExportDto(Guid Id, IntegrationProviderType Provider, IntegrationConnectionStatus Status, string? ExternalAccountId, DateTime? ConnectedAtUtc, DateTime? LastSyncedAtUtc, DateTime? DisconnectedAtUtc);
 
-public record CommentExportDto(Guid Id, Guid PlannedWorkoutId, CommentAuthorRole AuthorRole, string Text, DateTime CreatedAtUtc);
+public record CommentExportDto(Guid Id, Guid? PlannedWorkoutId, Guid? RaceId, CommentAuthorRole AuthorRole, string Text, DateTime CreatedAtUtc);
 
 public record NotificationExportDto(Guid Id, NotificationType Type, string Title, string? Body, DateTime CreatedAtUtc, DateTime? ReadAtUtc);
 

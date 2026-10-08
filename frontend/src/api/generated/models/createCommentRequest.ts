@@ -6,7 +6,10 @@
  */
 
 export interface CreateCommentRequest {
-  plannedWorkoutId?: string;
+  /** @nullable */
+  plannedWorkoutId?: string | null;
   /** @nullable */
   text?: string | null;
+  /** @nullable */
+  raceId?: string | null;
 }

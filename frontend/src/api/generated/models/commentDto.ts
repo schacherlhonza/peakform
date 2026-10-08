@@ -8,7 +8,8 @@ import type { CommentAuthorRole } from './commentAuthorRole';
 
 export interface CommentDto {
   id?: string;
-  plannedWorkoutId?: string;
+  /** @nullable */
+  plannedWorkoutId?: string | null;
   authorUserId?: string;
   authorRole?: CommentAuthorRole;
   /** @nullable */
@@ -16,4 +17,6 @@ export interface CommentDto {
   /** @nullable */
   text?: string | null;
   createdAtUtc?: string;
+  /** @nullable */
+  raceId?: string | null;
 }

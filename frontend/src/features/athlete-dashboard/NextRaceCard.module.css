@@ -1,0 +1,137 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 22px 24px;
+  border-radius: var(--radius-panel);
+  border: 1px solid color-mix(in srgb, var(--race-color) 38%, var(--color-border));
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--race-color) 20%, transparent), transparent 55%),
+    linear-gradient(150deg, rgba(23, 43, 36, 0.96), rgba(13, 28, 23, 0.94));
+  box-shadow: var(--shadow-panel);
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.chevron {
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.hero:hover .chevron {
+  color: var(--race-color);
+  transform: translateX(3px);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.countdown,
+.stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border);
+}
+
+.countdown {
+  background: color-mix(in srgb, var(--race-color) 13%, var(--color-surface-inset));
+  border-color: color-mix(in srgb, var(--race-color) 40%, transparent);
+  color: var(--race-color);
+}
+
+.countdownNumber {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.stat .statLabel {
+  color: var(--color-text-muted);
+}
+
+.phases {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: var(--space-1);
+}
+
+.phase {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phaseBar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.phaseLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-subtle);
+}
+
+.phaseDone .phaseBar {
+  background: color-mix(in srgb, var(--race-color) 55%, transparent);
+}
+
+.phaseCurrent .phaseBar {
+  background: var(--race-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--race-color) 60%, transparent);
+}
+
+.phaseCurrent .phaseLabel {
+  color: var(--race-color);
+}
+
+.motivation {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}

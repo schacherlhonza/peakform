@@ -136,16 +136,14 @@ export function useGetApiAthletesAthleteUserIdRaces<TData = Awaited<ReturnType<t
 
 
 
-export const postApiRaces = (
-    createRaceRequest?: CreateRaceRequest,
+export const getApiRacesId = (
+    id: string,
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<RaceDto>(
-      {url: `/api/races`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createRaceRequest, signal
+      {url: `/api/races/${id}`, method: 'GET', signal
     },
       );
     }
@@ -153,51 +151,78 @@ export const postApiRaces = (
 
 
 
-export const getPostApiRacesMutationKey = () => ['postApiRaces'] as const;
-
-export const getPostApiRacesMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiRaces>>, TError,PostApiRacesMutationVariables, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof postApiRaces>>, TError,PostApiRacesMutationVariables, TContext> => {
-
-const mutationKey = getPostApiRacesMutationKey();
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiRaces>>, PostApiRacesMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  postApiRaces(data,)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostApiRacesMutationResult = NonNullable<Awaited<ReturnType<typeof postApiRaces>>>
-    export type PostApiRacesMutationBody = CreateRaceRequest | undefined
-    export type PostApiRacesMutationError = ErrorType<unknown>
-    export type PostApiRacesMutationVariables = {data?: CreateRaceRequest}
-
-    export const usePostApiRaces = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiRaces>>, TError,PostApiRacesMutationVariables, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApiRaces>>,
-        TError,
-        PostApiRacesMutationVariables,
-        TContext
-      > => {
-      return useMutation(getPostApiRacesMutationOptions(options), queryClient);
+export const getGetApiRacesIdQueryKey = (id: string,) => {
+    return [
+    `/api/races/${id}`
+    ] as const;
     }
-    export const putApiRacesId = (
+
+
+export const getGetApiRacesIdQueryOptions = <TData = Awaited<ReturnType<typeof getApiRacesId>>, TError = ErrorType<unknown>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesId>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiRacesIdQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiRacesId>>> = ({ signal }) => getApiRacesId(id, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiRacesId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiRacesIdQueryResult = NonNullable<Awaited<ReturnType<typeof getApiRacesId>>>
+export type GetApiRacesIdQueryError = ErrorType<unknown>
+
+
+export function useGetApiRacesId<TData = Awaited<ReturnType<typeof getApiRacesId>>, TError = ErrorType<unknown>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesId>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiRacesId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiRacesId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiRacesId<TData = Awaited<ReturnType<typeof getApiRacesId>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesId>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiRacesId>>,
+          TError,
+          Awaited<ReturnType<typeof getApiRacesId>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiRacesId<TData = Awaited<ReturnType<typeof getApiRacesId>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiRacesId<TData = Awaited<ReturnType<typeof getApiRacesId>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesId>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiRacesIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const putApiRacesId = (
     id: string,
     updateRaceRequest?: UpdateRaceRequest,
  signal?: AbortSignal
@@ -317,4 +342,65 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getDeleteApiRacesIdMutationOptions(options), queryClient);
+    }
+    export const postApiRaces = (
+    createRaceRequest?: CreateRaceRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<RaceDto>(
+      {url: `/api/races`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createRaceRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getPostApiRacesMutationKey = () => ['postApiRaces'] as const;
+
+export const getPostApiRacesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiRaces>>, TError,PostApiRacesMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postApiRaces>>, TError,PostApiRacesMutationVariables, TContext> => {
+
+const mutationKey = getPostApiRacesMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiRaces>>, PostApiRacesMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiRaces(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiRacesMutationResult = NonNullable<Awaited<ReturnType<typeof postApiRaces>>>
+    export type PostApiRacesMutationBody = CreateRaceRequest | undefined
+    export type PostApiRacesMutationError = ErrorType<unknown>
+    export type PostApiRacesMutationVariables = {data?: CreateRaceRequest}
+
+    export const usePostApiRaces = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiRaces>>, TError,PostApiRacesMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiRaces>>,
+        TError,
+        PostApiRacesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostApiRacesMutationOptions(options), queryClient);
     }

@@ -41,7 +41,7 @@ Datový model je rozdělen do šesti oblastí (bounded contexts): **Identita a p
 | `CompletedActivity` | Skutečně provedená aktivita (ze Strava/Garmin/manuál/import). |
 | `ActivityMetric` | Jednotlivé naměřené metriky aktivity (tempo, tep, výška, kadence...). |
 | `TrainingFeedback` | Subjektivní zpětná vazba sportovce k tréninku. |
-| `Comment` | Komentář (trenér ↔ sportovec) navázaný typicky na trénink nebo den. |
+| `Comment` | Komentář (trenér ↔ sportovec) navázaný buď na plánovaný trénink (`PlannedWorkoutId`), nebo na závod (`RaceId`) — vždy právě jedno z nich (hlídá validátor požadavku). |
 | `DataProvenance` | Odkud konkrétní hodnota pochází (manual/import/strava/mock-provider) — základ pro řešení konfliktů zdrojů. |
 
 ### 2.4 Wellness
@@ -90,7 +90,7 @@ Datový model je rozdělen do šesti oblastí (bounded contexts): **Identita a p
 - `AthleteProfile` 1—N `TrainingPlan` 1—N `TrainingWeek` 1—N `PlannedWorkout` 1—N `WorkoutSegment`.
 - `PlannedWorkout` 0..1—0..N `CompletedActivity` (párování plán vs. skutečnost — viz pravidla níže).
 - `CompletedActivity` 1—N `ActivityMetric`, 1—N `DataProvenance` (na úrovni metriky nebo aktivity).
-- `CompletedActivity`/`PlannedWorkout` 0..N `Comment`, 0..N `TrainingFeedback`.
+- `PlannedWorkout` 0..N `Comment`, `Race` 0..N `Comment` (bez FK, index na `RaceId`; komentáře se mažou se závodem); `CompletedActivity`/`PlannedWorkout` 0..N `TrainingFeedback`.
 - `AthleteProfile` 1—N `DailyCheckIn` 0..N `PainOrHealthFlag`.
 - `AthleteProfile` 1—N `SleepRecord`, 1—N `HrvMeasurement`, 1—N `RecoveryMetric`, 1—N `PerformanceBaseline`, 1—N `PersonalRecord`.
 - `AthleteProfile` 1—N `FoodEntry`, 1—N `HydrationEntry`.
@@ -112,8 +112,8 @@ erDiagram
     PLANNED_WORKOUT ||--o{ WORKOUT_SEGMENT : obsahuje
     PLANNED_WORKOUT ||--o{ COMPLETED_ACTIVITY : "páruje se s"
     USER ||--o{ COMPLETED_ACTIVITY : zaznamenal
-    COMPLETED_ACTIVITY ||--o{ COMMENT : "má komentáře"
     PLANNED_WORKOUT ||--o{ COMMENT : "má komentáře"
+    RACE ||--o{ COMMENT : "má komentáře"
     USER ||--o{ DAILY_CHECK_IN : vyplňuje
     USER ||--o{ GENERATED_REPORT : "je adresátem"
     COACH_ATHLETE_RELATIONSHIP ||--o{ GENERATED_REPORT : "kontext reportu"
@@ -179,7 +179,7 @@ erDiagram
         guid Id PK
         guid AuthorUserId FK
         guid PlannedWorkoutId FK "nullable"
-        guid CompletedActivityId FK "nullable"
+        guid RaceId FK "nullable"
         string Text
         datetime CreatedAt
     }

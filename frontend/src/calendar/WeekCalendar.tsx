@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { Checkbox, Select, Stack, Text, Textarea, TextInput, Group } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDisclosure } from '@mantine/hooks';
-import { IconCalendarOff, IconChevronLeft, IconChevronRight, IconPlus } from '@tabler/icons-react';
+import { IconCalendarOff, IconChevronLeft, IconChevronRight, IconPlus, IconTrash } from '@tabler/icons-react';
 import {
   useGetApiAthletesAthleteUserIdPlans,
   useGetApiPlansId,
@@ -22,12 +22,17 @@ import {
   getPostApiPlansMutationOptions,
   getPostApiPlansPlanIdWeeksMutationOptions,
   getPostApiWorkoutsMutationOptions,
+  getDeleteApiWorkoutsIdMutationOptions,
+  getGetApiAthletesAthleteUserIdPlanVsActualQueryKey,
 } from '../api/generated/training-plans/training-plans';
 import { useGetApiWorkoutTemplates } from '../api/generated/workout-templates/workout-templates';
+import { useGetApiAthletesAthleteUserIdRaces } from '../api/generated/races/races';
+import { RaceCalendarCard } from '../races/RaceCalendarCard';
+import { raceLocalDate } from '../races/raceUtils';
 import { SegmentList } from '../workouts/segments/SegmentList';
 import { segmentTotals } from '../workouts/segments/segmentFormat';
-import { SportType, type PlannedWorkoutDto } from '../api/generated/models';
-import { Panel, CardHeader, Badge, Button, Modal, FormField, EmptyState, Skeleton, showToast } from '../design-system/components';
+import { SportType, type PlannedWorkoutDto, type RaceDto } from '../api/generated/models';
+import { Panel, CardHeader, Badge, Button, IconButton, Modal, FormField, EmptyState, Skeleton, showToast } from '../design-system/components';
 import { addDays, mondayOf, toIsoDate } from './dateUtils';
 import classes from './WeekCalendar.module.css';
 
@@ -204,6 +209,7 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure();
   const [createPlanOpened, { open: openCreatePlan, close: closeCreatePlan }] = useDisclosure();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PlannedWorkoutDto | null>(null);
 
   const templatesQuery = useGetApiWorkoutTemplates({ query: { enabled: canEdit } });
   const templates = templatesQuery.data ?? [];
@@ -227,6 +233,11 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
   const comparisonQuery = useGetApiAthletesAthleteUserIdPlanVsActual(athleteUserId, { from: weekIso, to: toIsoDate(addDays(weekStart, 6)) });
   const comparison = comparisonQuery.data;
   const comparisonByDate = new Map((comparison?.days ?? []).map((d) => [d.date!, d]));
+  const racesQuery = useGetApiAthletesAthleteUserIdRaces(athleteUserId);
+  const racesByDate = new Map<string, RaceDto[]>();
+  for (const race of racesQuery.data ?? []) {
+    if (race.startsAtUtc) racesByDate.set(raceLocalDate(race.startsAtUtc), [...(racesByDate.get(raceLocalDate(race.startsAtUtc)) ?? []), race]);
+  }
   const workoutsByDate = new Map<string, PlannedWorkoutDto[]>();
   for (const w of week?.workouts ?? []) {
     if (w.date) workoutsByDate.set(w.date, [...(workoutsByDate.get(w.date) ?? []), w]);
@@ -235,6 +246,7 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
   const createWeekMutation = useMutation(getPostApiPlansPlanIdWeeksMutationOptions());
   const createWorkoutMutation = useMutation(getPostApiWorkoutsMutationOptions());
   const createPlanMutation = useMutation(getPostApiPlansMutationOptions());
+  const deleteWorkoutMutation = useMutation(getDeleteApiWorkoutsIdMutationOptions());
 
   const {
     register,
@@ -280,11 +292,13 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
     const templateSegments = values.isRestDay ? [] : (selectedTemplate?.segments ?? []);
     const templateTotals = segmentTotals(templateSegments);
     try {
-      let targetWeekId = week?.id;
+      // The week of the chosen date — the form's date may lie outside the week on screen.
+      const targetWeekStart = toIsoDate(mondayOf(values.date));
+      let targetWeekId = plan?.weeks?.find((w) => w.weekStartDate === targetWeekStart)?.id;
       if (!targetWeekId) {
         const newWeek = await createWeekMutation.mutateAsync({
           planId: activePlan.id,
-          data: { weekStartDate: weekIso, weekIndex: (plan?.weeks?.length ?? 0) + 1 },
+          data: { weekStartDate: targetWeekStart, weekIndex: (plan?.weeks?.length ?? 0) + 1 },
         });
         targetWeekId = newWeek.id;
       }
@@ -307,11 +321,36 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
       reset();
       setSelectedTemplateId(null);
       closeModal();
-      await queryClient.invalidateQueries({ queryKey: getGetApiPlansIdQueryKey(activePlan.id) });
+      await refreshWeek();
     } catch {
       showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
     }
   });
+
+  const refreshWeek = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: getGetApiPlansIdQueryKey(activePlan?.id ?? '') }),
+      queryClient.invalidateQueries({ queryKey: getGetApiAthletesAthleteUserIdPlanVsActualQueryKey(athleteUserId) }),
+    ]);
+
+  /** The create dialog for one day, from the day's "+" or a click into its free space. */
+  const openCreate = (day: Date) => {
+    reset({ date: day, sport: SportType.Running, title: '', coachDescription: '', isRestDay: false });
+    setSelectedTemplateId(null);
+    openModal();
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete?.id) return;
+    try {
+      await deleteWorkoutMutation.mutateAsync({ id: pendingDelete.id });
+      showToast({ tone: 'positive', message: t('calendar.workoutDeleted') });
+      setPendingDelete(null);
+      await refreshWeek();
+    } catch {
+      showToast({ tone: 'danger', title: t('common.error'), message: t('common.unknownError') });
+    }
+  };
 
   if (plansQuery.isLoading) return <WeekCalendarSkeleton />;
 
@@ -372,24 +411,33 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
         }
       />
 
-      {canEdit && (
-        <Button leftSection={<IconPlus size={16} />} onClick={openModal} mb="md">
-          {t('calendar.addWorkout')}
-        </Button>
-      )}
-
       <div className={classes.dayGrid}>
         {days.map((day) => {
           const iso = toIsoDate(day);
           const dayWorkouts = workoutsByDate.get(iso) ?? [];
+          const dayRaces = racesByDate.get(iso) ?? [];
           const dayComparison = comparison?.actualAvailable ? comparisonByDate.get(iso) : undefined;
           const isToday = iso === todayIso;
           const dayClasses = [classes.day, isToday && classes.dayToday].filter(Boolean).join(' ');
           return (
             <div key={iso} className={dayClasses}>
-              <Text className="ds-eyebrow">
-                {t(`weekday.${day.getDay() === 0 ? 6 : day.getDay() - 1}`)} · {iso.slice(5)}
-              </Text>
+              <Group justify="space-between" wrap="nowrap" gap={4} className={classes.dayHeader}>
+                <Text className="ds-eyebrow">
+                  {t(`weekday.${day.getDay() === 0 ? 6 : day.getDay() - 1}`)} · {iso.slice(5)}
+                </Text>
+                {canEdit && (
+                  <IconButton
+                    icon={<IconPlus size={14} />}
+                    label={t('calendar.addWorkoutToDay', { date: day.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' }) })}
+                    size="sm"
+                    className={classes.dayAdd}
+                    onClick={() => openCreate(day)}
+                  />
+                )}
+              </Group>
+              {dayRaces.map((race) => (
+                <RaceCalendarCard key={race.id} race={race} />
+              ))}
               {dayWorkouts.map((workout) => (
                 <div
                   key={workout.id}
@@ -401,9 +449,22 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
                     if (workout.id && (e.key === 'Enter' || e.key === ' ')) navigate(`/workouts/${workout.id}`);
                   }}
                 >
-                  <div>
+                  <Group justify="space-between" wrap="nowrap" gap={4}>
                     <Badge tone={workout.isRestDay ? 'neutral' : 'info'}>{t(`sport.${workout.sport}`)}</Badge>
-                  </div>
+                    {canEdit && (
+                      <IconButton
+                        icon={<IconTrash size={14} />}
+                        label={t('calendar.deleteWorkout')}
+                        size="sm"
+                        color="red"
+                        className={classes.workoutDelete}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPendingDelete(workout);
+                        }}
+                      />
+                    )}
+                  </Group>
                   <Text fz={13} fw={600} lineClamp={2}>
                     {workout.isRestDay ? t('calendar.restDay') : workout.title}
                   </Text>
@@ -413,14 +474,37 @@ export function WeekCalendar({ athleteUserId, canEdit }: { athleteUserId: string
                   />
                 </div>
               ))}
-              {dayWorkouts.length === 0 && !dayComparison?.unplannedActivities?.length && <Text className="ds-metadata">—</Text>}
+              {dayWorkouts.length === 0 && dayRaces.length === 0 && !dayComparison?.unplannedActivities?.length && !canEdit && <Text className="ds-metadata">—</Text>}
               <UnplannedActivities day={dayComparison} />
+              {canEdit && (
+                // The day's free space adds a workout to that day.
+                <button type="button" className={classes.dayFill} onClick={() => openCreate(day)} aria-label={t('calendar.addWorkoutToDay', { date: iso })}>
+                  <IconPlus size={14} aria-hidden />
+                  <span>{t('calendar.addWorkoutShort')}</span>
+                </button>
+              )}
             </div>
           );
         })}
       </div>
 
       {comparison && <WeekComparison data={comparison} />}
+
+      <Modal opened={pendingDelete !== null} onClose={() => setPendingDelete(null)} title={t('calendar.deleteWorkoutTitle')}>
+        <Stack gap="md">
+          <Text className="ds-body">
+            {t('calendar.deleteWorkoutBody', { title: pendingDelete?.isRestDay ? t('calendar.restDay') : (pendingDelete?.title ?? ''), date: pendingDelete?.date ?? '' })}
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setPendingDelete(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button color="red" loading={deleteWorkoutMutation.isPending} onClick={() => void confirmDelete()}>
+              {t('common.delete')}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       <Modal
         opened={modalOpened}

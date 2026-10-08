@@ -40,6 +40,7 @@ Aplikace nahrazuje tabulku, ale nekopíruje její omezení — místo jedné vel
 
 - Sportovec: přehled aktuálního týdne (plán vs. skutečnost), nejbližší cíle/závody, poslední check-in, nepřečtené komentáře/notifikace.
 - Trenér: přehled všech svěřených sportovců — kdo netrénoval podle plánu, kdo hlásí bolest/nemoc, kdo má odchylku v HRV/klidové tepovce, nepřečtené zprávy.
+  - Implementováno (2026-10-08): karta „dnes“ pro každého sportovce (readiness, dnešní plán vs. skutečnost, týden, aktivní zdravotní problémy) z jednoho dotazu `GET /api/coach/today`, nad kartami souhrn týmu. Jen v rozsahu, který sportovec sdílí. Viz `planning/plan-vs-actual.md`.
 - Vizuální odlišení stavů (v pořádku / vyžaduje pozornost / kritické — např. hlášená bolest nebo výrazně zvýšená klidová tepovka).
 
 ### 3.2 Kalendář a tréninkový plán
@@ -80,6 +81,7 @@ Aplikace nahrazuje tabulku, ale nekopíruje její omezení — místo jedné vel
 - Sezóna (Season) sdružuje cíle (Goal) a závody (Race) v daném období.
 - Závod má datum, typ, cílový čas/umístění, návaznost na tréninkový plán (např. vrchol formy k danému datu).
 - Přehled blížících se závodů a postupu k cílům na dashboardu obou rolí.
+- Detail závodu (`/races/{id}`) pro sportovce i trenéra: odpočet, cíl vs. výsledek a vlákno komentářů k závodu (stejná oprávnění jako komentáře u tréninku). Závody se zobrazují i v týdenním kalendáři. Smazáním závodu zaniknou i jeho komentáře.
 
 ### 3.8 Reporty
 
@@ -108,6 +110,8 @@ Aplikace nahrazuje tabulku, ale nekopíruje její omezení — místo jedné vel
 ### 3.12 Notifikace
 
 - V aplikaci (a případně e-mailem) o nových komentářích, vygenerovaných reportech, žádostech o propojení trenér–sportovec, upozorněních na hlášenou bolest/nemoc.
+
+> **Stav (2026-10-07): odloženo, v UI skryté.** Backend (entita `Notification`, `GET /api/notifications`, označení přečtení) a stránka `NotificationsPage` existují, ale žádná událost upozornění nevytváří. Položka v menu, zvonek v hlavičce i route jsou proto skryté. Při dokončení doplnit: vytváření u událostí (komentář, zdravotní problém, přijatá pozvánka, nesplněný trénink), proklik na související stránku (`LinkUrl`), počet nepřečtených u zvonku, „označit vše“ a deduplikaci opakovaných událostí.
 
 ## 4. Nefunkční požadavky
 

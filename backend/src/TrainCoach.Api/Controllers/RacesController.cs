@@ -16,6 +16,12 @@ public class RacesController(IRaceService service, ICurrentUserService currentUs
         return Ok(await service.GetForAthleteAsync(athleteUserId, cancellationToken));
     }
 
+    [HttpGet("races/{id:guid}")]
+    public async Task<ActionResult<RaceDto>> Get(Guid id, CancellationToken cancellationToken)
+    {
+        return Ok(await service.GetAsync(id, cancellationToken));
+    }
+
     [HttpPost("races")]
     public async Task<ActionResult<RaceDto>> Create(CreateRaceRequest request, CancellationToken cancellationToken)
     {

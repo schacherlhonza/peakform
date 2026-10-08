@@ -740,6 +740,45 @@
         }
       }
     },
+    "/api/coach/today": {
+      "get": {
+        "tags": [
+          "Coach"
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachTodayDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachTodayDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachTodayDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workouts/{workoutId}/comments": {
       "get": {
         "tags": [
@@ -748,6 +787,55 @@
         "parameters": [
           {
             "name": "workoutId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CommentDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/races/{raceId}/comments": {
+      "get": {
+        "tags": [
+          "Comments"
+        ],
+        "parameters": [
+          {
+            "name": "raceId",
             "in": "path",
             "required": true,
             "schema": {
@@ -3424,30 +3512,22 @@
         }
       }
     },
-    "/api/races": {
-      "post": {
+    "/api/races/{id}": {
+      "get": {
         "tags": [
           "Races"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRaceRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRaceRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRaceRequest"
-              }
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -3470,9 +3550,7 @@
             }
           }
         }
-      }
-    },
-    "/api/races/{id}": {
+      },
       "put": {
         "tags": [
           "Races"
@@ -3548,6 +3626,54 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/races": {
+      "post": {
+        "tags": [
+          "Races"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRaceRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRaceRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RaceDto"
+                }
+              }
+            }
           }
         }
       }
@@ -6277,6 +6403,87 @@
         },
         "additionalProperties": false
       },
+      "CoachTodayAthleteDto": {
+        "type": "object",
+        "properties": {
+          "athleteUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "wellnessShared": {
+            "type": "boolean"
+          },
+          "planShared": {
+            "type": "boolean"
+          },
+          "activitiesShared": {
+            "type": "boolean"
+          },
+          "healthFlagsShared": {
+            "type": "boolean"
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/ReadinessDto"
+          },
+          "todayWorkouts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutComparisonDto"
+            },
+            "nullable": true
+          },
+          "unplannedActivities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActualActivityDto"
+            },
+            "nullable": true
+          },
+          "weekPlannedWorkouts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "weekCompletedWorkouts": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "activeHealthFlags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PainOrHealthFlagDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CoachTodayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "athletes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoachTodayAthleteDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CommentAuthorRole": {
         "enum": [
           "Coach",
@@ -6293,7 +6500,8 @@
           },
           "plannedWorkoutId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "authorUserId": {
             "type": "string",
@@ -6313,6 +6521,11 @@
           "createdAtUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "raceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -6326,7 +6539,13 @@
           },
           "plannedWorkoutId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
+          },
+          "raceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           },
           "authorRole": {
             "$ref": "#/components/schemas/CommentAuthorRole"
@@ -6536,10 +6755,16 @@
         "properties": {
           "plannedWorkoutId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "text": {
             "type": "string",
+            "nullable": true
+          },
+          "raceId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           }
         },
@@ -10605,6 +10830,13 @@
           "distanceCompliancePercent": {
             "type": "integer",
             "format": "int32",
+            "nullable": true
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSegmentDto"
+            },
             "nullable": true
           }
         },

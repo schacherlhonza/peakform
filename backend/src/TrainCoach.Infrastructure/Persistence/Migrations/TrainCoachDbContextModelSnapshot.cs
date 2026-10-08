@@ -389,7 +389,10 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<Guid>("PlannedWorkoutId")
+                    b.Property<Guid?>("PlannedWorkoutId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RaceId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Text")
@@ -406,6 +409,8 @@ namespace TrainCoach.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PlannedWorkoutId");
+
+                    b.HasIndex("RaceId");
 
                     b.ToTable("Comments");
                 });

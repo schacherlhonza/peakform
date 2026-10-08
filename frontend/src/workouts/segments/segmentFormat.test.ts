@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { IntensityTargetType, WorkoutSegmentType, type WorkoutSegmentDto } from '../../api/generated/models';
-import { garminStepCount, normalizeSegments, parseClock, segmentTotals, targetLabel } from './segmentFormat';
+import i18n from '../../i18n';
+import { garminStepCount, normalizeSegments, parseClock, segmentTotals, summarizeStructure, targetLabel } from './segmentFormat';
 
 const block = (repeatCount: number, steps: WorkoutSegmentDto[]): WorkoutSegmentDto => ({
   type: WorkoutSegmentType.Repeat,
@@ -91,5 +92,26 @@ describe('targetLabel', () => {
     expect(targetLabel({ intensityTargetType: IntensityTargetType.HeartRateZone, targetHeartRateZoneNumber: 4 })).toBe('Z4');
     expect(targetLabel({ intensityTargetType: IntensityTargetType.Pace, targetPaceSecondsPerKmMin: 270, targetPaceSecondsPerKmMax: 290 })).toBe('4:30–4:50 /km');
     expect(targetLabel({ intensityTargetType: IntensityTargetType.Free })).toBeNull();
+  });
+});
+
+describe('summarizeStructure', () => {
+  it('puts the whole structure on one line, blocks in parentheses', () => {
+    const summary = summarizeStructure(
+      [
+        { order: 1, type: WorkoutSegmentType.WarmUp, durationSeconds: 600, intensityTargetType: IntensityTargetType.HeartRateZone, targetHeartRateZoneNumber: 2 },
+        {
+          ...block(3, [
+            { order: 1, type: WorkoutSegmentType.Interval, durationSeconds: 180, intensityTargetType: IntensityTargetType.HeartRateZone, targetHeartRateZoneNumber: 4 },
+            { order: 2, type: WorkoutSegmentType.Recovery, durationSeconds: 120 },
+          ]),
+          order: 2,
+        },
+        { order: 3, type: WorkoutSegmentType.Strides, distanceMeters: 100, repeatCount: 4 },
+        { order: 4, type: WorkoutSegmentType.Main },
+      ],
+      i18n.t,
+    );
+    expect(summary).toBe('Rozklus 10:00 Z2 → 3× (Interval 3:00 Z4 + Aktivní pauza 2:00) → 4× Stupňované úseky 100 m → Hlavní část Lap');
   });
 });

@@ -116,6 +116,7 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
     {
         builder.Property(x => x.Text).HasMaxLength(2000).IsRequired();
         builder.HasIndex(x => x.PlannedWorkoutId);
+        builder.HasIndex(x => x.RaceId);
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

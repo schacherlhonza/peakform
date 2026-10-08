@@ -81,6 +81,24 @@ export function describeSegment(s: WorkoutSegmentDto, t: TFunction): string {
   return target ? `${head} · ${target}` : head;
 }
 
+/** A step as "Interval 3:00 Z4" — type first, so a one-line summary still reads as a workout. */
+function compactStep(s: WorkoutSegmentDto, t: TFunction): string {
+  const length = { time: () => formatClock(s.durationSeconds!), distance: () => formatSegmentDistance(s.distanceMeters!), lap: () => 'Lap' }[endCondition(s)]();
+  return [repeats(s) > 1 ? `${repeats(s)}×` : null, t(`segmentType.${s.type}`), length, targetLabel(s)].filter(Boolean).join(' ');
+}
+
+/** The whole structure on one line for tables: "Rozklus 10:00 Z2 → 3× (Interval 3:00 Z4 + Aktivní pauza 2:00 Z1) → …". */
+export function summarizeStructure(segments: readonly WorkoutSegmentDto[], t: TFunction): string {
+  return [...segments]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map((s) =>
+      isBlock(s)
+        ? `${repeats(s)}× (${[...(s.steps ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).map((step) => compactStep(step, t)).join(' + ')})`
+        : compactStep(s, t),
+    )
+    .join(' → ');
+}
+
 function normalizeStep(s: WorkoutSegmentDto, order: number, inBlock: boolean): WorkoutSegmentDto {
   const type = s.intensityTargetType ?? IntensityTargetType.Free;
   const paces = [s.targetPaceSecondsPerKmMin, s.targetPaceSecondsPerKmMax].filter((p): p is number => !!p).sort((a, b) => a - b);

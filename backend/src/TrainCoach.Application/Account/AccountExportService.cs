@@ -55,7 +55,7 @@ public class AccountExportService(
 
         var commentsAuthored = await db.Comments
             .Where(c => c.AuthorUserId == userId)
-            .Select(c => new CommentExportDto(c.Id, c.PlannedWorkoutId, c.AuthorRole, c.Text, c.CreatedAtUtc))
+            .Select(c => new CommentExportDto(c.Id, c.PlannedWorkoutId, c.RaceId, c.AuthorRole, c.Text, c.CreatedAtUtc))
             .ToListAsync(cancellationToken);
 
         var notifications = await db.Notifications

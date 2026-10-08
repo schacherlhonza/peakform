@@ -135,6 +135,92 @@ export function useGetApiWorkoutsWorkoutIdComments<TData = Awaited<ReturnType<ty
 
 
 
+export const getApiRacesRaceIdComments = (
+    raceId: string,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<CommentDto[]>(
+      {url: `/api/races/${raceId}/comments`, method: 'GET', signal
+    },
+      );
+    }
+
+
+
+
+export const getGetApiRacesRaceIdCommentsQueryKey = (raceId: string,) => {
+    return [
+    `/api/races/${raceId}/comments`
+    ] as const;
+    }
+
+
+export const getGetApiRacesRaceIdCommentsQueryOptions = <TData = Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError = ErrorType<unknown>>(raceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiRacesRaceIdCommentsQueryKey(raceId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>> = ({ signal }) => getApiRacesRaceIdComments(raceId, signal);
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: raceId !== null && raceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiRacesRaceIdCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>>
+export type GetApiRacesRaceIdCommentsQueryError = ErrorType<unknown>
+
+
+export function useGetApiRacesRaceIdComments<TData = Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError = ErrorType<unknown>>(
+ raceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiRacesRaceIdComments>>,
+          TError,
+          Awaited<ReturnType<typeof getApiRacesRaceIdComments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiRacesRaceIdComments<TData = Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError = ErrorType<unknown>>(
+ raceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiRacesRaceIdComments>>,
+          TError,
+          Awaited<ReturnType<typeof getApiRacesRaceIdComments>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiRacesRaceIdComments<TData = Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError = ErrorType<unknown>>(
+ raceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiRacesRaceIdComments<TData = Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError = ErrorType<unknown>>(
+ raceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiRacesRaceIdComments>>, TError, TData>>, }
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiRacesRaceIdCommentsQueryOptions(raceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 export const postApiComments = (
     createCommentRequest?: CreateCommentRequest,
  signal?: AbortSignal

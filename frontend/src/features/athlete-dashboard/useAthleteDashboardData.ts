@@ -3,7 +3,7 @@ import { useGetApiAthletesAthleteUserIdRaces } from '../../api/generated/races/r
 import { useGetApiAthletesAthleteUserIdReportsDateType } from '../../api/generated/reports/reports';
 import { useGetApiAthletesAthleteUserIdReadiness } from '../../api/generated/readiness/readiness';
 import { useGetApiAthletesAthleteUserIdTrainingLoad } from '../../api/generated/training-load/training-load';
-import { useGetApiAthletesAthleteUserIdPlans, useGetApiPlansId } from '../../api/generated/training-plans/training-plans';
+import { useGetApiAthletesAthleteUserIdPlanVsActual, useGetApiAthletesAthleteUserIdPlans, useGetApiPlansId } from '../../api/generated/training-plans/training-plans';
 import { useGetApiAthletesAthleteUserIdActivities } from '../../api/generated/activities/activities';
 import { useGetApiAthletesAthleteUserIdFood } from '../../api/generated/food-entries/food-entries';
 import { useGetApiAthletesAthleteUserIdHydration } from '../../api/generated/hydration-entries/hydration-entries';
@@ -54,18 +54,19 @@ export function useAthleteDashboardData(athleteUserId: string) {
   const todayWorkout = week?.workouts?.find((w) => w.date === today);
 
   const activitiesQuery = useGetApiAthletesAthleteUserIdActivities(athleteUserId, { from: weekStartIso, to: today });
+  // Today's plan paired with what was done — compliance and time in zones for the today card.
+  const todayComparisonQuery = useGetApiAthletesAthleteUserIdPlanVsActual(athleteUserId, { from: today, to: today });
+  const todayComparison = todayComparisonQuery.data?.days?.find((d) => d.date === today);
 
   const foodQuery = useGetApiAthletesAthleteUserIdFood(athleteUserId, { from: `${today}T00:00:00`, to: `${today}T23:59:59` });
   const hydrationQuery = useGetApiAthletesAthleteUserIdHydration(athleteUserId, { from: `${today}T00:00:00`, to: `${today}T23:59:59` });
 
-  const nextRace = useMemo(() => {
-    const races = racesQuery.data ?? [];
+  const upcomingRaces = useMemo(() => {
     const now = Date.now();
-    return races
-      .filter((r) => r.startsAtUtc && new Date(r.startsAtUtc).getTime() >= now)
-      .sort((a, b) => new Date(a.startsAtUtc!).getTime() - new Date(b.startsAtUtc!).getTime())[0];
+    return (racesQuery.data ?? [])
+      .filter((r) => r.startsAtUtc && new Date(r.startsAtUtc).getTime() >= now - 12 * 3_600_000) // still "next" on race day
+      .sort((a, b) => new Date(a.startsAtUtc!).getTime() - new Date(b.startsAtUtc!).getTime());
   }, [racesQuery.data]);
-  const daysToRace = nextRace?.startsAtUtc ? Math.max(0, Math.ceil((new Date(nextRace.startsAtUtc).getTime() - Date.now()) / 86_400_000)) : null;
 
   const latestTrainingLoad = latestByDate(trainingLoadQuery.data);
 
@@ -101,6 +102,8 @@ export function useAthleteDashboardData(athleteUserId: string) {
     },
     todayWorkout: {
       workout: todayWorkout ?? null,
+      comparison: todayComparison?.workouts?.find((c) => c.workoutId === todayWorkout?.id) ?? null,
+      activities: (activitiesQuery.data ?? []).filter((a) => a.startedAtUtc && toIsoDate(new Date(a.startedAtUtc)) === today),
       isLoading: plansQuery.isLoading || planDetailQuery.isLoading,
       isError: planDetailQuery.isError,
       hasPlan: !!activePlan,
@@ -130,8 +133,7 @@ export function useAthleteDashboardData(athleteUserId: string) {
       eveningIsLoading: eveningReportQuery.isLoading,
     },
     nextRace: {
-      race: nextRace ?? null,
-      daysToRace,
+      upcoming: upcomingRaces,
       isLoading: racesQuery.isLoading,
     },
   };

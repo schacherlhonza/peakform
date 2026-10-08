@@ -1,0 +1,8 @@
+.row {
+  cursor: pointer;
+}
+
+.detailRow,
+.detailRow:hover {
+  background: var(--color-surface-inset);
+}

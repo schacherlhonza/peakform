@@ -1,14 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Group, Stack, Text } from '@mantine/core';
-import { IconFlag, IconMoonStars, IconSun } from '@tabler/icons-react';
+import { Stack, Text } from '@mantine/core';
+import { IconMoonStars, IconSun } from '@tabler/icons-react';
 import { useAuth } from '../../auth/AuthContext';
-import { Panel, CardHeader, Badge, Button } from '../../design-system/components';
+import { Panel, CardHeader, Button } from '../../design-system/components';
 import { useAthleteDashboardData } from './useAthleteDashboardData';
 import { ReadinessCard } from './ReadinessCard';
 import { TrainingLoadCard } from './TrainingLoadCard';
 import { TodayWorkoutCard } from './TodayWorkoutCard';
 import { FuelHydrationCard } from './FuelHydrationCard';
+import { NextRaceCard } from './NextRaceCard';
 import { WeekTimelineSection } from './WeekTimelineSection';
 import { WeekHrZonesCard } from './WeekHrZonesCard';
 import { RecoveryInsightsSection } from './RecoveryInsightsSection';
@@ -35,7 +36,7 @@ export function AthleteDashboardPage() {
           <ReadinessCard data={data.readiness} />
         </div>
         <TodayWorkoutCard data={data.todayWorkout} />
-        <FuelHydrationCard data={data.fuelHydration} />
+        <NextRaceCard data={data.nextRace} />
       </div>
 
       <WeekTimelineSection data={data.weekTimeline} />
@@ -68,19 +69,7 @@ export function AthleteDashboardPage() {
           </Button>
         </Panel>
 
-        <Panel compact>
-          <CardHeader kicker={t('dashboard.nextRace')} right={<IconFlag size={18} stroke={1.8} color="var(--color-text-muted)" />} />
-          {data.nextRace.race ? (
-            <Group gap="xs">
-              <Text fw={600} fz={14}>
-                {data.nextRace.race.name}
-              </Text>
-              <Badge tone="info">{t('dashboard.daysToRace', { days: data.nextRace.daysToRace })}</Badge>
-            </Group>
-          ) : (
-            <Text className="ds-body">—</Text>
-          )}
-        </Panel>
+        <FuelHydrationCard data={data.fuelHydration} />
       </div>
     </Stack>
   );

@@ -2,14 +2,14 @@ import { useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Anchor, Group, MultiSelect, Pagination, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import { Anchor, Group, Pagination, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useDebouncedCallback } from '@mantine/hooks';
 import { IconRun, IconSearch } from '@tabler/icons-react';
 import { useAuth } from '../auth/AuthContext';
 import { useGetApiAthletesAthleteUserIdActivitiesSearch } from '../api/generated/activities/activities';
 import { SportType, type CompletedActivityDto } from '../api/generated/models';
-import { Panel, Badge, Button, EmptyState, MetricStrip, SegmentedControl, Skeleton } from '../design-system/components';
+import { Panel, Badge, Button, EmptyState, FilterMultiSelect, MetricStrip, SegmentedControl, Skeleton } from '../design-system/components';
 import { formatClock, formatDistanceKm, formatPace, formatTotalDuration } from './activityFormat';
 import PersonalBestsView from './PersonalBestsView';
 
@@ -212,13 +212,13 @@ export function ActivitiesBrowser({
               minDate={from ?? undefined}
               w={{ base: '47%', sm: 150 }}
             />
-            <MultiSelect
+            <FilterMultiSelect
               label={t('activities.sports')}
-              placeholder={sports.length ? undefined : t('activities.allSports')}
+              placeholder={t('activities.allSports')}
+              manySelected={(count) => t('common.selectedCount', { count })}
               data={SPORTS.map((s) => ({ value: s, label: t(`sport.${s}`) }))}
               value={sports}
               onChange={(v) => update({ sport: v })}
-              clearable
               w={{ base: '100%', sm: 260 }}
             />
           </Group>
